@@ -1,0 +1,370 @@
+﻿@model Application.DTO.Models.Causa
+
+@using Enums = Domain.Infrastructure;
+@using resources = Infrastructure.Resources;
+
+@{
+
+    int count = 1;
+    var DataForm = ViewBag.DataForm as Application.DTO.DataForm;
+
+}
+
+<h4>N° Rol: @Model.NumeroTicket</h4>
+
+<script type="text/javascript">
+
+    var oTableEvento;
+
+    ; (function ($) {
+        $(function () {
+
+            $("#tabs").tabs({ active: getTabStorage('tabsExpediente') });
+            callToolTips();
+
+
+            $("#grillaExpediente .diasTrans").each(function () {
+                var dias = parseInt($(this).data("dias")) || 0;
+                if (dias >= 0) {
+                    var status1 = parseInt($(this).data("status1")) || 0;
+                    var status2 = parseInt($(this).data("status2")) || 0;
+                    if (status1 > 0 && status2 > 0) {
+                        let html = GetSemaforo(dias, status1, status2);
+                        $(this).html(html);
+                    }
+                    else {
+                        $(this).html("N/A");
+                    }
+                }
+            })
+
+
+            var localGridParams = {}
+            generalGridParams.paging = false;
+            generalGridParams.ordering = false;
+
+            var allGridParams = $.extend({}, localGridParams, generalGridParams);
+            oTableEvento = $('#grillaExpediente').dataTable(allGridParams);
+        });
+    })(jQuery);
+
+    function GetExpediente(ExpedienteID, CausaID) {
+        var opt = {
+            title: ((ExpedienteID == 0) ? "Agregar" : "Editar") + " Evento",
+            url: "@Url.Action("GetExpediente", "Expedientes")",
+            params: {
+                __RequestVerificationToken: getVToken(),
+                ExpedienteID: ExpedienteID,
+                CausaID: CausaID
+            },
+            size: "modal-lg",
+            callback: function () {
+                //goGrid();
+            }
+        }
+
+        GetModalContent(opt);
+    }
+
+    function GetDocumentos(ExpedienteID, CausaID) {
+
+        var opt = {
+            title: "Documentos Adjuntos",
+            url: "@Url.Action("GetAdjuntosExpediente", "Expedientes")",
+            params: {
+                __RequestVerificationToken: getVToken(),
+                ExpedienteID: ExpedienteID,
+                CausaID: CausaID
+            },
+            size: "modal-lg",
+            callback: function () {
+                //goGrid();
+            }
+        }
+
+        GetModalContent(opt);
+    }
+
+    function GetFinalizarExpediente(ExpedienteID, CausaID) {
+
+        var optBtn = {
+            title: "Finalizar Expediente",
+            msg1: "¿Confirma finalizar Expediente?",
+            msg2: "",
+            url: "@Url.Action("ActionExpediente", "Expedientes")",
+            params: {
+                __RequestVerificationToken: getVToken(),
+                action: "@Enums.ActionSystem.FinalizarExpediente",
+                Identidad: ExpedienteID,
+                CausaID: CausaID
+            },
+            callback: function () {
+
+                showBlockUI(CloseDialog);
+                $("#btnBuscar").click();
+
+                //$("#grilla tr.selected a:last i.x-icon-org").click();
+            },
+            alert: "alert-warning",
+            txtBtn1: "Sí"
+        }
+
+        xDialogConfirmAction(optBtn);
+
+    }
+
+</script>
+
+
+<div id="tabs">
+    <ul>
+        <li><a href="#tab1" onclick="setTabStorage(0, 'tabsExpediente')">Expediente</a></li>
+        <li><a href="#tab2" onclick="setTabStorage(1, 'tabsExpediente')">Causa (Carátula)</a></li>
+        <li><a href="#tab3" onclick="setTabStorage(2, 'tabsExpediente')">Partes</a></li>
+    </ul>
+    <div id="tab1">
+
+        @if (!DataForm.PerfilActive.IsInvitado)
+        {
+            <div class="row">
+                <div class="col text-right" id="">
+                    <button type="button" id="" class="btn btn-default"
+                            onclick="GetExpediente(0, @Model.CausaID)">
+                        <i class="x-icon x-icon-mas3 icon-in-button"></i> @resources.GlobalResources.Agregar Evento
+                    </button>
+                </div>
+            </div>
+        }
+
+        <div class="table-responsive-not">
+            <table class="table table-striped table-sm table-bordered table-hover x-table allW" id="grillaExpediente">
+                <thead>
+                    <tr>
+                        <th class="ac" style="">@resources.GlobalResources.TH_Number</th>
+                        <th class="ac " style="">Fecha</th>
+                        <th class="ac" style="">Trámite</th>
+                        <th class="ac" style="">Descripción</th>
+                        <th class="ac" style="">Observación</th>
+                        <th class="ac" style="">N° de Oficio</th>
+                        <th class="ac" style="">Usuario</th>
+                        <th class="ac" style="">Días Transcurridos</th>
+                        <th class="ac" style="">Firmas</th>
+                        <th class="ac" style="">@resources.GlobalResources.TH_Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Expediente.OrderBy(x => x.FechaExpediente).ThenBy(c => c.ExpedienteID))
+                    {
+                        string iconVer = item.IsPuedeEditar() ? "edit" : "zoom1";
+                        string stringVer = item.IsPuedeEditar() ? resources.GlobalResources.Editar : resources.GlobalResources.BtnVer;
+
+                        var AsocExpedienteOpcion = item.AsocExpedienteOpcion.FirstOrDefault();
+                        int status1 = 0;
+                        int status2 = 0;
+
+                        bool IsPuedeFinalizar = !item.IsFinalizado;
+
+                        if (AsocExpedienteOpcion != null)
+                        {
+                            var AsocTipoTramiteOpciones = item.TipoTramite
+                                .AsocTipoTramiteOpciones.FirstOrDefault(x => x.OpcionesTramiteID == AsocExpedienteOpcion.OpcionesTramiteID);
+
+                            if (AsocTipoTramiteOpciones != null)
+                            {
+                                status1 = AsocTipoTramiteOpciones.Status1;
+                                status2 = AsocTipoTramiteOpciones.Status2;
+                            }
+                        }
+
+                        <tr id="trEx_@item.ExpedienteID">
+                            <td class="ac">@count</td>
+                            <td class="ac nw">@Html.DatetimeToString(item.FechaExpediente)</td>
+                            <td>@item.TipoTramite.Descripcion</td>
+                            <td>@Html.Raw(item.GetOpcionesTramite())</td>
+                            <td>@item.Observacion</td>
+                            <td class="nw">@item.NumeroOficio</td>
+                            <td>@item.Usuario.GetFullName()</td>
+                            @if (item.IsFinalizado)
+                            {
+                                <td></td>
+                            }
+                            else
+                            {
+                                <td class="ac diasTrans" data-dias="@item.GetDiasTranscurridos()" data-status1="@status1" data-status2="@status2"></td>
+                            }
+                            <td class="ac">@item.GetFirmas()</td>
+                            <td class="ac">
+
+                                @if (!item.IsFinalizado)
+                                {
+                                    <a class='x-title-t getDialog' style=''
+                                       onclick="GetExpediente(@item.ExpedienteID, @item.CausaID)"
+                                       href='javascript:void(0);'
+                                       title='@stringVer'><i class='x-icon x-icon-@iconVer'></i></a>
+                                }
+
+
+
+                                @if (item.IsTieneDocumentos())
+                                {
+                                    <a class='x-title-t' style='margin-left:3px'
+                                       onclick="GetDocumentos(@item.ExpedienteID, @item.CausaID)"
+                                       href='javascript:void(0);'
+                                       title='Ver documentos'><i class='x-icon x-icon-folder'></i></a>
+                                }
+
+                                @if (IsPuedeFinalizar)
+                                {
+                                    <a class='x-title-t' style=''
+                                       onclick="GetFinalizarExpediente(@item.ExpedienteID, @item.CausaID)"
+                                       href='javascript:void(0);'
+                                       title='@resources.GlobalResources.Finalizar'><i class='x-icon x-icon-ended'></i></a>
+                                }
+
+
+                            </td>
+                        </tr>
+                        count++;
+                    }
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+    <div id="tab2">
+
+        <table class="table table-striped table-sm table-bordered table-hover x-table allW" id="grillaTab2">
+            <tbody>
+                <tr>
+                    <td width="20%">Número de Rol de TDPI</td>
+                    <td class="azul">@Model.NumeroTicket</td>
+                    <td width="20%">Fecha de Recepción TDPI</td>
+                    <td class="azul">@Html.DatetimeToString(Model.FechaIngreso)</td>
+                </tr>
+                <tr>
+                    <td>Tipo de Expediente</td>
+                    <td class="azul">@Model.TipoCausa.Descripcion</td>
+                    @if (Model.IsContencioso)
+                    {
+                        <td>Tipo Contencioso</td>
+                        <td class="azul">@Model.TipoContencioso.Descripcion</td>
+                    }
+                    else
+                    {
+                        <td></td>
+                        <td class="azul"></td>
+                    }
+
+                </tr>
+                <tr>
+                    <td>N° de Solicitud</td>
+                    <td class="azul">@Model.Numero</td>
+                    <td>N° de Registro</td>
+                    <td class="azul">@Model.NumeroRegistro</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <fieldset class="x-fieldset">
+            <legend class="celeste">Individualización @Html.Raw(Html.HelpTitle(resources.Expediente.lblDenominacionHelp))</legend>@Model.Denominacion
+        </fieldset>
+
+        @if (!string.IsNullOrWhiteSpace(Model.Observacion))
+        {
+            <fieldset class="x-fieldset">
+                <legend class="celeste">Observación</legend>@Model.Observacion
+            </fieldset>
+        }
+
+        @if (Model.DocumentoCausa.Count > 0)
+        {
+            int TipoDocumentoEnum = (int)Enums.TipoDocumento.Causa;
+            count = 1;
+
+            <fieldset class="x-fieldset" id="fsAdjuntosCausa">
+                <legend class="celeste">Documentos adjuntos</legend>
+
+                <div class="table-responsive">
+
+                    <table class="@Html.GetBaseTableCSS()" id="">
+                        <thead>
+                            <tr>
+                                <th class="ac" style="">#</th>
+                                <th class="ac" style="">Nombre Documento</th>
+                                <th class="ac" style="">Descripción</th>
+                                <th class="ac" style="">Fecha Carga</th>
+                                <th class="ac" style="">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.DocumentoCausa)
+                            {
+                                <tr>
+                                    <td class="ac">@count</td>
+                                    <td class="">@item.NombreArchivoFisico</td>
+                                    <td style="max-width:200px" class="fixWord">@item.Descripcion</td>
+                                    <td class="ac">@Html.DatetimeToString(item.Fecha, "dd-MM-yyyy HH:mm")</td>
+                                    <td class="ac">
+
+                                        <a style="margin-right:2px" href="javascript:void(0)"
+                                           onclick='getDownloadFile(@item.DocumentoCausaID, @Model.CausaID, "@item.Hash.Trim()", @TipoDocumentoEnum)'
+                                           class="x-title-l" title="@resources.GlobalResources.BtnDescargar">
+                                            <i class="x-icon @Html.GetCSS(item.NombreArchivoFisico)" style="cursor: pointer;"></i>
+                                        </a>
+
+                                    </td>
+                                </tr>
+                                count++;
+                            }
+                        </tbody>
+                    </table>
+
+                </div>
+
+
+
+            </fieldset>
+        }
+    </div>
+    <div id="tab3">
+
+        <table class="table table-striped table-sm table-bordered table-hover x-table allW" id="grillaPartes">
+            <thead>
+                <tr>
+                    <th class="ac" style="">@resources.GlobalResources.TH_Number</th>
+                    <th class="ac" style="">Tipo</th>
+                    <th class="ac" style="text-align: left !important">RUT<br />Nombre</th>
+                    <th class="ac" style="">País</th>
+                    <th class="ac" style="text-align: left !important">RUT<br />Representante</th>
+                    <th class="ac" style="">Estudio Jurídico</th>
+                    <th class="ac" style="text-align: left !important">Abogado<br />Email</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    count = 1;
+                }
+
+                @foreach (var item in Model.Parte)
+                {
+                    <tr>
+                        <td class="ac">@count</td>
+                        <td>@item.TipoParte.Descripcion</td>
+                        <td>@item.GetRutFormat(item.Rut)<span class="azul db">@item.Nombre</span></td>
+                        <td>@item.GetPais()</td>
+                        <td>@item.GetRutFormat(item.RutRepresentante)<span class="azul db">@item.NombreRepresentante</span></td>
+                        <td>@item.NombreEstudioJuridico</td>
+                        <td>
+                            <span class="azul db">@item.NombreAbogado</span>
+                            <span class="amarillo db">@item.EmailAbogado</span>
+                        </td>
+                    </tr>
+                    count++;
+                }
+            </tbody>
+        </table>
+
+
+
+    </div>
+</div>

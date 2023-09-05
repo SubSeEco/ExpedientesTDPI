@@ -1,0 +1,155 @@
+﻿@model Application.DTO.Models.Usuario
+
+@using resources = Infrastructure.Resources;
+@using Enums = Domain.Infrastructure;
+
+@{
+//var RegionList = ViewBag.RegionList as IList<SIAC.Application.DTO.Models.SP_ListaRegion_Result>;
+}
+
+<script type="text/javascript">
+
+    ; (function ($) {
+        $(function () {
+
+            $("#newEmail").on('blur', function () { IsEmailValidate($(this)); });
+
+        });
+    })(jQuery);
+        
+    function saveEmail() {
+        var newEmail = $.trim($("#newEmail").val());
+        var ReingreseEmail = $.trim($("#ReingreseEmail").val());
+
+        if (newEmail == "" || ReingreseEmail == "") {
+            showBlockUIError("Debe completar los datos de Email");
+            return false;
+        }
+
+        xJsonObj("@Url.Action("SaveCambiarEmail", "Main")",
+        {
+            __RequestVerificationToken: getVToken(),
+            email: newEmail,
+            emailOld: $.trim("@Model.Mail"),
+            },
+            $.noop, function ()
+            {
+                showBlockUI(SelfRedirect);
+            })
+
+    }
+
+</script>
+
+<div class="modal-body" style="padding-top: 6px;">
+
+    @if (Model.UsuarioID == 0)
+    {
+        <div class="alert alert-danger">
+            <span>No Es Posible Continuar</span>
+        </div>
+
+    }
+    else
+    {
+        <div id="">
+            @if (Model.Mail != "")
+            {
+                <div class="form-group row align-items-center">
+                    <label for="" class="col-md-4 col-form-label">@Html.Raw(HttpUtility.HtmlDecode(ViewBag.lblEmail)) actual</label>
+                    <div class="col-md-8">
+                        <input type="text" class="form-control" maxlength="150" disabled="disabled" id="" name="" value="@Model.Mail" />
+                    </div>
+                </div>
+            }
+
+            <div class="form-group row">
+                <label for="newEmail" id="" class="col-md-4 col-form-label">@Html.Raw(HttpUtility.HtmlDecode(ViewBag.lblEmail)) nuevo</label>
+                <div class="col-md-8">
+                    <input type="text" class="form-control" maxlength="150" id="newEmail" name="newEmail" value="" />
+                </div>
+            </div>
+
+            <div class="form-group row" id="divReingreseEmail">
+                <label for="ReingreseEmail" id="lblReingreseEmail" data-spanverifica="false"
+                       class="col-md-4 col-form-label">Reingrese @Html.Raw(HttpUtility.HtmlDecode(ViewBag.lblEmail))</label>
+                    <div class="col-md-8">
+                        <input type="text" class="verificar form-control IsEmail" maxlength="150"
+                               id="ReingreseEmail" name="ReingreseEmail" value="" />
+                    </div>
+                </div>
+
+                <script>
+                    $(document).ready(function () {
+                        $('#newEmail,#ReingreseEmail').on("cut copy paste", function (e) {
+                            e.preventDefault();
+                        });
+
+                        $('#ReingreseEmail').on("blur", function (e) {
+                            e.preventDefault();
+                            var e1 = $.trim($("#newEmail").val());
+                            var e2 = $.trim($("#ReingreseEmail").val());
+
+                            if (e1 != "" && e2 != "") {
+                                if (e1 != e2) {
+                                    showBlockUIError("El Correo electrónico no coincide");
+                                    $("#newEmail,#ReingreseEmail").removeClass("is-valid").addClass("is-invalid");
+                                    return false;
+                                }
+                            }
+                        });
+
+                    });
+                </script>
+
+        </div>
+    }
+
+
+
+</div>
+
+<div class="modal-footer">
+
+
+    @if (Model.UsuarioID == 0)
+    {
+        <button class="btn btn-default" data-dismiss="modal" onclick="SelfRedirect()" type="button">
+            <i class="x-icon x-icon-cancel2 icon-in-button"></i> @resources.GlobalResources.BtnAceptar
+        </button>
+    }
+    else
+    {
+        <button id="btnUpdateEmail" class="btn btn-default" onclick="saveEmail()" type="button">                       
+                <i class="x-icon x-icon-save2 icon-in-button"></i> @resources.GlobalResources.BtnActualizar
+            </button>
+
+            <i class="x-icon-loader hide"></i>
+            if (Model.Mail != "")
+            {
+            <button class="btn btn-default" data-dismiss="modal" type="button">
+                <i class="x-icon x-icon-cancel2 icon-in-button"></i> @resources.GlobalResources.BtnCancelar
+            </button>
+            }
+
+            }
+
+
+</div>
+
+
+<div id="modalEmailValidateChange" style="display:none">
+    <div title="Validación de Email" id="validateEmailPopupChange">
+        <div class="alert alert-danger">
+            <strong>POR FAVOR NO CIERRE ESTA VENTANA</strong>
+        </div>
+
+        @*@Html.Raw(Html.GetInfoVentana(Enums.TipoVentana.CodigoVerificacion, true))*@
+
+        <div class="form-group">
+            <label for="EmailCodeVerificationChange">Código de Verificación</label>
+            <input type="text" maxlength="10" class="form-control verificar" id="EmailCodeVerificationChange" name="EmailCodeVerificationChange">
+        </div>
+
+    </div>
+</div>

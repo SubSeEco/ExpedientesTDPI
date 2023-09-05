@@ -1,0 +1,75 @@
+﻿@model Application.DTO.Models.EstadoDiario
+
+@using Enums = Domain.Infrastructure;
+@using resources = Infrastructure.Resources;
+
+@{
+    bool IsNew = Model.EstadoDiarioID == 0;
+}
+
+<script type="text/javascript">
+
+    ; (function ($) {
+        $(function () {
+
+            callCalendarPopup("frmEstadoDiario");
+
+            activateForm("btnSaveED", "frmEstadoDiario",
+                function () {
+
+                    return true;
+                },
+                function () {
+
+                    if (xResultJsonData.result == ReturnJson.ActionSuccess)
+                    {
+                        CloseDialog();
+                        showBlockUI();
+                        GetListadoEstadoDiario();
+                    }
+                });
+        });
+    })(jQuery);
+
+</script>
+
+<div class="modal-body ">
+
+    <form class="form-horizontal " id="frmEstadoDiario" method="post" action="@Url.Action("SaveEstadoDiario", "Listados")">
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(x => x.EstadoDiarioID)
+        @Html.HiddenFor(x => x.TipoEstadoDiarioID)
+
+        <div class="form-group row align-items-center">
+            <label for="Fecha" class="col-md-3 col-form-label" id="">Fecha <span class="span-obligatorio">*</span></label>
+            <div class="col-md-5">
+                <div class="input-group">
+                    @Html.TextBoxFor(x => x.Fecha, new
+               {
+                   @Value = Html.DatetimeToString(Model.Fecha),
+                   @class = "ac IsCalendar form-control",
+                   @style = "",
+                   @placeholder = "",
+                   @maxlength = "10",
+                   @data_year_range = "-1:+1",
+                   @data_max_date = "+30d",
+                   @readonly = "readonly"
+               })
+                    <div class="input-group-append">
+                        <span class="input-group-text" id=""><i class="x-icon x-icon-calendar" data-dateinput="Fecha"></i></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </form>
+
+
+</div>
+<div class="modal-footer">
+
+    <button id="btnSaveED" class="btn btn-default" onclick="$('#frmEstadoDiario').submit()" type="button"><i class="x-icon x-icon-save2 icon-in-button"></i> @resources.GlobalResources.BtnGuardar</button>
+    <i class="x-icon-loader hide"></i>
+    <button class="btn btn-default" data-dismiss="modal" type="button"><i class="x-icon x-icon-cancel2 icon-in-button"></i> @resources.GlobalResources.BtnCancelar</button>
+
+</div>

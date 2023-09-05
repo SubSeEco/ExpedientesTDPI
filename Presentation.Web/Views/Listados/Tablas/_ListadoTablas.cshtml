@@ -1,0 +1,238 @@
+﻿@using Enums = Domain.Infrastructure;
+@using resources = Infrastructure.Resources;
+
+@{
+
+    int count = 1;
+
+    var Listado = ViewBag.Listado as IList<Application.DTO.Models.Tabla>;
+
+}
+
+
+<script type="text/javascript">
+
+    var oTableGrid;
+
+    ; (function ($) {
+        $(function () {
+
+            var ParamsGrid1 = generalGridParams;
+
+            var localGridParams = {
+                fnDrawCallback: function () {
+                    callToolTipsGrid("grillaListadoTablas");
+                }
+            }
+
+            generalGridParams.paging = true;
+            generalGridParams.pageLength = parseInt("@Domain.Infrastructure.WebConfigValues.CantidadResultadosGrilla");
+            //generalGridParams.ordering = false;
+
+            var allGridParams = $.extend({}, localGridParams, generalGridParams);
+            oTableGrid = $('#grillaListadoTablas').removeClass("hide").dataTable(allGridParams);
+
+        });
+    })(jQuery);
+
+    function GetEliminarTabla(TablaID) {
+
+        var optBtn = {
+            title: "Eliminar Tabla",
+            msg1: "@resources.GlobalResources.ConfirmaEliminar",
+            msg2: "@resources.GlobalResources.RegistroEliminado",
+            url: "@Url.Action("ActionExpediente", "Expedientes")",
+            params: {
+                __RequestVerificationToken: getVToken(),
+                action: "@Enums.ActionSystem.EliminarTabla",
+                Identidad: TablaID
+            },
+            callback: function () {
+                GetListadoTablas();
+            },
+            alert: "alert-danger",
+            txtBtn1: "Sí"
+        }
+
+        xDialogConfirmAction(optBtn);
+
+    }
+
+
+    function GetFinalizarTabla(key) {
+
+        var optBtn = {
+            title: "Finalizar Tabla",
+            msg1: "¿Confirma finalizar Tabla para publicación?",
+            msg2: "",
+            url: "@Url.Action("ActionExpediente", "Expedientes")",
+            params: {
+                __RequestVerificationToken: getVToken(),
+                action: "@Enums.ActionSystem.FinalizarTabla",
+                Identidad: key
+            },
+            callback: function () {
+                GetListadoEstadoDiario();
+            },
+            alert: "alert-danger",
+            txtBtn1: "Sí"
+        }
+
+        xDialogConfirmAction(optBtn);
+    }
+
+    function GetDetalleCausasTabla(TablaID)
+    {
+        var $divDet = $("#divCausasTablas");
+
+        $divDet.html("");
+
+        var before = function () { $divDet.html(divLoaderHtml()); };
+        var params = {
+            __RequestVerificationToken: getVToken(),
+            TablaID: TablaID
+        };
+
+        xAjaxHtml("@Url.Action("GetDetalleCausasTabla", "Listados")", params, before, function ()
+        {
+            $divDet.html(DataHTM);
+
+            scrollToElement($divDet);
+        });
+    }
+
+    function GetGenerarPDF(TablaID, Fecha) {
+
+        xDialogConfirmAction({
+            url: "@Url.Action("GenerarListadoTablaPDF", "Listados")",
+            title: "Tabla PDF",
+            msg1: "¿Confirma generar documento PDF para la fecha <b>" + Fecha + "</b>?",
+            IsHideMessageEnd: true,
+            params: {
+                __RequestVerificationToken: getVToken(),
+                TablaID: TablaID
+            },
+            callback: function () {
+
+                if (xJSONResult.result == ReturnJson.SinAccion) {
+                    showBlockUIError("No es posible generar el PDF, favor reintente mas tarde.");
+                    return false;
+                }
+
+                if (xJSONResult.result == ReturnJson.DatoNoEncontrado) {
+                    showBlockUIError("No hay causas asignadas para generar el PDF");
+                    return false;
+                }
+
+                if (xJSONResult.result == ReturnJson.ActionSuccess) {
+                    showBlockUI();
+                    $("#btnBuscar").click();
+                }
+
+            }
+
+        });
+    }
+
+</script>
+
+<div class="table-responsive-not">
+    <table class="table table-striped table-sm table-bordered table-hover x-table allW" id="grillaListadoTablas">
+        <thead>
+            <tr>
+                <th class="ac" style="width:1%">@resources.GlobalResources.TH_Number</th>
+                <th class="ac nw" style="text-align: center !important">Fecha</th>
+                <th class="ac " style="">Relator</th>
+                <th class="ac " style="">Sala</th>
+                <th class="ac " style="">Tipo</th>
+                <th class="ac " style="">Estado</th>
+                <th class="ac" style="width:12%">@resources.GlobalResources.Seleccionar</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Listado.OrderByDescending(x => x.Fecha))
+            {
+                string iconVer = item.IsGenerado() ? "zoom1" : "edit";
+                string stringVer = item.IsGenerado() ? resources.GlobalResources.Editar : resources.GlobalResources.BtnVer;
+
+                bool PuedeEditar = item.IsBorrador() || item.IsGenerado();
+                bool PuedeEliminar = item.IsBorrador() || item.IsGenerado();
+                bool PuedeGenerar = PuedeEliminar;
+                bool PuedeDescargar = item.IsGenerado() || item.IsPublicado();
+                bool PuedeVerDetalle = !item.IsEliminado();
+                bool PuedeFinalizar = PuedeVerDetalle && item.IsGenerado() && !item.IsPublicado();
+
+                string Fecha = Html.DatetimeToString(item.Fecha, "dd-MM-yyyy");
+
+                <tr class="@(item.IsEliminado() ? "rowDeleted" : "") ">
+                    <td class="ac">@count</td>
+                    <td class="ac nw">@Fecha</td>
+                    <td>@item.NombreRelator</td>
+                    <td class="">@item.Sala.Descripcion</td>
+                    <td class="">@item.TipoTabla.Descripcion</td>
+                    <td class="">@item.EstadoTabla.Descripcion</td>
+                    <td class="ac">
+
+                        @if (PuedeEditar)
+                        {
+                            <a class='x-title-l' style=''
+                               onclick="GetTabla(@item.TablaID)"
+                               href='javascript:void(0);'
+                               title='@resources.GlobalResources.Editar'><i class='x-icon x-icon-edit'></i></a>
+                        }
+
+                        @if (PuedeDescargar && item.DocumentoSistemaTabla.Count > 0)
+                        {
+                            int TipoDocumentoEnum = (int)Enums.TipoDocumento.Tabla;
+                            int CausaID = 0;
+                            var doc = item.DocumentoSistemaTabla.LastOrDefault();
+
+                            <a style="margin-right:2px" href="javascript:void(0)"
+                               onclick='getDownloadFile(@doc.DocumentoSistemaID, @CausaID, "@doc.Hash.Trim()", @TipoDocumentoEnum)'
+                               class="x-title-l" title="Descargar PDF">
+                                <i class="x-icon x-icon-pdf" style="cursor: pointer;"></i>
+                            </a>
+                        }
+
+                        @if (PuedeVerDetalle)
+                        {
+                            <a class='x-title-l' style=''
+                               onclick="GetDetalleCausasTabla(@item.TablaID);seleccionarTRGrid('grillaListadoTablas', this)"
+                               href='javascript:void(0);'
+                               title='Ver Causas'><i class='x-icon x-icon-org'></i></a>
+                        }
+
+                        @if (PuedeGenerar)
+                        {
+                            <a class='x-title-l' style=''
+                               onclick="GetGenerarPDF(@item.TablaID, '@Fecha');"
+                               href='javascript:void(0);'
+                               title='Generar PDF'><i class='x-icon x-icon-folder2'></i></a>
+                        }
+
+                        @if (PuedeEliminar)
+                        {
+                            <a class='x-title-l' style=''
+                               onclick="GetEliminarTabla(@item.TablaID)"
+                               href='javascript:void(0);'
+                               title='@resources.GlobalResources.BtnEliminar'><i class='x-icon x-icon-delete'></i></a>
+                        }
+
+
+                        @if (PuedeFinalizar)
+                        {
+                            <a class='x-title-l' style=''
+                               onclick="GetFinalizarTabla(@item.TablaID)"
+                               href='javascript:void(0);'
+                               title='@resources.GlobalResources.Finalizar'><i class='x-icon x-icon-ended'></i></a>
+                        }
+
+                    </td>
+                </tr>
+                count++;
+            }
+        </tbody>
+    </table>
+</div>
+
+<div id="divCausasTablas"></div>

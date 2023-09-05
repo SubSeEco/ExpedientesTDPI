@@ -1,0 +1,69 @@
+﻿@using Enums = Domain.Infrastructure;
+@using resources = Infrastructure.Resources;
+
+@{
+
+    int count = 1;
+
+    var Listado = ViewBag.Listado as IList<Application.DTO.Models.Causa>;
+
+}
+
+<script type="text/javascript">
+
+    var oTableGrid;
+
+    ; (function ($) {
+        $(function () {
+
+            var localGridParams = {
+
+            }
+
+            generalGridParams.paging = false;
+            generalGridParams.ordering = false;
+
+            var allGridParams = $.extend({}, localGridParams, generalGridParams);
+            oTableGrid = $('#grilla').removeClass("hide").dataTable(allGridParams);
+        });
+    })(jQuery);
+
+
+
+</script>
+
+
+<div class="table-responsive-not">
+    <table class="table table-striped table-sm table-bordered table-hover x-table allW" id="grilla">
+        <thead>
+            <tr>
+                <th class="ac" style="">@resources.GlobalResources.TH_Number</th>
+                <th class="ac nw" style="text-align: center !important">N° Rol TDPI</th>
+                <th class="ac " style="text-align: center !important">Fecha</th>
+                <th class="ac" style="text-align: left !important">@resources.Expediente.lblDenominacion</th>
+                <th class="ac" style="text-align: center !important">Días Transcurridos</th>
+                <th class="ac nw" style="text-align: center !important">N° Solicitud</th>
+                <th class="ac nw" style="text-align: center !important">Estado</th>
+                <th class="ac" style="">@resources.GlobalResources.Seleccionar</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Listado)
+            {
+                <tr>
+                    <td class="ac">@count</td>
+                    <td class="ac nw">@item.NumeroTicket</td>
+                    <td class="ac nw">@Html.DatetimeToString(item.FechaIngreso, "dd-MM-yyyy HH:mm")</td>
+                    <td>@item.Denominacion</td>
+                    <td class="ac">@item.GetDiasTranscurridos()</td>
+                    <td class="ac nw" >@item.Numero</td>
+                    <td class="nw">@item.EstadoCausa.Descripcion</td>
+                    <td class="ac">
+                        <input type="checkbox" class="checkListado" value="@item.CausaID" />
+                    </td>
+                </tr>
+                count++;
+            }
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,240 @@
+﻿@model Application.DTO.FiltrosEscritorio
+
+@using resources = Infrastructure.Resources;
+@using Enums = Domain.Infrastructure;
+
+@{
+    string PageTitle = "Listado de Ingresos";
+    ViewBag.Title = PageTitle;
+
+    string OptionInitial = resources.GlobalResources.OptionInicial;
+
+    DateTime FechaDesde = DateTime.Now.AddMonths(-12);
+    DateTime FechaHasta = DateTime.Now;
+
+    int AnioOld = DateTime.Now.Year - Domain.Infrastructure.WebConfigValues.AnioInicial;
+}
+
+<script type="text/javascript">
+
+    ; (function ($) {
+        $(function () {
+
+            $("#btnBuscar").on("click", GetListadoIngresos);
+            GetListadoIngresos();
+
+        });
+    })(jQuery);
+
+    function GetListadoIngresos() {
+
+        var desde = $.trim($("#FechaDesde").val());
+        var hasta = $.trim($("#FechaHasta").val());
+
+        if (desde == "" || hasta == "") {
+            showBlockUIError("Debe indicar las fechas Desde/Hasta");
+            return false;
+        }
+
+        if (!IsFechaValida("FechaDesde")) {
+            showBlockUIError("Ingrese una Fecha Desde válida.");
+            return false;
+        }
+
+        if (!IsFechaValida("FechaHasta")) {
+            showBlockUIError("Ingrese una Fecha Hasta válida.");
+            return false;
+        }
+
+        if (!IsFechaMenorIgual(desde, hasta)) {
+            showBlockUIError("La fecha Desde debe ser menor a la Fecha Hasta");
+            return false;
+        }
+
+        var xBtn = $("#btnBuscar");
+        //blockPageUI();
+
+        var $divDet = $("#divListado");
+        $divDet.html("");
+
+        var before = function () { $divDet.html(divLoaderHtml()); };
+        var params = {
+            __RequestVerificationToken: getVToken(),
+            FechaDesde: desde,
+            FechaHasta: hasta
+        };
+
+        xAjaxHtml("@Url.Action("GetListadoIngresos", "Listados")", params, before, function ()
+        {
+            $divDet.html(DataHTM);
+        });
+
+    }
+
+    function GenerarListadoIngresoPDF()
+    {
+        let selected = $(".checkListado:checked").length;
+
+        if (selected == 0) {
+            showBlockUIError("Debe seleccionar al menos un Ingreso");
+            return false;
+        }
+
+        let lista = [];
+
+        $(".checkListado:checked").each(function () {
+            let valor = parseInt($(this).val());
+            lista.push(valor);
+        });
+
+        xDialogConfirmAction({
+            url: "@Url.Action("GenerarListadoIngresoPDF", "Listados")",
+            title: "PDF",
+            msg1: "¿Confirma generar documento PDF?",
+            IsHideMessageEnd: true,
+            params: {
+                __RequestVerificationToken: getVToken(),
+                lista: JSON.stringify(lista)
+            },
+            callback: function () {
+                xAlert({
+                    title: "Generación PDF",
+                    html: $("#messageEnd").html(),
+                    onOpen: function () {
+
+                        var $body = $("#myModalAlert .modal-body");
+
+                        $body.find(".showEmails").html(xJSONResult.emails);
+
+                        var $objDesc = $("#objDescarga", "#myModalAlert .modal-body");
+                        $objDesc.attr("data-vs", xJSONResult.vs);
+                        $objDesc.attr("data-hash", xJSONResult.hash);
+                        $objDesc.attr("data-documento", xJSONResult.documento);
+                    },
+                    callback: function () {
+                        GetListadoIngresos();
+                    }
+                })
+            }
+
+        });
+    }
+
+    function MarcarTodo() {
+
+        $(".checkListado").prop("checked", true);
+    }
+
+    function DescargarPDF() {
+
+        var $obj = $("#objDescarga", "#myModalAlert .modal-body");
+
+        var vs = $obj.data("vs");
+        var hash = $obj.data("hash");
+        var documento = $obj.data("documento");
+        let TipoDocumentoID = parseInt("@Html.EnumToInt(Enums.TipoDocumento.Ingreso)");
+
+        getDownloadFile(documento, 0, hash, TipoDocumentoID)
+
+    }
+
+
+
+</script>
+
+<div id="messageEnd" style="display:none">
+    <p>El PDF ha sido generado correctamente y fue notificado por correo a las siguientes casillas de correo: <span class="showEmails bold"></span></p>
+    <p>Descargue aqui: <a href="javascript:void(0)" id="objDescarga" class="bold" data-vs="" data-hash="" data-documento="" onclick="DescargarPDF(this)">aqui</a></p>
+</div>
+
+
+<div class="bodyContent">
+    <div class="cont">
+
+        <fieldset>
+            <legend class="legendTitle">@PageTitle</legend>
+
+            @Html.Raw(Html.GetInfoVentana(Domain.Infrastructure.TipoVentana.ListadosIngreso))
+
+            <fieldset class="x-fieldset">
+                <legend class="bold celeste">Filtros</legend>
+
+                <form class="" method="POST" id="frmFiltrosEscritorio" onsubmit="return false" autocomplete="on">
+                    @Html.AntiForgeryToken()
+
+                    <div class="row ">
+                        <div class="col-md-6">
+                            <div class="form-group row">
+                                <label for="FechaDesde" class="col-sm-4 col-form-label">Fecha Desde</label>
+                                <div class="col-sm-8 col-lg-5">
+                                    <div class="input-group">
+                                        @Html.TextBoxFor(x => x.FechaDesde, new
+                                       {
+                                           @Value = FechaDesde.ToString("dd-MM-yyyy"),
+                                           @class = "ac IsCalendar form-control",
+                                           @style = "",
+                                           @placeholder = "",
+                                           @maxlength = "10",
+                                           @data_year_range = string.Format("-{0}:+1", AnioOld),
+                                           @data_max_date = "+12m"
+                                       })
+                                        <div class="input-group-append">
+                                            <span class="input-group-text" id=""><i class="x-icon x-icon-calendar" data-dateinput="FechaDesde"></i></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group row">
+                                <label for="FechaHasta" class="col-sm-4 col-form-label">Fecha Hasta</label>
+                                <div class="col-sm-8 col-lg-5">
+                                    <div class="input-group">
+                                        @Html.TextBoxFor(x => x.FechaHasta, new
+                                       {
+                                           @Value = FechaHasta.ToString("dd-MM-yyyy"),
+                                           @class = "ac IsCalendar form-control",
+                                           @style = "",
+                                           @placeholder = "",
+                                           @maxlength = "10",
+                                           @data_year_range = string.Format("-{0}:+1", AnioOld),
+                                           @data_max_date = "+30d"
+                                       })
+                                        <div class="input-group-append">
+                                            <span class="input-group-text" id=""><i class="x-icon x-icon-calendar" data-dateinput="FechaHasta"></i></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+            </fieldset>
+
+        </fieldset>
+
+        <div class="row">
+            <div class="col">
+                <button id="btnBuscar" type="button" class="btn btn-default"><i class="x-icon x-icon-zoom1 icon-in-button"></i> @resources.GlobalResources.BtnBuscar</button>
+                <i class="x-icon-loader hide"></i>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col text-right" id="">
+                <button type="button" id="" class="btn btn-default" onclick="GenerarListadoIngresoPDF()">
+                    <i class="x-icon x-icon-pdf icon-in-button"></i> Generar PDF</button>
+
+                <button type="button" id="" class="btn btn-default" onclick="MarcarTodo()">
+                    <i class="x-icon x-icon-check2 icon-in-button"></i> Marcar Todos</button>
+            </div>
+        </div>
+
+
+        <div id="divListado"></div>
+
+    </div>
+</div>
+

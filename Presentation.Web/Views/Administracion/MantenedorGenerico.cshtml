@@ -1,0 +1,264 @@
+﻿@using resources = Infrastructure.Resources;
+@using Enums = Domain.Infrastructure;
+
+@{
+    string PageTitle = resources.Administracion.MantenedorGenerico;
+    ViewBag.Title = PageTitle;
+
+    IList<Application.DTO.Mantenedor.ConfigurarDescripcion> ConfigurarDescripcion = ViewBag.ConfigurarDescripcion;
+
+}
+
+<script type="text/javascript">
+    ; (function ($) {
+        $(function () {
+
+            $("#tablaID").on("change", function () {
+                if ($(this).val() == "TipoDocumento") {
+                    $("#btnAgregar").hide();
+                }
+                else
+                    $("#btnAgregar").show();
+            })
+
+            $('#btnBuscar').on("click", getDatailMantenedor);
+
+            $("#tablaID").on("change", function () {
+                $("#div_gridResults, #btnAgregar").hide();
+            });    
+
+        });
+    })(jQuery);
+
+    
+    function getDatailMantenedor() {
+
+        var tablaID = $("#tablaID").val();
+        var codigoObj = ($.trim($("#CodigoObj").val()) == "") ? 0 : parseInt($("#CodigoObj").val());
+        var txtDesc = $.trim($("#txtDescripcion").val());
+
+        $("#codigoObjeto").val(codigoObj);
+
+        if (tablaID == "") {
+            showBlockUIError("@resources.Administracion.DebeSeleccionarDescripcion");
+            return false;
+        }
+
+        var xBtn = $("#btnBuscar");
+        blockPageUI();
+
+        var params = {
+            codigoObj: codigoObj,
+            TableName: tablaID,
+            txtDesc: txtDesc,
+            __RequestVerificationToken: getVToken(),
+        };
+
+        xJsonObj("@Url.Action("BuscarMantenedor", "Administracion")", params,
+                function () {
+                    BtnInAction(xBtn, false, true);
+                },
+                function () {
+                    BtnInAction(xBtn, true, true);
+                    blockPageUIclose();
+                    loagGridMantenedor();
+                });
+    }
+
+    function loagGridMantenedor() {
+
+        var xJSONResultDisplay = new Array();
+
+        $.each(xJSONResult, function (i, item) {
+
+            var Obj = {
+                'Codigo': item.Codigo,
+                'Descripcion': item.Descripcion,
+                'Vigente': function () {
+                    var html = '';
+                    if (item.Vigente) {
+                        html = '<i class="x-icon x-icon-accept"></i>';
+                    }
+                    return html;
+                },
+                'btnActions': function () {
+
+                    var html = '<a class="x-title-t" title="@resources.GlobalResources.BtnEditar" href="javascript:GetCreateEditView(' + item.Codigo + ', \'' + item.Descripcion + '\', \'' + item.Vigente + '\')" style="margin-right: 4px;">' +
+                            '<i class="x-icon x-icon-edit"></i></a>';
+                    return html;
+                },
+                'DT_RowId': 'tr_' + item.Codigo
+            }
+            xJSONResultDisplay.push(Obj);
+        });
+
+        var localGridParams = {
+            "bSort": true,
+            "aaData": xJSONResultDisplay,
+            "bDestroy": true,
+            "aoColumns": [
+                            { "sClass": "ac", "bSortable": true, "mDataProp": "Codigo" },
+                            { "sClass": "al", "bSortable": true, "mDataProp": "Descripcion" },
+                            { "sClass": "ac", "bSortable": true, "mDataProp": "Vigente" },
+                            { "sClass": "nw ac", "bSortable": false, "mDataProp": "btnActions" }
+            ]
+        };
+
+        var allGridParams = $.extend({}, localGridParams, generalGridParams);
+        var oTableGrid = $('#GridResults').removeClass("hide").dataTable(allGridParams);
+
+        $("#div_gridResults").show();
+
+        if (tablaID == "TipoDocumento") {
+            $("#btnAgregar").addClass("hide");
+            $("#btnAgregar").hide();
+        }
+        else {
+
+            $("#btnAgregar").show();
+            $("#btnAgregar").removeClass("hide");
+        }
+    }
+
+    function GetCreateEditView(codigoObj, txtDesc, vigente) {
+
+        var tablaID = $("#tablaID").val();
+
+        if (tablaID == "") {
+            showBlockUIError("@resources.Administracion.DebeSeleccionarDescripcion");
+            return false;
+        }
+
+        var _codigoObj = codigoObj;
+        var _txtDesc = txtDesc;
+        var _vigente = vigente;
+        
+        var params = {
+            __RequestVerificationToken: getVToken(),
+            codigoObjeto: _codigoObj,
+            itemDescripcion: _txtDesc,
+            vigente: _vigente
+        };
+        
+        var editNew = (_codigoObj > 0 || _txtDesc != "") ? "Editar" : "Agregar";
+
+            var opt = {
+                        title: editNew + " Registro",
+                        url: "@Url.Action("GetDetalleMantenedorGenerico", "Administracion")",
+                        params: params,
+                        size: "modal-lg",
+                        callback: function () {                        
+                        }
+            }
+
+        GetModalContent(opt);
+
+    }   
+
+</script>
+
+<div class="bodyContent">
+    <div class="cont">
+
+        <fieldset>
+            <legend class="legendTitle">@PageTitle</legend>
+
+            @Html.Raw(Html.GetInfoVentana(Enums.TipoVentana.MantenedorGenerico))
+            
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" id="codigoObjeto" value="0" />
+
+            <fieldset id="" class="x-fieldset" style="">
+                <legend class="bold celeste">Filtros</legend>
+
+           
+                <div id="tableFiltros">
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group row">
+                                <label for="tablaID" id="" class="col-md-4 col-form-label">@resources.Administracion.DescMantenedor</label>
+                                <div class="col-md-8">
+                                    <select class="verificar custom-select" id="tablaID" name="tablaID">
+                                        <option value="">@resources.GlobalResources.LabelOptionInicial</option>
+                                        @foreach (var item in ConfigurarDescripcion)
+                                        {
+                                            <option value="@item.NombreTabla.Trim()">@item.NombreTabla</option>
+                                        }
+                                    </select>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group row">
+                                <label for="CodigoObj" id="" class="col-md-4 col-form-label">@resources.Administracion.Codigo</label>
+                                <div class="col-md-8">
+                                    <input type="text" class="form-control verificar isInteger" id="CodigoObj">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group row">
+                                <label for="Descripcion" id="" class="col-md-4 col-form-label">@resources.Administracion.Descripcion</label>
+                                <div class="col-md-8">
+                                    <textarea style="" class="form-control  verificar" id="txtDescripcion" row="3" cols="3"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+
+            </fieldset>
+            
+            <div class="row">
+                <div class="col">
+                    <button id="btnBuscar" type="button" class="btn btn-default"><i class="x-icon x-icon-zoom1 icon-in-button"></i> @resources.GlobalResources.BtnBuscar</button>
+                    <i class="x-icon-loader hide"></i>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col text-right" id="">
+                    <i class="x-icon-loader hide"></i>
+                    <button id="btnAgregar" class="btn btn-default" style="display:none" onclick="GetCreateEditView(0,'',false)">                        
+                        <i class="x-icon x-icon-mas3 icon-in-button"></i> 
+                        @resources.GlobalResources.BtnAgregar
+                    </button>
+                </div>
+            </div>
+
+            <div class="controls" id="div_gridResults">
+                <div class="ar" style="margin-top: 8px !important;">
+                </div>
+
+                <table class="table table-striped table-sm table-bordered table-hover x-table hide allW" id="GridResults" @*style="width: 100%"*@>
+                    <thead>
+                        <tr>
+                            <th class="ac">@resources.Administracion.Codigo</th>
+                            <th class="al" >@resources.Administracion.Descripcion</th>
+                            <th class="ac">@resources.Administracion.Vigente</th>
+                            <th class="ac">@resources.GlobalResources.TH_Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div id="divAddRow" style="min-height:300px"></div>
+
+        </fieldset>
+
+    </div>
+</div>
+<div class="clearfix"></div>
+

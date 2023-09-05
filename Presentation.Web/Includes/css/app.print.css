@@ -1,0 +1,18 @@
+﻿.alert-primary{
+    display: none;
+}
+
+#footer {
+    width: 100%;
+}
+
+.btn-default, .counter{
+    display: none !important;
+}
+
+input[type="radio"]:checked+label{ 
+    font-weight: bold; 
+
+} 
+
+/* $(".custom-radio :checked").next(".custom-control-label").addClass("bold") */

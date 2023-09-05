@@ -1,0 +1,69 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mensaje 403</title>
+    <link rel="stylesheet" href="../../Includes/message/estilo.css" />
+
+    <link rel="shortcut icon" href="../../Includes/message/img/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" src="//normalize-css.googlecode.com/svn/trunk/normalize.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+
+    <script type="text/javascript">
+        var d = new Date();
+        var datetime = d.getDate() + "/" + (d.getMonth() + 1) + "/" + d.getFullYear();
+        datetime += ", " + d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds();
+
+        $(function () {
+            $.post("/ES/Json/GetServerTime", function (data) {
+                $("#date").html(data.HoraException);
+            }).fail(function () {
+                $("#date").html(datetime + " local");
+            });
+        });
+    </script>
+
+
+</head>
+
+<body>
+
+    <div id="contenedor">
+
+        <a href="#"><img id="logo" src="../../Includes/css/images/logos/principal.png" alt="" /></a>
+
+        <span id="error">Mensaje (403)</span>
+
+        <div class="clear"></div>
+
+        <img id="flecha" src="../../Includes/message/img/flecha.png" alt="" />
+        <div class="clear"></div>
+        <span id="texto">En este momento no podemos atenderlo, por favor intente más tarde.</span>
+
+        <div id="date"></div>
+
+    </div>
+
+
+    <div id="pie">
+
+        <h2>Le sugerimos nuestros canales de atención: </h2>
+
+        <ul>
+            <li id="f">
+                <span>Mesa Central</span>
+                Teléfono: (56 2) 2 887 0400 <br />
+            </li>
+            <li id="o" style="margin: 0 !important">
+                <span>Dirección</span>
+                Carabineros de Chile, Nº 195.<br />
+            </li>
+        </ul>
+
+    </div>
+
+
+</body>
+</html>

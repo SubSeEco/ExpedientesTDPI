@@ -1,0 +1,146 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{CDCCC469-95F6-4B55-8544-BFEBC4BF6362}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Application.DTO</RootNamespace>
+    <AssemblyName>Application.DTO</AssemblyName>
+    <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Infrastructure.Utils">
+      <HintPath>..\packages\Infrastructure.Utils.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AD\UserAD.cs" />
+    <Compile Include="AD\Credential.cs" />
+    <Compile Include="AD\GrupoAD.cs" />
+    <Compile Include="AD\GrupoADEntity.cs" />
+    <Compile Include="Commons.cs" />
+    <Compile Include="Grids.cs" />
+    <Compile Include="Login\Login.cs" />
+    <Compile Include="Login\StatusLoginEnum.cs" />
+    <Compile Include="Mantenedor\MantenedorGenerico.cs" />
+    <Compile Include="Models\AsocCausaDocumento.cs" />
+    <Compile Include="Models\AsocDocSistemaFirma.cs" />
+    <Compile Include="Models\AsocDocumentoSistemaEstadoDiario.cs" />
+    <Compile Include="Models\AsocDocumentoSistemaTabla.cs" />
+    <Compile Include="Models\AsocEscritoDocto.cs" />
+    <Compile Include="Models\AsocExpedienteOpcion.cs" />
+    <Compile Include="Models\AsocExpeFirma.cs" />
+    <Compile Include="Models\AsocFirmaDocto.cs" />
+    <Compile Include="Models\AsocTipoCausaPerfil.cs" />
+    <Compile Include="Models\AsocTipoDocumentoAdjunto.cs" />
+    <Compile Include="Models\AsocTipoNotificacionPerfil.cs" />
+    <Compile Include="Models\AsocTipoTramiteOpciones.cs" />
+    <Compile Include="Models\AsocUsuarioPerfil.cs" />
+    <Compile Include="Models\Causa.cs" />
+    <Compile Include="Models\Commons.cs" />
+    <Compile Include="Models\ConfigurarDescripcion.cs" />
+    <Compile Include="Models\ConfTipoCausa.cs" />
+    <Compile Include="Models\Derivacion.cs" />
+    <Compile Include="Models\DetalleEstadoDiario.cs" />
+    <Compile Include="Models\DetalleTabla.cs" />
+    <Compile Include="Models\DocumentoAdjunto.cs" />
+    <Compile Include="Models\DocumentoCausa.cs" />
+    <Compile Include="Models\DocumentoSistema.cs" />
+    <Compile Include="Models\DocumentoTmp.cs" />
+    <Compile Include="Models\EstadoCausa.cs" />
+    <Compile Include="Models\EstadoDiario.cs" />
+    <Compile Include="Models\EstadosAplica.cs" />
+    <Compile Include="Models\EstadoTabla.cs" />
+    <Compile Include="Models\Expediente.cs" />
+    <Compile Include="Models\FamiliasMimeType.cs" />
+    <Compile Include="Models\Feriado.cs" />
+    <Compile Include="Models\Firma.cs" />
+    <Compile Include="Models\Folio.cs" />
+    <Compile Include="Models\History.cs" />
+    <Compile Include="Models\LogCausa.cs" />
+    <Compile Include="Models\LogSistema.cs" />
+    <Compile Include="Models\MaximoTamanoArchivo.cs" />
+    <Compile Include="Models\OpcionesTramite.cs" />
+    <Compile Include="Models\Pais.cs" />
+    <Compile Include="Models\Parte.cs" />
+    <Compile Include="Models\Perfil.cs" />
+    <Compile Include="Models\Sala.cs" />
+    <Compile Include="Models\SP_Causas_Result.cs" />
+    <Compile Include="Models\Tabla.cs" />
+    <Compile Include="Models\TipoCanal.cs" />
+    <Compile Include="Models\TipoCausa.cs" />
+    <Compile Include="Models\TipoContencioso.cs" />
+    <Compile Include="Models\TipoDocumento.cs" />
+    <Compile Include="Models\TipoEstadoDiario.cs" />
+    <Compile Include="Models\TipoFormato.cs" />
+    <Compile Include="Models\TipoGenero.cs" />
+    <Compile Include="Models\TipoNotificacion.cs" />
+    <Compile Include="Models\TipoParte.cs" />
+    <Compile Include="Models\TipoTabla.cs" />
+    <Compile Include="Models\TipoTramite.cs" />
+    <Compile Include="Models\TipoVentana.cs" />
+    <Compile Include="Models\Usuario.cs" />
+    <Compile Include="Models\Ventana.cs" />
+    <Compile Include="Models\VersionEncript.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SSO\Identidad.cs" />
+    <Compile Include="SSO\TokenUsuario.cs" />
+    <Compile Include="Users.cs" />
+    <Compile Include="Utils\TheHash.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Domain.Infraestructure\Domain.Infrastructure.csproj">
+      <Project>{361A79A9-670E-4391-8225-702209B1795D}</Project>
+      <Name>Domain.Infrastructure</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Infraestructure.Logging\Infrastructure.Logging.csproj">
+      <Project>{489C1A89-394B-4120-8E9B-CE8CB0289B35}</Project>
+      <Name>Infrastructure.Logging</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Api\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

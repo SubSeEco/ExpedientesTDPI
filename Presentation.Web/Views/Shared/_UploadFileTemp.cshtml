@@ -1,0 +1,173 @@
+﻿@using Enums = Domain.Infrastructure;
+@using resources = Infrastructure.Resources;
+
+@{
+    var FormatosPermitidos = ViewBag.FormatosPermitidos as IList<Application.DTO.Models.AsocTipoDocumentoAdjunto>;
+    var TipoDocumentoEnum = (int)ViewBag.TipoDocumentoEnum;
+
+    int TipoDocumentoTemp = (int)Enums.TipoDocumento.Temporal;
+}
+
+<script>
+    ; (function ($) {
+        $(function () {
+
+            fixFakePath("archivo");
+
+            activateFormUploadTemp("UploadFileFrm",
+                function () {
+
+                    if (xJSONResult.Error == 1) {
+                        showBlockUIError(xJSONResult.Desc);
+                        return false;
+                    }
+
+                    AppendItemInTable(xJSONResult, 'tableAdjuntos');
+
+                    return true;
+                },
+                function () {
+                    var _DescArchivo = $.trim($("#DescArchivo").val());
+                    if (_DescArchivo == "") {
+                        showBlockUIError("Debe indicar el contenido del archivo");
+                        return false;
+                    }
+
+                    var _file = $("input[name='file']").val();
+                    if (_file == "") {
+                        showBlockUIError(Labels._messageErrorSelect);
+                        return false;
+                    }
+                })
+
+        });
+    })(jQuery);
+
+
+    function AppendItemInTable(obj, tableName) {
+
+        var tr = $("#tampleteDescarga tbody").html();
+
+        tr = tr.replace("{docid}", obj.DocumentoTmpID);
+        tr = tr.replace("{docDownload}", obj.DocumentoTmpID);
+        tr = tr.replace("{docDelete}", obj.DocumentoTmpID);
+        tr = tr.replace("{nombreDoc}", obj.nombreDoc);
+        tr = tr.replace("{nombreDoc2}", obj.nombreDoc);
+        tr = tr.replace("{descDoc}", obj.descDoc);
+        tr = tr.replace("{fechaDoc}", obj.fechaDoc);
+        tr = tr.replace("{cssIcon}", obj.cssIcon);
+        tr = tr.replace("{nombreDescarga}", obj.nombreDoc);
+        tr = tr.replace("{downloadID}", obj.DocumentoTmpID);
+
+        $("#" + tableName + " tbody").append(tr);
+        enumerateItems('enumerate');
+        callToolTipsGrid(tableName);
+
+        $('#UploadFileFrm').reset();
+        $('#UploadFileFrm .custom-file-label').empty();
+    }
+
+    function ParseDocsAdjuntos(form) {
+
+        $("#UploadFileFrm .docTmpID").each(function () {
+            var txt = $(this).data("docid");
+            var obj = "<input type='hidden' name='DocTmpID' value='" + txt + "' />";
+            $("#" + form).append(obj);
+        });
+
+        $("#UploadFileFrm .nombreDoc").each(function () {
+            var txt = $(this).text();
+            var obj = "<input type='hidden' name='DocTmpNombre' value='" + txt + "' />";
+            $("#" + form).append(obj);
+        });
+
+        $("#UploadFileFrm .descDoc").each(function () {
+            var txt = $(this).text();
+            var obj = "<input type='hidden' name='DocTmpDesc' value='" + txt + "' />";
+            $("#" + form).append(obj);
+        });
+
+    }
+
+</script>
+
+<form id="UploadFileFrm" method="post" action="@Url.Action("UploadFileTemp", "Uploader")" style="margin-bottom:0;">
+    @Html.AntiForgeryToken()
+
+    @*@Html.Hidden("SolicitudID", Model.SolicitudID)*@
+
+    <input type="hidden" id="_TipoDocumentoID" name="TipoDocumentoID" value="@TipoDocumentoEnum" />
+    <fieldset class="x-fieldset" style="" id="fsDocumentosAdjuntos">
+        <legend class="celeste bold">Documentos adjuntos</legend>
+
+        <div class="alert alert-info" role="alert">
+            Al seleccionar un archivo deberá indicar el contenido del mismo en el campo de texto
+        </div>
+
+        <div class="form-group row" id="divDescArchivo">
+            <label for="DescArchivo" id="" class="col-sm-4 col-form-label">Indique el contenido del archivo</label>
+            <div class="col-sm-8">
+                <input type="text" id="DescArchivo" name="DescArchivo" class="form-control notBlock" value="" />
+            </div>
+        </div>
+
+        <div class="input-group">
+            <div class="custom-file">
+                <input type="file" class="custom-file-input notBlock" id="archivo" name="file">
+                <label class="custom-file-label" for="file"
+                       data-browse="@resources.UploadFiles.FileInput_changeText"
+                       aria-describedby="inputGroupFileAddon">@resources.UploadFiles.FileInput_inputText</label>
+                </div>
+                <div class="input-group-append">
+                    <button class="btn btn-info btn-file" onclick='$("#UploadFileFrm").submit();' type="button" id="inputGroupFileAddon">
+                        <i class="x-icon x-icon-upload2 icon-in-upload"></i> @resources.UploadFiles.lblSubirArchivo
+                    </button>
+                </div>
+            </div>
+            <small id="" class="form-text text-muted ac" style="margin-bottom: 10px;">
+                @resources.GlobalResources.ExtensionesPermitidas: @Html.Raw(Html.GetExtensionesPermitidas(FormatosPermitidos, IncluyeTamanio: true))
+            </small>
+
+            <div class="table-responsive">
+                <table style="" class="@Html.GetBaseTableCSS() " id="tableAdjuntos">
+                    <thead>
+                        <tr>
+                            <th class="ac" style="">@resources.GlobalResources.TH_Number</th>
+                            <th class="ac" style="">Nombre Documento</th>
+                            <th class="ac" style="">Descripción</th>
+                            <th class="ac" style="">Fecha Carga</th>
+                            <th class="ac" style="">@resources.GlobalResources.TH_Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+        </fieldset>
+    </form>
+
+
+    <table id="tampleteDescarga" style="display:none">
+        <tbody>
+            <tr>
+                <td class="ac docTmpID" data-docid="{docid}"><span class="enumerate">1</span></td>
+                <td class="nombreDoc">{nombreDoc}</td>
+                <td class="descDoc">{descDoc}</td>
+                <td class="ac">{fechaDoc}</td>
+                <td class="ac">
+
+                    <a style="margin-right:2px" href="javascript:void(0)"
+                       onclick="getDownloadFile({downloadID}, 0, '{nombreDoc2}', @TipoDocumentoTemp)"
+                       class="x-title-t" title="@resources.GlobalResources.BtnDescargar">
+                        <i class="x-icon {cssIcon}" style="cursor: pointer;"></i>
+                    </a>
+
+                    <a href="javascript:void(0)"
+                       onclick='getDeleteFileTemp(@TipoDocumentoTemp, {docDelete}, 0, "", 0, this)'
+                       class="x-title-t" title="@resources.GlobalResources.BtnEliminar">
+                        <i class="x-icon x-icon-delete" style="cursor: pointer;"></i>
+                    </a>
+                </td>
+            </tr>
+        </tbody>
+    </table>

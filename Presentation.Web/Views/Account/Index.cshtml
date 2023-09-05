@@ -1,0 +1,131 @@
+﻿@using WebConfig = Domain.Infrastructure.WebConfigValues;
+@using resources = Infrastructure.Resources;
+@using Enums = Domain.Infrastructure;
+
+@{
+    Layout = null;
+    string UrlLogin = Url.Action("LoginAnonymous", "Account");
+}
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <!--meta name="viewport" content="width=device-width" /-->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Acceso Usuarios Externos TDPI</title>
+
+    <link rel="shortcut icon" href="~/favicon.ico" />
+
+    <script src="~/Includes/js/jquery-3.4.1.min.js"></script>
+    <link rel="stylesheet" href="~/Includes/css/custom.min.css">
+    <script src="~/Includes/bootstrap-4.3.1/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="~/Includes/jquery-ui-1.12.1/jquery-ui.min.css">
+    <script src="~/Includes/jquery-ui-1.12.1/jquery-ui.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="~/Includes/datatables/datatables.min.css" />
+    <script type="text/javascript" src="~/Includes/datatables/datatables.min.js"></script>
+
+    <script type="text/javascript">
+
+        var Config = {
+            SeparadorDecimales: ",",
+            IsBlock: true,
+            SeparadorMiles: ".",
+            HomeSistemas: "@WebConfig.Url_MenuSistemas",
+            IntMaxValue: parseInt("@Int32.MaxValue"),
+            IntMinValue: parseInt("@Int32.MinValue"),
+            SessionRefresh: (180 * 1000) //milisegundos
+        }
+
+
+    </script>
+
+    <script src="~/Includes/js/plugins-4.0.js"></script>
+    <script src="~/Includes/js/utils.js"></script>
+    <script src="~/Includes/js/app-4.0.js"></script>
+
+    <link rel="stylesheet" href="~/Includes/css/app-4.0.css">
+    <link rel="stylesheet" href="~/Includes/css/plugins-4.0.css">
+    <link rel="stylesheet" href="~/Includes/css/fontawesome-5.9.0/css/all.min.css">
+
+    <link rel="stylesheet" href="~/Includes/css/login.public.css">
+
+    <script type="text/javascript">
+
+            ; (function ($) {
+                $(function () {
+
+
+                });
+            })(jQuery);
+
+            function GetLoginCU() {
+
+                blockPageUI();
+
+                window.location.href = "https://api.claveunica.gob.cl/api/v1/accounts/app/logout";
+                setTimeout(function () {
+
+                    var Url = "@Url.Action("LoginCU", "Account")";
+                    LinkRedirect(Url);
+
+                }, 1000);
+            }
+
+    </script>
+
+</head>
+
+<body>
+
+    <div class="limiter">
+        <div class="container-login100">
+            <div class="wrap-login100">
+                <div class="logo-login">
+                    <img src="~/Includes/css/images/logos/principal.png" alt="" />
+                </div>
+
+                <fieldset class="x-fieldset ma" style="width: 90%">
+                    <legend></legend>
+                    <p class="ac" style="">Para ingresar al sitio de trámites de TDPI puede hacerlo con ClaveÚnica</p>
+                    <div class="botones-login-user">
+                        <button class="boton-login-user boton-clave-unica" onclick="GetLoginCU()" id="">
+                            <img style="height: 22px" src="~/Includes/css/images/claveunica.png"> Clave única
+                        </button>
+                        <p class="db " style="margin-top: 25px;margin-bottom: 5px;">
+                            ¿Cómo obtener tu <a href="https://claveunica.gob.cl" target="_blank" style="text-decoration:underline">ClaveÚnica</a>?
+                        </p>
+                    </div>
+
+                </fieldset>
+
+                <fieldset class="x-fieldset ma" style="width: 90%; margin-top: 15px !important">
+                    <legend class="celeste bold">No deseo iniciar sesión</legend>
+
+                    <div class="botones-login-user" style="margin-top:5px; margin-bottom: 20px">
+                        <button class="boton-login-user boton-login" id="" onclick="$('#frmLogin').submit()">Ingresar</button>
+                    </div>
+
+                </fieldset>
+
+
+            </div>
+        </div>
+    </div>
+
+    <div class="abs" style="position: absolute;top:22px; left: 7px;font-size:13px;color: #787676;">
+        <i class="x-icon x-icon-gear rel" style="top:2px"></i> @resources.GlobalResources.TituloSistema - @Html.GetVersion() / Acceso Usuarios Externos
+    </div>
+
+    <form id="frmLogin" class="" style="margin: 0" autocomplete="off" method="post" action="@UrlLogin">
+        @Html.AntiForgeryToken()
+
+    </form>
+</body>
+</html>

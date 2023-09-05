@@ -1,0 +1,107 @@
+﻿@using resources = Infrastructure.Resources;
+@using Enums = Domain.Infrastructure;
+
+@{
+    bool IsView = (bool)ViewBag.IsView;
+    var TipoParte = (Enums.TipoParte)ViewBag.TipoParte;
+    var TipoParteID = (int)TipoParte;
+    var Lista = ViewBag.Lista as IList<Application.DTO.Models.Parte>;
+    int CausaID = (int)ViewBag.CausaID;
+
+    int count = 1;
+
+
+    //switch (TipoParte)
+    //{
+    //    case Enums.TipoParte.Recurrente:
+    //        break;
+    //    case Enums.TipoParte.Recurrido:
+    //        break;
+    //    case Enums.TipoParte.Apelante:
+    //        break;
+    //    case Enums.TipoParte.Apelado:
+    //        break;
+    //    case Enums.TipoParte.Solicitante:
+    //        break;
+    //    default:
+    //        break;
+    //}
+}
+
+<script>
+    ; (function ($) {
+        $(function () {
+
+        });
+    })(jQuery);
+
+</script>
+
+
+<fieldset class="x-fieldset">
+    <legend class="celeste bold">@TipoParte.ToString()</legend>
+
+    <div class="row">
+        <div class="col text-right" id="btnAdd_@TipoParte.ToString()">
+            <button type="button" id="" class="btn btn-default" onclick="GetParte(0, '@TipoParte.ToString()', @CausaID, @TipoParteID)">
+                <i class="x-icon x-icon-mas3 icon-in-button"></i> Agregar @TipoParte.ToString()
+            </button>
+        </div>
+    </div>
+
+
+
+    <table class="table table-striped table-sm table-bordered table-hover x-table allW" id="" style="margin-top:10px">
+        <thead>
+            <tr>
+                <th class="ac" style="">@resources.GlobalResources.TH_Number</th>
+                <th class="ac" style="text-align: left !important">RUT<br />Nombre</th>
+                <th class="ac" style="">País</th>
+                <th class="ac" style="text-align: left !important">RUT<br />Representante</th>
+                <th class="ac" style="">Estudio Jurídico</th>
+                <th class="ac" style="text-align: left !important">Abogado<br />Email</th>
+                <th class="ac" style="">@resources.GlobalResources.TH_Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Lista.Count == 0)
+            {
+                <tr>
+                    <td colspan="7" class="ac">&nbsp;&nbsp;@resources.GlobalResources.SinInformacion</td>
+                </tr>
+            }
+            else
+            {
+                foreach (var item in Lista)
+                {
+                    <tr>
+                        <td class="ac">@count</td>
+                        <td>@item.GetRutFormat(item.Rut)<span class="azul db">@item.Nombre</span></td>
+                        <td>@item.GetPais()</td>
+                        <td>@item.GetRutFormat(item.RutRepresentante)<span class="azul db">@item.NombreRepresentante</span></td>
+                        <td>@item.NombreEstudioJuridico</td>
+                        <td>
+                            <span class="azul db">@item.NombreAbogado</span>
+                            <span class="amarillo db">@item.EmailAbogado</span>
+                        </td>
+                        <td class="ac">
+                            @if (!IsView)
+                            {
+                                <a class='x-title-l' style=''
+                                   onclick="GetParte(@item.ParteID, '@TipoParte.ToString()', @CausaID, @TipoParteID)"
+                                   href='javascript:void(0);'
+                                   title='@resources.GlobalResources.Editar'><i class='x-icon x-icon-edit'></i></a>
+                            }
+                        </td>
+
+                    </tr>
+                    count++;
+                }
+            }
+
+            
+        </tbody>
+    </table>
+
+
+</fieldset>

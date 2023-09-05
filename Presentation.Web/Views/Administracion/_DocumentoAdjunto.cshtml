@@ -1,0 +1,96 @@
+﻿@model Application.DTO.Models.DocumentoAdjunto
+
+@using resources = Infrastructure.Resources;
+@using Enums = Domain.Infrastructure;
+
+@{
+    bool isNew = (Model.DocumentoAdjuntoID == 0);
+
+    var AsocTipoDocumentoAdjunto = ViewBag.AsocTipoDocumentoAdjunto as Application.DTO.Models.AsocTipoDocumentoAdjunto;
+
+    var MaximoTamanoArchivo = ViewBag.MaximoTamanoArchivo as IList<Application.DTO.Models.MaximoTamanoArchivo>;
+    var TipoFormato = ViewBag.TipoFormato as IList<Application.DTO.Models.TipoFormato>;
+}
+
+<script type="text/javascript">
+    ; (function ($) {
+        $(function () {
+
+            TrimFormByID("#frmDocumentoAdjunto");
+
+            activateForm("btnSaveDocumentoAdjunto", "frmDocumentoAdjunto",
+                function () {
+
+
+                    return true;
+                },
+                function () {
+
+                    $("#TipoDocumentoID").trigger("change");
+
+                    CloseDialog();
+                    showBlockUI();
+                });
+
+        });
+    })(jQuery);
+</script>
+
+
+<div class="modal-body" style="padding-top: 6px;">
+
+    <form class="" id="frmDocumentoAdjunto" method="post" action="@Url.Action("SaveDocumentoAdjunto", "Administracion")">
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(x => x.DocumentoAdjuntoID)
+        @Html.HiddenFor(x => x.Hash)
+        @Html.HiddenFor(x => x.NombreArchivoFisico)
+        @Html.HiddenFor(x => x.VersionEncriptID)
+
+        @Html.Hidden("AsocTipoDocumentoAdjuntoID", AsocTipoDocumentoAdjunto.AsocTipoDocumentoAdjuntoID)
+        @Html.Hidden("TipoDocumentoID", AsocTipoDocumentoAdjunto.TipoDocumentoID)
+
+        <div class="form-group row">
+            <label for="Descripcion" class="col-sm-3 col-form-label">@resources.Administracion.Descripcion <span class="span-obligatorio">*</span></label>
+            <div class="col-sm-9">
+                @Html.TextBoxFor(x => x.Descripcion, new { @class = "form-control verificar", @maxlength = "100", @placeholder = "", @style = "" })
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <label for="TipoFormatoID" class="col-sm-3 col-form-label">Tipo formato permitido  <span class="span-obligatorio">*</span></label>
+            <div class="col-sm-9">
+                <select id="TipoFormatoID" name="TipoFormatoID" class="custom-select verificar" data-default="0">
+                    <option value="">@resources.GlobalResources.OptionInicial</option>
+                    @foreach (var item in TipoFormato.Where(x => x.Vigente))
+                    {
+                        string selected = (item.TipoFormatoID == Model.TipoFormatoID) ? "selected='selected'" : "";
+                        <option value="@item.TipoFormatoID" @selected>@item.Descripcion </option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <label for="MaximoTamanoArchivoID" class="col-sm-3 col-form-label">Tamaño máximo  <span class="span-obligatorio">*</span></label>
+            <div class="col-sm-9">
+                <select id="MaximoTamanoArchivoID" name="MaximoTamanoArchivoID" class="custom-select verificar" data-default="0">
+                    <option value="">@resources.GlobalResources.OptionInicial</option>
+                    @foreach (var item in MaximoTamanoArchivo)
+                    {
+                        string selected = (item.MaximoTamanoArchivoID == Model.MaximoTamanoArchivoID) ? "selected='selected'" : "";
+                        <option value="@item.MaximoTamanoArchivoID" @selected>@item.Tamano MB </option>
+                    }
+                </select>
+            </div>
+        </div>    
+
+    </form>
+</div>
+
+<div class="modal-footer">
+
+    <button id="btnSaveDocumentoAdjunto" class="btn btn-default" onclick="$('#frmDocumentoAdjunto').submit()" type="button"><i class="x-icon x-icon-save2 icon-in-button"></i> @resources.GlobalResources.BtnGuardar</button>
+    <i class="x-icon-loader hide"></i>
+    <button class="btn btn-default" data-dismiss="modal" type="button"><i class="x-icon x-icon-cancel2 icon-in-button"></i> @resources.GlobalResources.BtnCancelar</button>
+
+</div>

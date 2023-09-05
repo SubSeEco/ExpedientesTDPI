@@ -1,0 +1,44 @@
+﻿@using resources = Infrastructure.Resources;
+@using Enums = Domain.Infrastructure;
+
+@{
+
+    var Notificacion = ViewBag.Notificacion as Application.DTO.Models.TipoNotificacion;
+    var Perfiles = ViewBag.Perfiles as IList<Application.DTO.Models.Perfil>;
+}
+
+<fieldset class="x-fieldset">
+    <legend class="bold celeste">Perfiles Notificados</legend>
+    <table class="@Html.GetBaseTableCSS() " id="">
+        <thead>
+            <tr>
+                <th class="ac" style="">Perfil</th>
+                <th class="ac nw" style="width:10%">Aplica</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Perfiles)
+            {
+
+                bool Seleccionado = false;
+                string selected = "";
+
+                if (Notificacion.AsocTipoNotificacionPerfil != null)
+                {
+                    Seleccionado = Notificacion.AsocTipoNotificacionPerfil.Any(x => x.PerfilID == item.PerfilID);
+                    selected = Seleccionado ? "checked='checked'" : "";
+                }
+                
+
+                <tr>
+                    <td>@item.Descripcion</td>
+                    <td class="ac">
+                        <input type="checkbox" class="chekPerfil" name="PerfilIDs" value="@item.PerfilID" @selected />
+                        @*@Html.Raw(Html.MyCheckbox(Seleccionado, "PerfilIDs", 0, "", "small", 0, false, false))*@
+                    </td>
+                </tr>
+            }
+        </tbody>
+
+    </table>
+</fieldset>

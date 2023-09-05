@@ -1,0 +1,329 @@
+﻿@model Application.DTO.Models.AsocTipoTramiteOpciones
+
+@using resources = Infrastructure.Resources;
+@using Enums = Domain.Infrastructure;
+
+@{
+    bool isNew = (Model.AsocTipoTramiteOpcionesID == 0) ? true : false;
+
+    var EstadoCausa = ViewBag.EstadoCausaList as IList<Application.DTO.Models.EstadoCausa>;
+    var EstadosAplica = ViewBag.EstadosAplicaList as IList<Application.DTO.Models.EstadosAplica>;
+
+    bool IsActuacion = (Model.TipoTramiteID == (int)Enums.TipoTramite.Actuacion);
+    bool IsEscrito = (Model.TipoTramiteID == (int)Enums.TipoTramite.Escrito);
+    bool IsOficio = (Model.TipoTramiteID == (int)Enums.TipoTramite.Oficio);
+    bool IsResolucion = (Model.TipoTramiteID == (int)Enums.TipoTramite.Resolucion);
+
+    int cont = 0;
+}
+
+<script type="text/javascript">
+    var IsTieneDias = false;
+    ; (function ($) {
+        $(function () {
+
+            @if (isNew)
+            {
+                @:$("#NumeroFirmas").val("");
+                @:$("#PlazoDias").val("");
+                @:$("#Status1").val("");
+                @:$("#Status2").val("");
+            }
+
+            @if (!isNew && Model.NumeroFirmas == 0) {
+               @:$("#NumeroFirmas").val("");
+            }
+            @if (!isNew && Model.PlazoDias == 0) {
+                @:$("#PlazoDias").val("");
+            }
+            @if (!isNew && Model.Status1 == 0) {
+                @:$("#Status1").val("");
+            }
+            @if (!isNew && Model.Status2 == 0) {
+                @:$("#Status2").val("");
+            }
+
+
+
+            activateForm("btnSaveOpcionTipoTramite", "frmOpcionTipoTramite",
+                function () {
+
+                    if (!IsTieneDias) {
+                            $("#PlazoDias").val("0");
+                            $("#Status1").val("0");
+                            $("#Status2").val("0");
+                            $("#IsDiasHabiles").val("false");
+                            $("#IsInformaAtraso").val("false");
+                    }
+
+                    return true;
+                },
+                 function () {
+                    if (xResultJsonData.result == parseInt("@Convert.ToInt32(Enums.ReturnJson.YaExisteDescripcion)"))
+                    {
+                        showBlockUIError("Ya existe");
+                    }
+                    else
+                    {
+                        CloseDialog();
+                        $("#fsTipoTramite #TipoTramiteID").trigger("change");
+                    }
+            });
+
+            $("#TablaEstadosAplica .xCheckbox").bootstrapSwitch({
+                onSwitchChange: function (event, state) {
+                    event.preventDefault();
+                    blockPageUI()
+
+                    var _ObjID = $(this).attr("id");
+                    var _EstadoAplicaID = $(this).data("obj-id");
+                    var _EstadoCausaID = $(this).data("obj-section");
+                    var _AsocTipoTramiteOpcionesID = $("#frmOpcionTipoTramite #AsocTipoTramiteOpcionesID").val();
+                    var _TipoTramiteID = parseInt(@Model.TipoTramiteID);
+                    var _OpcionesTramiteID = parseInt(@Model.OpcionesTramiteID);
+
+                    var before = function () { };
+                    var callback = function () {
+                        blockPageUIclose()
+                        showBlockUI();
+                        if (state) {
+                            $("#frmOpcionTipoTramite #AsocTipoTramiteOpcionesID").val(xJSONResult.AsocTipoTramiteOpcionesID);
+                            $("#" + _ObjID).data("obj-id", xJSONResult.EstadosAplicaID);
+                        } else {
+                            $("#" + _ObjID).data("obj-id", 0);
+                        }
+                    };
+
+                    if (state) {
+                        var params = {
+                            __RequestVerificationToken: getVToken(),
+                            EstadoCausaID: _EstadoCausaID,
+                            AsocTipoTramiteOpcionesID: _AsocTipoTramiteOpcionesID,
+                            TipoTramiteID: _TipoTramiteID,
+                            OpcionesTramiteID: _OpcionesTramiteID
+                        };
+                        xJsonObj('@Url.Action("SaveEstadosAplica", "Administracion")', params, before, callback);
+                    } else {
+                        var params = {
+                            __RequestVerificationToken: getVToken(),
+                            EstadoAplicaID: _EstadoAplicaID
+                        };
+                        xJsonObj('@Url.Action("DeleteEstadosAplica", "Administracion")', params, before, callback);
+                    }
+                }
+            });
+
+            $("#frmOpcionTipoTramite .xCheckbox").bootstrapSwitch({
+                onSwitchChange: function (event, state) {
+                    var _ObjID = $(this).attr("id");
+
+                    if (_ObjID == "IsTieneDias") {
+                        if (state) {
+                            $("#divTieneDias").show();
+                            IsTieneDias = true;
+                        } else {
+                            $("#divTieneDias").hide();
+                            IsTieneDias = false;
+                        }
+                    }
+
+                    if (_ObjID == "IsInformaAtraso") {
+                        if (state) {
+                            $("#divDiasAlerta").show();
+                        } else {
+                            $("#divDiasAlerta").hide();
+                        }
+                    }
+
+                    if (_ObjID == "IsFinalizaIngreso") {
+                        if (state) {
+                            $("#divEstadoCausa").show();
+                        } else {
+                            $("#divEstadoCausa").hide();
+                        }
+                    }
+                }
+            });
+
+            @if (!isNew && Model.PlazoDias > 0 ) {
+                @:$("#IsTieneDias").bootstrapSwitch('state', true);
+                @:$("#divTieneDias").show();
+                @:IsTieneDias = true;
+            }
+
+            @if (!isNew && Model.IsInformaAtraso) {
+                @:$("#divDiasAlerta").show();
+                @:$("#IsInformaAtraso").bootstrapSwitch('state', true);
+                @:IsTieneDias = true;
+            }
+
+            @if (!isNew && Model.IsFinalizaIngreso) {
+                @:$("#divEstadoCausa").show();
+                @:$("#IsFinalizaIngreso").bootstrapSwitch('state', true);                
+            }
+
+
+
+        });
+    })(jQuery);
+</script>
+
+<div class="modal-body" style="padding-top: 6px;">
+    <form class="form-horizontal" id="frmOpcionTipoTramite" method="post" action="@Url.Action("SaveOpcionTipoTramite", "Administracion")">
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(x => x.AsocTipoTramiteOpcionesID)
+        @Html.HiddenFor(x => x.TipoTramiteID)
+        @Html.HiddenFor(x => x.OpcionesTramiteID)
+        @Html.HiddenFor(x => x.IsTabla)
+        @Html.Hidden("Vigente", true)
+
+        @*@if (IsEscrito)
+            {
+                <div class="form-group row">
+                    <label for="IsTabla" class="col-sm-3 col-form-label">En Tabla</label>
+                    <div class="col-sm-9">
+                        @Html.Raw(Html.MyCheckbox(Model.IsTabla, "IsTabla", 0, "", "small", 0, false, false, ""))
+                    </div>
+                </div>
+            }*@
+
+        <div class="form-group row">
+            <label for="IsTieneDias" class="col-sm-3 col-form-label">Tiene Días</label>
+            <div class="col-sm-9">
+                @Html.Raw(Html.MyCheckbox(false, "IsTieneDias", 0, "", "small", 0, false, false, ""))
+            </div>
+        </div>
+
+        <div id="divTieneDias" style="display:none;">
+            <div class="form-group row">
+                <label for="PlazoDias" class="col-sm-3 col-form-label">Plazo Días <span class="span-obligatorio">*</span></label>
+                <div class="col-sm-9">
+                    @Html.TextBoxFor(x => x.PlazoDias, new { @class = "form-control IsInteger verificar", @maxlength = "3", @placeholder = "", @style = "" })
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="IsDiasHabiles" class="col-sm-3 col-form-label">Días hábiles</label>
+                <div class="col-sm-9">
+                    @Html.Raw(Html.MyCheckbox(Model.IsDiasHabiles, "IsDiasHabiles", 0, "", "small", 0, false, false, ""))
+                </div>
+            </div>
+            <div class="form-group row" style="margin-top: 0px !important;">
+                <label for="IsInformaAtraso" class="col-sm-3 col-form-label">Informa Atraso</label>
+                <div class="col-sm-9">
+                    @Html.Raw(Html.MyCheckbox(Model.IsInformaAtraso, "IsInformaAtraso", 0, "", "small", 0, false, false, ""))
+                </div>
+            </div>
+
+            <div id="divDiasAlerta" style="display:none;">
+                <div class="form-group row">
+                    <label for="Status1" class="col-sm-3 col-form-label">Días para Alerta <i class='x-alerta-yellow cursorp x-title-t' style='padding-bottom: 19px;' title="Alarma visual: Semáforo amarillo"></i> <span class="span-obligatorio">*</span></label>
+                    <div class="col-sm-9">
+                        @Html.TextBoxFor(x => x.Status1, new { @class = "form-control IsInteger verificar", @maxlength = "3", @placeholder = "", @style = "" })
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label for="Status2" class="col-sm-3 col-form-label">Días para Reporte <i class='x-alerta-red cursorp x-title-t' style='padding-bottom: 19px;' title="Alarma visual: Semáforo rojo"></i> <span class="span-obligatorio">*</span></label>
+                    <div class="col-sm-9">
+                        @Html.TextBoxFor(x => x.Status2, new { @class = "form-control IsInteger verificar", @maxlength = "3", @placeholder = "", @style = "" })
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        @if (IsActuacion || IsResolucion)
+        {
+            <div class="form-group row" style="margin-top: 0px !important;">
+                <label for="IsPermiteFechaAnterior" class="col-sm-3 col-form-label">Permite Fecha Anterior</label>
+                <div class="col-sm-9">
+                    @Html.Raw(Html.MyCheckbox(Model.IsPermiteFechaAnterior, "IsPermiteFechaAnterior", 0, "", "small", 0, false, false, ""))
+                </div>
+            </div>
+        }
+
+        @if (IsResolucion)
+        {
+            <div class="form-group row">
+                <label for="NumeroFirmas" class="col-sm-3 col-form-label">N° Firmas</label>
+                <div class="col-sm-9">
+                    @Html.TextBoxFor(x => x.NumeroFirmas, new { @class = "form-control IsInteger", @maxlength = "3", @placeholder = "", @style = "" })
+                </div>
+            </div>
+        }
+
+        <div class="form-group row" style="margin-top: 0px !important;">
+            <label for="IsFinalizaIngreso" class="col-sm-3 col-form-label">Da lugar a estado</label>
+            <div class="col-sm-9">
+                @Html.Raw(Html.MyCheckbox(Model.IsFinalizaIngreso, "IsFinalizaIngreso", 0, "", "small", 0, false, false, ""))
+            </div>
+        </div>
+
+        <div id="divEstadoCausa" class="form-group row" style="margin-top: 0px !important; display:none;">
+            <label for="EstadoCausaID" class="col-sm-3 col-form-label">Estado Causa <span class="span-obligatorio">*</span></label>
+            <div class="col-sm-9">
+                <select id="EstadoCausaID" name="EstadoCausaID" class="custom-select verificar" data-default="">
+                    <option value="">@resources.GlobalResources.OptionInicial</option>
+                    @foreach (var item in EstadoCausa.OrderBy(x => x.Descripcion))
+                    {
+                        string selected = (item.EstadoCausaID == Model.EstadoCausaID) ? "selected='selected'" : "";
+                        <option value="@item.EstadoCausaID" @selected>@item.Descripcion</option>
+                    }
+                </select>
+            </div>
+        </div>
+    </form>
+
+
+
+        <fieldset id="" class="x-fieldset" style="">
+            <legend class="bold celeste">Estados donde se permite</legend>
+            <div class="col-md-12" style="margin-top:10px">
+                <div class="table-responsive">
+                    <table id="TablaEstadosAplica" class="@Html.GetBaseTableCSS() " style="width:100%;">
+                        <thead>
+                            <tr>
+                                <th>Estado Causa</th>
+                                <th>Aplica</th>
+                                @*<th>Siguiente</th>*@
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in EstadoCausa.OrderBy(x=> x.Descripcion))
+                        {
+                            Application.DTO.Models.EstadosAplica EstadoAplica = EstadosAplica.FirstOrDefault(x => x.EstadoCausaID == item.EstadoCausaID);
+                            bool IsEstadoNull = (EstadoAplica == null);
+                            bool IsAplica = (!IsEstadoNull) ? (EstadoAplica.EstadosAplicaID > 0) : false;
+                            bool IsSiguiente = (!IsEstadoNull) ? EstadoAplica.IsSiguiente : false;
+                            int EstadoAplicaID = (!IsEstadoNull) ? EstadoAplica.EstadosAplicaID : 0;
+                            cont++;
+
+                        <tr>
+                            <td>@item.Descripcion</td>
+                            <td class="ac">@Html.Raw(Html.MyCheckbox(IsAplica, "Aplica_" + cont, EstadoAplicaID, "", "mini", item.EstadoCausaID))</td>
+                            @*<td class="ac">@Html.Raw(Html.MyCheckbox(IsSiguiente, "Siguiente", EstadoAplicaID, "", "mini", 0, false, IsEstadoNull))</td>*@
+                        </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </fieldset>
+
+        
+
+       
+
+
+
+    
+    
+
+</div>
+
+
+<div class="modal-footer">
+    <button id="btnSaveOpcionTipoTramite" class="btn btn-default" onclick="$('#frmOpcionTipoTramite').submit()" type="button"><i class="x-icon x-icon-save2 icon-in-button"></i> @resources.GlobalResources.BtnGuardar</button>
+    <i class="x-icon-loader hide"></i>
+    <button class="btn btn-default" data-dismiss="modal" type="button"><i class="x-icon x-icon-cancel2 icon-in-button"></i> @resources.GlobalResources.BtnCancelar</button>
+</div>

@@ -1,0 +1,234 @@
+﻿@using resources = Infrastructure.Resources;
+@using Enums = Domain.Infrastructure;
+
+@{
+    string PageTitle = resources.Administracion.PlantillasEmail;
+    ViewBag.Title = PageTitle;
+
+    IList<Application.DTO.Models.TipoNotificacion> TipoNotificacion = ViewBag.TipoNotificacion;
+    var Perfiles = ViewBag.Perfiles as IList<Application.DTO.Models.Perfil>;
+
+}
+
+
+<script type="text/javascript">
+
+    ; (function ($) {
+        $(function () {
+
+            $("#Descripcion").val("");
+            $("#EmailID").val("");
+            $("#Vigente").val("False");
+
+            CKEDITOR.replace('Contenido', { height: 280 });
+
+            enableCheks();
+
+            var btnSave = $("#btnSaveAll");
+            var options = {
+                type: 'post',
+                iframe: iFrameGlobal,
+                success: function (data) {
+                    BtnInAction(btnSave, true, true);
+                    showBlockUI();
+
+                    if (data.Redirect == 1) SelfRedirect();
+
+                },
+                beforeSubmit: function (arr, $form, options) {
+                    BtnInAction(btnSave, false, true);
+                },
+                beforeSerialize: function ($form, options) {
+
+                    CKEDITOR.instances['Contenido'].updateElement();
+
+                    return validateForm($form);
+                }
+            };
+
+            $("#frmHelp").ajaxForm(options);
+
+        });
+    })(jQuery);
+
+    function enableCheks() {
+
+        $(".x-icon-checkOff").on("click", function () {
+
+            var isOn = $(this).hasClass("x-icon-checkOn");
+
+            if (!isOn) {
+
+                $("#itemVisible").addClass("x-icon-checkOn");
+                $("#Vigente").val("true");
+
+            } else {
+
+                $("#itemVisible").removeClass("x-icon-checkOn");
+                $("#Vigente").val("false");
+            }
+        });
+    }
+
+
+    function getDetalle(obj, valor) {
+
+        if (valor == "" || valor == "0") {
+
+            $("#Descripcion").val("");
+            $("#Asunto").val("");
+
+            $("#divDetalle").hide();
+            $("#divBotonera").hide();
+
+            var $divDet = $("#divDetallePerfiles");
+            $divDet.html("");
+
+            CKEDITOR.instances['Contenido'].setData("");
+
+            $("#itemVisible").removeClass("x-icon-checkOn");
+            return false;
+        }
+
+
+        $.ajax({
+            type: "POST", cache: false, url: "@Url.Action("GetDetalleTipoNotificacion", "Administracion")",
+            data: { __RequestVerificationToken: getVToken(), TipoNotificacionID: valor },
+            success: function (data) {
+
+                $("#divDetalle").show();
+                $("#divBotonera").show();
+                CKEDITOR.instances['Contenido'].setData(data.Mensaje);
+                $("#Asunto").val(data.Asunto);
+                $("#Descripcion").val(data.Descripcion);
+                $("#ConCopia").val(data.ConCopia)
+
+                var isOn = $("#itemVisible").hasClass("x-icon-checkOn");
+
+                if (data.Vigente) {
+                    if (!isOn) $("#itemVisible").trigger("click");
+                }
+                else {
+                    if (isOn) $("#itemVisible").trigger("click");
+                }
+
+            },
+            error: function (error) {
+
+                if (error.status == 403) {
+                    window.location.href = HomeSistemas;
+                    return false;
+                } else {
+
+                    xAlert({
+                        title: "Error",
+                        alert: "alert-error",
+                        html:"@resources.GlobalResources.HaOcurridoError: " + error.statusText,
+                        callback: function () {
+
+                        }
+                    });
+                }
+
+            }
+        });
+
+        var $divDet = $("#divDetallePerfiles");
+        $divDet.html("");
+
+        var before = function () { $divDet.html(divLoaderHtml()); };
+        var params = { __RequestVerificationToken: getVToken(), TipoNotificacionID: valor };
+
+        xAjaxHtml("@Url.Action("GetPerfilesNotificacion", "Administracion")", params, before, function ()
+        {
+            $divDet.html(DataHTM);
+        });
+    }
+
+
+
+
+
+</script>
+
+<div class="bodyContent">
+    <div class="cont">
+
+        <fieldset class="ma" style="width: 96%;">
+            <legend class="legendTitle">@PageTitle</legend>
+
+            @Html.Raw(Html.GetInfoVentana(Enums.TipoVentana.PlantillasEmail))
+
+            <form id="frmHelp" action="@Url.Action("SaveTipoNotificacion", "Administracion")" method="post">
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" name="Descripcion" id="Descripcion" value="" />
+                <input type="hidden" name="Vigente" id="Vigente" value="False" />
+
+                <div style="" class="form-group row">
+                    <label class="col-sm-3 col-form-label" for="TipoNotificacionID" style="">Tipo Notificación</label>
+                    <div class="col-sm-9">
+                        <select style="" name="TipoNotificacionID" id="TipoNotificacionID" class="custom-select verificar" onchange="getDetalle(this, this.value)">
+                            <option value="">@resources.GlobalResources.OptionInicial</option>
+                            @foreach (var item in TipoNotificacion.Where(x => x.Vigente).ToList())
+                            {
+                                <option value="@item.TipoNotificacionID">@item.Descripcion.Trim()</option>
+                            }
+                        </select>
+                        <i class="x-icon-loader rel hide" style="top: 1px"></i>
+                    </div>
+
+                </div>
+
+                <div id="divDetalle" style="display:none;">
+                    <div style="" class="form-group row">
+                        <label class="col-sm-3 col-form-label" for="Asunto">Asunto</label>
+                        <div class="col-sm-9">
+                            <input type="text" value="" id="Asunto" class="form-control" maxlength="1000" name="Asunto" style="" />
+                        </div>
+                    </div>
+
+                    <div style="" class="form-group row">
+                        <label class="col-sm-3 col-form-label" for="ConCopia">Con Copia</label>
+                        <div class="col-sm-9">
+                            <input type="text" value="" id="ConCopia" class="form-control" maxlength="300" name="ConCopia" style="" />
+                        </div>
+                    </div>
+
+                    <div style="" class="form-group row">
+                        <label class="col-sm-3 col-form-label" for="itemCodigo">Activo</label>
+                        <div class="col-sm-9">
+                            <a style="top: 6px" class="rel" href="javascript:void(0)"><i class="x-icon x-icon-checkOff" id="itemVisible" style="cursor: pointer;"></i></a>
+                        </div>
+                    </div>
+
+                    @*<div class="control-group" style="margin-bottom: 0px;">
+                        <label style="line-height: 30px;" for="itemCodigo" class="control-label">Activo</label>
+                        <a style="top: 6px" class="rel" href="javascript:void(0)"><i class="x-icon x-icon-checkOff" id="itemVisible" style="cursor: pointer;"></i></a>
+                    </div>*@
+
+                    <fieldset class="x-fieldset">
+                        <legend class="bold celeste">Contenido Email</legend>
+
+                        <textarea name="__Mensaje" class="form-control" maxlength="10000" id="Contenido"
+                                  style="" cols="3" rows="4"></textarea>
+
+                    </fieldset>
+
+                    <div id="divDetallePerfiles" ></div>
+                    
+                </div>
+
+            </form>
+
+            <div class="form-actions ac" id="divBotonera" style="display:none;">
+
+                <button class="btn btn-default" onclick="$('#frmHelp').submit()" id="btnSaveAll" type="button"><i class="x-icon x-icon-save2 icon-in-button"></i> @resources.GlobalResources.BtnGuardar</button>
+                <i class="x-icon-loader hide"></i>
+            </div>
+
+        </fieldset>
+
+    </div>
+</div>
+<div class="clearfix"></div>

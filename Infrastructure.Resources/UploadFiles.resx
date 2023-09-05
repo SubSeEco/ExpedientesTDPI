@@ -1,0 +1,255 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Adjunto" xml:space="preserve">
+    <value>Adjunto</value>
+  </data>
+  <data name="CargaArchivos" xml:space="preserve">
+    <value>Carga de Archivos</value>
+  </data>
+  <data name="CargaDeArchivo" xml:space="preserve">
+    <value>Carga de Archivo</value>
+  </data>
+  <data name="Cargando" xml:space="preserve">
+    <value>Cargando...</value>
+  </data>
+  <data name="CedulaIndentidad" xml:space="preserve">
+    <value>Cédula Indentidad</value>
+  </data>
+  <data name="CurriculumVitae" xml:space="preserve">
+    <value>Currículum Vitae</value>
+  </data>
+  <data name="dialogEliminar" xml:space="preserve">
+    <value>¿Confirma eliminar el Archivo?</value>
+  </data>
+  <data name="DocAntAca" xml:space="preserve">
+    <value>Documentos de antecedentes académicos</value>
+  </data>
+  <data name="Error_Descarga" xml:space="preserve">
+    <value>Descarga de Archivo</value>
+  </data>
+  <data name="Error_ElDocumento" xml:space="preserve">
+    <value>El documento</value>
+  </data>
+  <data name="Error_EnLaDescarga" xml:space="preserve">
+    <value>Error en la Descarga!</value>
+  </data>
+  <data name="Error_NoHaPosisoDescargarse" xml:space="preserve">
+    <value>no ha podido descargarse, puede que el archivo no exista o los parámetros de entrada sean incorrectos.</value>
+  </data>
+  <data name="Error_Title" xml:space="preserve">
+    <value>Registro de Consultor</value>
+  </data>
+  <data name="FileInput_buttonText" xml:space="preserve">
+    <value>Seleccionar</value>
+  </data>
+  <data name="FileInput_changeText" xml:space="preserve">
+    <value>Seleccionar</value>
+  </data>
+  <data name="FileInput_inputText" xml:space="preserve">
+    <value>Selección de archivo</value>
+  </data>
+  <data name="help_lblArchivo" xml:space="preserve">
+    <value>Carga de archivo</value>
+  </data>
+  <data name="help_OtrosArchivos" xml:space="preserve">
+    <value>Puede anexar otros archivos que usted considere relevantes.</value>
+  </data>
+  <data name="help_SubirArchivo" xml:space="preserve">
+    <value>Seleccione el archivo que necesita cargar a la plataforma y presione el botón “Subir Archivo”.</value>
+  </data>
+  <data name="lblArchivo" xml:space="preserve">
+    <value>Archivo</value>
+  </data>
+  <data name="lblDescripcion" xml:space="preserve">
+    <value>Descripción</value>
+  </data>
+  <data name="lblExtensiones" xml:space="preserve">
+    <value>Extensiones permitidas</value>
+  </data>
+  <data name="lblSubirArchivo" xml:space="preserve">
+    <value>Subir Archivo</value>
+  </data>
+  <data name="messageCargando" xml:space="preserve">
+    <value>Cargando</value>
+  </data>
+  <data name="messageErrorCarga" xml:space="preserve">
+    <value>Error en la carga</value>
+  </data>
+  <data name="messageErrorDescripcion" xml:space="preserve">
+    <value>Debe indicar una Descripción</value>
+  </data>
+  <data name="messageErrorSelect" xml:space="preserve">
+    <value>Debe seleccionar un archivo</value>
+  </data>
+  <data name="messageErrorTP" xml:space="preserve">
+    <value>Debe seleccionar un Tipo de Proceso</value>
+  </data>
+  <data name="messageErrorVacio" xml:space="preserve">
+    <value>El archivo está vacío</value>
+  </data>
+  <data name="messageSuccess" xml:space="preserve">
+    <value>El archivo ha sido eliminado</value>
+  </data>
+  <data name="msg_ContratoReemplazado" xml:space="preserve">
+    <value>Contrato reemplazado manualmente</value>
+  </data>
+  <data name="msg_ContratoReemplazadoManualmente" xml:space="preserve">
+    <value>Contrato reemplazado manualmente, posterior al envío al consultor</value>
+  </data>
+  <data name="msg_ErrorCargaArchivo" xml:space="preserve">
+    <value>Error en la carga del archivo</value>
+  </data>
+  <data name="msg_FormatoNoSoportado" xml:space="preserve">
+    <value>Formato de archivo no soportado.</value>
+  </data>
+  <data name="msg_MaximoCaracteres" xml:space="preserve">
+    <value>El nombre del archivo no debe superar los {0} caracteres.</value>
+  </data>
+  <data name="msg_NoAlmacenarArchivo" xml:space="preserve">
+    <value>No se logró almacenar el archivo.</value>
+  </data>
+  <data name="msg_NoSeGuardoElArchivo" xml:space="preserve">
+    <value>El archivo no se ha podido guardar en el directorio</value>
+  </data>
+  <data name="msg_ProblemasConElArchivo" xml:space="preserve">
+    <value>Problemas con el archivo, no se puede acceder al contenido, intente almarcenar el archivo con una versión mas reciente.</value>
+  </data>
+  <data name="msg_TamanioMaximo" xml:space="preserve">
+    <value>El archivo supera el tamaño máximo permitido.</value>
+  </data>
+  <data name="OtrosArchivos" xml:space="preserve">
+    <value>Otros Archivos</value>
+  </data>
+  <data name="PageTitle" xml:space="preserve">
+    <value>Subir Archivo</value>
+  </data>
+  <data name="ReemplazarArchivo" xml:space="preserve">
+    <value>Reemplazar Archivo</value>
+  </data>
+  <data name="msg_ArchivoYaFueCargado" xml:space="preserve">
+    <value>El archivo ya fue cargado anteriormente</value>
+  </data>
+  <data name="msg_NombreArchivoDemasiadoLargo" xml:space="preserve">
+    <value>Nombre de Archivo demasiado largo, intente con un nombre más corto.</value>
+  </data>
+  <data name="msg_NoSePudoProcesarDocumento" xml:space="preserve">
+    <value>Hubo un error, no fue posible procesar el documento.</value>
+  </data>
+</root>

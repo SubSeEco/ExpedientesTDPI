@@ -1,0 +1,261 @@
+﻿@using resources = Infrastructure.Resources;
+@using Enums = Domain.Infrastructure;
+
+@{
+    int TipoTramiteID = (int)ViewBag.TipoTramiteID;
+
+    var AsocTipoTramiteOpciones = ViewBag.AsocTipoTramiteOpcionesList as IList<Application.DTO.Models.AsocTipoTramiteOpciones>;
+    var OpcionesTramite = ViewBag.OpcionesTramiteList as IList<Application.DTO.Models.OpcionesTramite>;
+
+    bool IsEscrito = (TipoTramiteID == (int)Enums.TipoTramite.Escrito);
+
+    int _contOpciones = 0;
+
+}
+
+<script type="text/javascript">
+
+    ; (function ($) {
+        $(function () {
+            callToolTips();
+            
+            // DataTable
+            var localGridParams = {
+                "bSort": false,
+                "orderCellsTop": true,
+                "paging": false,
+                "ordering": false,
+                "search": true,
+            };
+            var allGridParams = $.extend({}, generalGridParams, localGridParams);
+            var table = $('#detalleCat').DataTable(allGridParams);
+
+            // búsqueda en grilla
+            $('#detalleCat thead').on('keyup', ".column_search", function () {
+                table
+                    .column($(this).parent().index())
+                    .search(this.value)
+                    .draw();
+            });
+            
+        });
+    })(jQuery);
+
+    function NewEditOpcionesTipoTramite(AsocTipoTramiteOpcionesID, OpcionesTramiteID, TipoTramiteID, txtOpcion, IsTabla) {
+        
+        var editNew = (AsocTipoTramiteOpcionesID > 0) ? "Editar" : "Agregar";
+
+        var opt = {
+            title: editNew + ": Opción " + txtOpcion,
+            url: "@Url.Action("NewEditOpcionesTipoTramite", "Administracion")",
+            params: {
+                __RequestVerificationToken: getVToken(),
+                AsocTipoTramiteOpcionesID: AsocTipoTramiteOpcionesID,
+                OpcionesTramiteID: OpcionesTramiteID,
+                TipoTramiteID: TipoTramiteID,
+                IsTabla: IsTabla
+            },
+            size: "modal-lg",
+            callback: function () {
+                
+            }
+        }
+
+        GetModalContent(opt);
+    }
+
+    function DeleteOpcionesTipoTramite(AsocTipoTramiteOpcionesID) {
+
+        var optBtn = {
+            title: "Deshabilitar",
+            msg1: "@resources.GlobalResources.ConfirmaEliminar",
+            msg2: "@resources.GlobalResources.RegistroEliminado",
+            url: "@Url.Action("DeleteOpcionTipoTramite", "Administracion")",
+            params: {
+                __RequestVerificationToken: getVToken(),
+                AsocTipoTramiteOpcionesID: AsocTipoTramiteOpcionesID
+            },
+            callback: function () {
+                $("#fsTipoTramite #TipoTramiteID").trigger("change");
+                showBlockUI();
+            },
+            alert: "alert-danger",
+            txtBtn1: "Sí",
+
+        }
+
+        xDialogConfirmAction(optBtn);
+    }
+
+
+</script>
+
+<div class="row" style="margin-bottom: 10px !important;display:none">
+    <div class="col text-right">
+        <button id="btnAgregar" type="button" class="btn btn-default"
+                onclick="GetDocumentoAdjunto(0,0)">
+            <i class="x-icon x-icon-mas3 icon-in-button"></i> @resources.GlobalResources.BtnAgregar Configuración
+        </button>
+    </div>
+</div>
+
+<div class="table-responsive">
+
+    <table class="@Html.GetBaseTableCSS() " id="detalleCat" style="width:100%;">
+        <thead>
+            <tr>
+                <th class="ac">#</th>                
+                <th class="ac "><br />Descripción <br /> <br /><input type="text" placeholder="Buscar por Descripción" class="form-control ac column_search" /></th>
+                <th class="ac" style="">Habilitado</th>
+                <th class="ac" style="width: 10%">@resources.GlobalResources.TH_Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (OpcionesTramite.Count > 0)
+            {
+                foreach (var item in OpcionesTramite.OrderBy(x=> x.Descripcion))
+                {
+                    _contOpciones++;
+
+                    if (IsEscrito)
+                    {
+                        #region Parametros
+                        var asocEnTablaSi = AsocTipoTramiteOpciones.FirstOrDefault(x => x.OpcionesTramiteID == item.OpcionesTramiteID && x.IsTabla);
+                        string vigenteEnTablaSi = "<i class='x-icon x-icon-check2'></i>";
+                        bool IsAsocEnTablaSiNull = (asocEnTablaSi == null);
+                        if (IsAsocEnTablaSiNull)
+                        {
+                            asocEnTablaSi = new Application.DTO.Models.AsocTipoTramiteOpciones();
+                            asocEnTablaSi.AsocTipoTramiteOpcionesID = 0;
+                            asocEnTablaSi.IsTabla = true;
+                            asocEnTablaSi.Vigente = false;
+                        }
+                        vigenteEnTablaSi = (asocEnTablaSi.Vigente) ? vigenteEnTablaSi : "";
+
+                        var asocEnTablaNo = AsocTipoTramiteOpciones.FirstOrDefault(x => x.OpcionesTramiteID == item.OpcionesTramiteID && !x.IsTabla);
+                        string vigenteEnTablaNo = "<i class='x-icon x-icon-accept6'></i>";
+                        bool IsAsocEnTablaNoNull = (asocEnTablaNo == null);
+
+                        if (IsAsocEnTablaNoNull)
+                        {
+                            asocEnTablaNo = new Application.DTO.Models.AsocTipoTramiteOpciones();
+                            asocEnTablaNo.AsocTipoTramiteOpcionesID = 0;
+                            asocEnTablaNo.IsTabla = true;
+                            asocEnTablaNo.Vigente = false;
+                        }
+                        vigenteEnTablaNo = (asocEnTablaNo.Vigente) ? vigenteEnTablaNo : "";
+                        #endregion
+
+                        <tr>
+                            <td class="ac">@_contOpciones</td>
+                            <td class="al">@item.Descripcion</td>
+                            <td class="ac">@Html.Raw(vigenteEnTablaSi + vigenteEnTablaNo)</td>
+                            <td class="ac">
+                                @if (!asocEnTablaSi.Vigente)
+                                {
+                                    <a class='x-title-t' style=''
+                                       href='javascript:void(0);'
+                                       onclick="NewEditOpcionesTipoTramite(@asocEnTablaSi.AsocTipoTramiteOpcionesID, @item.OpcionesTramiteID, @TipoTramiteID, '@item.Descripcion', 'true')" title='Habilitar En tabla: Si'>
+                                        <i class='x-icon x-icon-mas3'></i>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <a class='x-title-t' style=''
+                                       href='javascript:void(0);'
+                                       onclick="NewEditOpcionesTipoTramite(@asocEnTablaSi.AsocTipoTramiteOpcionesID, @item.OpcionesTramiteID, @TipoTramiteID, '@item.Descripcion', 'true')" title='Editar En tabla: Si'>
+                                        <i class='x-icon x-icon-edit'></i>
+                                    </a>
+                                    <a href="javascript:void(0)" style="margin-left: 3px"
+                                       onclick='DeleteOpcionesTipoTramite(@asocEnTablaSi.AsocTipoTramiteOpcionesID)'
+                                       class="x-title-t" title="Deshabilitar En tabla: Si">
+                                        <i class="x-icon x-icon-deshabilita3 rel" style="cursor: pointer;top:-1px"></i>
+                                    </a>
+                                }
+
+                                @if (!asocEnTablaNo.Vigente)
+                                {
+
+
+                                    <a class='x-title-t' style=''
+                                       href='javascript:void(0);'
+                                       onclick="NewEditOpcionesTipoTramite(@asocEnTablaNo.AsocTipoTramiteOpcionesID, @item.OpcionesTramiteID, @TipoTramiteID, '@item.Descripcion', 'false')" title='Habilitar En tabla: No'>
+                                        <i class='x-icon x-icon-mas3Gray'></i>
+                                    </a>
+                                }
+                                else
+                                {   
+                                    <a class='x-title-t' style=''
+                                       href='javascript:void(0);'
+                                       onclick="NewEditOpcionesTipoTramite(@asocEnTablaNo.AsocTipoTramiteOpcionesID, @item.OpcionesTramiteID, @TipoTramiteID, '@item.Descripcion', 'false')" title='Editar En tabla: No'>
+                                        <i class='x-icon x-icon-edit'></i>
+                                    </a>
+
+                                    <a href="javascript:void(0)" style="margin-left: 3px"
+                                       onclick='DeleteOpcionesTipoTramite(@asocEnTablaNo.AsocTipoTramiteOpcionesID)'
+                                       class="x-title-t" title="Deshabilitar En tabla: No">
+                                        <i class="x-icon x-icon-deshabilita3Gray rel" style="cursor: pointer;top:-1px"></i>
+                                    </a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        #region Parametros
+                        var asoc = AsocTipoTramiteOpciones.FirstOrDefault(x => x.OpcionesTramiteID == item.OpcionesTramiteID);
+                        string vigente = "<i class='x-icon x-icon-accept'></i>";
+                        bool IsAsocNull = (asoc == null);
+
+                        if (IsAsocNull)
+                        {
+                            asoc = new Application.DTO.Models.AsocTipoTramiteOpciones();
+                            asoc.AsocTipoTramiteOpcionesID = 0;
+                            asoc.Vigente = false;
+                        }
+
+                        vigente = (asoc.Vigente) ? vigente : "";
+                        #endregion
+
+                        <tr>
+                            <td class="ac">@_contOpciones</td>
+                            <td>@item.Descripcion</td>
+                            <td class="ac">@Html.Raw(vigente)</td>
+                            <td class="ac">
+                                @if (!asoc.Vigente)
+                                 {
+                                    <a class='x-title-t' style=''
+                                       href='javascript:void(0);'
+                                       onclick="NewEditOpcionesTipoTramite(@asoc.AsocTipoTramiteOpcionesID, @item.OpcionesTramiteID, @TipoTramiteID, '@item.Descripcion', 'false')" title='Habilitar'>
+                                        <i class='x-icon x-icon-mas3'></i>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <a class='x-title-t' style=''
+                                       href='javascript:void(0);'
+                                       onclick="NewEditOpcionesTipoTramite(@asoc.AsocTipoTramiteOpcionesID, @item.OpcionesTramiteID, @TipoTramiteID, '@item.Descripcion', 'false')" title='Editar'>
+                                        <i class='x-icon x-icon-edit'></i>
+                                    </a>
+                                    <a href="javascript:void(0)" style="margin-left: 3px"
+                                       onclick='DeleteOpcionesTipoTramite(@asoc.AsocTipoTramiteOpcionesID)'
+                                       class="x-title-t" title="Deshabilitar">
+                                        <i class="x-icon x-icon-deshabilita3 rel" style="cursor: pointer;top:-1px"></i>
+                                    </a>
+                                }
+                               
+                            </td>
+                        </tr>
+                    }                    
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="4">@resources.GlobalResources.GridSinResultados</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+</div>

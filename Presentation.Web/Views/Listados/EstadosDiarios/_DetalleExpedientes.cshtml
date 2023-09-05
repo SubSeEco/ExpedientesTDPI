@@ -1,0 +1,175 @@
+﻿@model Application.DTO.Models.EstadoDiario
+
+@using Enums = Domain.Infrastructure;
+@using resources = Infrastructure.Resources;
+
+@{
+    int count = 1;
+    string title = string.Format("Estado Diario: {0} ", Model.Fecha.ToString("dd-MM-yyyy"));
+    var Causas = ViewBag.Causas as IList<Application.DTO.Models.Causa>;
+}
+
+
+<h4>@title</h4>
+
+<script type="text/javascript">
+
+
+    ; (function ($) {
+        $(function () {
+
+            var localGridParams = {
+                fnDrawCallback: function () {
+                    callToolTipsGrid("grillaDetalleTablaED");
+                }
+            }
+
+            generalGridParams.paging = true;
+            generalGridParams.pageLength = parseInt("@Domain.Infrastructure.WebConfigValues.CantidadResultadosGrilla");
+
+            //var allGridParams = $.extend({}, localGridParams, generalGridParams);
+           // var oTableGrid2 = $('#grillaDetalleTablaED').removeClass("hide").dataTable(allGridParams);
+
+        });
+    })(jQuery);
+
+
+    function GetDeleteDetalleEstadoDiario(obj, rol) {
+
+        var ids = $(obj).data("keys");
+
+        var optBtn = {
+            title: "Quitar Expediente: Rol " + rol,
+            msg1: "¿Confirma quitar Expediente(s) del Estado Diario?<br>Luego de quitar, se recomienda regenerar el PDF",
+            msg2: "Operación realizada",
+            url: "@Url.Action("ActionExpediente", "Expedientes")",
+            params: {
+                __RequestVerificationToken: getVToken(),
+                action: "@Enums.ActionSystem.QuitarVigenciaDetalleEstadoDiario",
+                Identidad: 0,
+                Keys: ids
+            },
+            callback: function () {
+                GetDetalleExpedientes(@Model.EstadoDiarioID);
+            },
+            alert: "alert-danger",
+            txtBtn1: "Sí"
+        }
+
+        xDialogConfirmAction(optBtn);
+    }
+
+
+    function GetAgregarDetalleEstadoDiario(EstadoDiarioID) {
+
+        var opt = {
+            title: "Agregar Expediente a Estado Diario",
+            url: "@Url.Action("GetAgregarDetalleEstadoDiario", "Listados")",
+            params:  {
+                __RequestVerificationToken: getVToken(),
+                EstadoDiarioID: EstadoDiarioID
+            },
+            size: "modal-xl",
+            callback: function () {
+
+            }
+        }
+
+        GetModalContent(opt);
+    }
+
+</script>
+
+
+@if (Model.IsBorrador() || Model.IsGenerado())
+{
+    <div class="row">
+        <div class="col text-right" id="">
+            <button type="button" id="" class="btn btn-default"
+                    onclick="GetAgregarDetalleEstadoDiario(@Model.EstadoDiarioID)">
+                <i class="x-icon x-icon-mas3 icon-in-button"></i> @resources.GlobalResources.Agregar Expediente
+            </button>
+        </div>
+    </div>
+}
+
+
+<div class="table-responsive-not" style="margin-top:10px">
+    <table class="table table-striped table-sm table-bordered x-table table-hover allW" id="grillaDetalleTablaED">
+        <thead>
+            <tr>
+                <th class="ac" style="width:1%">@resources.GlobalResources.TH_Number</th>
+                <th class="ac nw" style="">N° Rol TDPI</th>
+                <th class="ac " style="">Fecha</th>
+                <th class="ac" style="">@resources.Expediente.lblDenominacion</th>
+                <th class="ac" style="text-align: left !important">Apelante<br />Recurrente<br />Solicitante</th>
+                <th class="ac" style="text-align: left !important">Apelado<br />Recurrido</th>
+                <th class="ac" style="">N° de Solicitud</th>
+                <th class="ac" style="">N° de Resol.</th>
+                <th class="ac" style="">Texto resolución</th>
+                <th class="ac" style="width:5%">@resources.GlobalResources.TH_Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+
+            @foreach (var item in Causas)
+            {
+                //var expedientes = Model.Expediente.Where(x => x.Expediente.CausaID == CausaID && x.Vigente).ToList();
+                
+
+                bool IsList = false;
+                <tr id="">
+                    <td class="ac">@count</td>
+                    <td class="ac nw">@item.NumeroTicket</td>
+                    <td class="ac nw">@Html.DatetimeToString(item.FechaIngreso)</td>
+                    <td>@item.Denominacion</td>
+                    <td class="ac">@item.GetParteCausa(Enums.TipoParte.Apelante)</td>
+                    <td class="ac">@item.GetParteCausa(Enums.TipoParte.Apelado)</td>
+                    <td>@item.Numero</td>
+                    <td class="ac">@item.Expediente.Count</td>
+                    <td>
+                        @if (IsList)
+                        {
+                            <ul class="list-group">
+                                @foreach (var e in item.Expediente)
+                                {
+                                    <li class="list-group-item">@e.Observacion</li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            foreach (var e in item.Expediente)
+                            {
+                                <p class="db" style="margin-bottom: 10px;" >@e.Observacion</p>
+                            }
+                        }
+                    </td>
+                    <td class="ac">
+                        @if (item.Expediente.Count > 0 && (Model.IsBorrador() || Model.IsGenerado()))
+                        {
+                            List<int> ids = new List<int>();
+                            foreach (var d in item.Expediente)
+                            {
+                                var detalle = Model.DetalleEstadoDiario.FirstOrDefault(x => x.ExpedienteID == d.ExpedienteID && x.Vigente);
+                                if (detalle != null)
+                                {
+                                    ids.Add(detalle.DetalleEstadoDiarioID);
+                                }
+                            }
+
+                            if (ids.Count > 0)
+                            {
+                                <a class='x-title-t getDialog' style='' data-keys="@string.Join(",", ids)"
+                                   onclick="GetDeleteDetalleEstadoDiario(this, '@item.NumeroTicket.Trim()')"
+                                   href='javascript:void(0);'
+                                   title='@resources.GlobalResources.BtnEliminar'><i class='x-icon x-icon-delete'></i></a>
+                            }
+                        }
+                    </td>
+                </tr>
+                count++;
+            }
+        </tbody>
+    </table>
+</div>

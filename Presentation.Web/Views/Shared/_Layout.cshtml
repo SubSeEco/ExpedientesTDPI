@@ -1,0 +1,501 @@
+﻿@using WebConfig = Domain.Infrastructure.WebConfigValues;
+@using resources = Infrastructure.Resources;
+@using Enums = Domain.Infrastructure;
+
+@{
+    string tituloSistema = resources.GlobalResources.TituloSistema;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <!--meta name="viewport" content="width=device-width" /-->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>@ViewBag.Title</title>
+
+    <link rel="shortcut icon" href="~/favicon.ico" />
+
+    <script src="~/Includes/js/jquery-3.4.1.min.js"></script>
+
+    <link rel="stylesheet" href="~/Includes/jquery-ui-1.12.1/jquery-ui.min.css">
+    <script src="~/Includes/jquery-ui-1.12.1/jquery-ui.min.js"></script>
+
+    <script src="~/Includes/js/popper.min.js"></script>
+
+    @*<link rel="stylesheet" href="~/Includes/bootstrap-4.3.1/css/bootstrap.min.css">*@
+    <link rel="stylesheet" href="~/Includes/css/custom.min.css">
+    <script src="~/Includes/bootstrap-4.3.1/js/bootstrap.min.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="~/Includes/datatables/datatables.min.css" />
+    <script type="text/javascript" src="~/Includes/datatables/datatables.min.js"></script>
+
+
+    <script src="~/Includes/js/plugins-4.0.js"></script>
+    <script src="~/Includes/js/app-4.0.js"></script>
+    <script src="~/Includes/js/vendor/underscore-min.js" type="text/javascript"></script>
+    <script src="~/Includes/ckeditor/ckeditor.js" type="text/javascript"></script>
+    <script src="~/Includes/js/vue.js"></script>
+
+    <link rel="stylesheet" href="~/Includes/css/app-4.0.css">
+    <link rel="stylesheet" href="~/Includes/css/plugins-4.0.css">
+    <link rel="stylesheet" href="~/Includes/css/fontawesome-5.9.0/css/all.min.css">
+
+
+    <script type="text/javascript">
+
+
+
+        var ExceptionPages = {
+            Default: '/Exception',
+            ExceptionPage400: '/ES/Exception/Error400',
+            ExceptionPage403: '/ES/Exception/Error403',
+            ExceptionPage404: '/ES/Exception/Error404',
+            ExceptionPage500: '/ES/Exception/Error500'
+        }
+
+        var Labels = {
+            _buttonText: "@resources.UploadFiles.FileInput_buttonText",
+            _changeText: "@resources.UploadFiles.FileInput_changeText",
+            _inputText: "@resources.UploadFiles.FileInput_inputText",
+            _messageCargando: "@resources.UploadFiles.messageCargando",
+            _messageErrorDescripcion: "@resources.UploadFiles.messageErrorDescripcion",
+            _messageErrorSelect: "@resources.UploadFiles.messageErrorSelect",
+            _messageErrorCarga: "@resources.UploadFiles.messageErrorCarga",
+            _aceptar: "@resources.GlobalResources.BtnAceptar",
+            _cancelar: "@resources.GlobalResources.BtnCancelar",
+        }
+
+        var Config = {
+            SeparadorDecimales: ",",
+            IsBlock: true,
+            SeparadorMiles: ".",
+            HomeSistemas: "@WebConfig.Url_MenuSistemas",
+            IntMaxValue: parseInt("@Int32.MaxValue"),
+            IntMinValue: parseInt("@Int32.MinValue"),
+            SessionRefresh: (180 * 1000) //milisegundos
+        }
+
+        var generalGridParams = {
+            "paging":   true,
+            "ordering": true,
+            "search": false,
+            "responsive": true,
+            "info":     true,
+            "pageLength": parseInt("@WebConfig.CantidadResultadosGrilla"),
+            "sPaginationType": "full_numbers",
+            "language": {
+                "sProcessing": "Procesando...",
+                "sLengthMenu": "Mostrar _MENU_ registros",
+                "sZeroRecords": "No se encontraron resultados",
+                "sEmptyTable": "@resources.GlobalResources.GridSinResultados",
+                "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
+                "sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0 registros",
+                "sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
+                "sInfoPostFix": "",
+                "sSearch": "Buscar:",
+                "sUrl": "",
+                "sInfoThousands": ",",
+                "sLoadingRecords": "Cargando...",
+                "oPaginate": {
+                    "sFirst": "@resources.GlobalResources.GridIrPrimerRegistro",
+                    "sLast": "@resources.GlobalResources.GridUltimoRegistro",
+                    "sPrevious": "@resources.GlobalResources.GridBtnAnterior",
+                    "sNext": "@resources.GlobalResources.GridBtnSiguiente"
+                },
+                "oAria": {
+                    "sSortAscending": ": Activar para ordenar la columna de manera ascendente",
+                    "sSortDescending": ": Activar para ordenar la columna de manera descendente"
+                }
+            },
+            "autoWidth": false,
+            "bDestroy": true
+        };
+
+    </script>
+
+    <script src="~/Includes/js/utils.js"></script>
+    <script>var IsDebug = "@WebConfig.IsAppDebug".bool();</script>
+    <script src="~/Includes/js/app-4.0.js"></script>
+
+    <script type="text/javascript">
+
+        ; (function ($) {
+            $(function () {
+
+
+                $(".multi_font_icon").click(function (event) {
+                    var id = event.target.id;
+                    var getOptId = id.substr(id.length - 1);
+                    var newFontSize = 16;
+                    switch (getOptId) {
+                        case '1': newFontSize = 12; break; //Param "12" means change font-size to 12px
+                        case '2': newFontSize = 14; break; //Param "16" means change font-size to 16px
+                        case '3': newFontSize = 18; break; //Param "18" means change font-size to 18px
+                        case '4': newFontSize = 20; break; //Param "20" means change font-size to 20px
+                    }
+                    //setCookie('fontSize', newFontSize, 30);
+                    changeFont(newFontSize);
+                    console.log(newFontSize);
+                });
+
+                KeepAlive();
+
+            });
+        })(jQuery);
+
+        function changeFont(fontSize) {
+            $("body").css('font-size', fontSize + 'px');
+        }
+
+        function SalirCiudadano() {
+
+            blockPageUI();
+
+            window.location.href = "https://api.claveunica.gob.cl/api/v1/accounts/app/logout";
+            setTimeout(function () {
+
+                window.location.href = "@Url.Action("Salir", "Account")";
+
+            }, 1000);
+        }
+
+        function ChangeEmailCiudadano() {
+            var opt = {
+                title: "Cambiar Email",
+                url: '@Url.Action("CambiarEmail", "Main")',
+                params: {
+                    __RequestVerificationToken: getVToken(),
+                    lblEmail: "@HttpUtility.HtmlEncode("Email")",
+                },
+                size: 'modal-xl',
+                onOpen: function () {
+                   
+                },
+                callback: function () {
+                    $(".modal-content .close").hide();
+                }
+            }
+
+            GetModalContent(opt);
+        }
+
+        function VerHistorial(CausaID) {
+            var opt = {
+                title: "Historial Causa",
+                url: "@Url.Action("GetLogCausa", "Expedientes")",
+                params: {
+                __RequestVerificationToken: getVToken(),                
+                CausaID: CausaID
+                },
+                size: "modal-lg",
+                callback: function () {
+                    //goGrid();
+                }
+            }
+
+            GetModalContent(opt);
+        }
+
+        function KeepAlive() {
+            setInterval('GetKeepAlive()', Config.SessionRefresh);
+        }
+
+        function GetKeepAlive() {
+            var params = {
+                __RequestVerificationToken: getVToken(),
+                action: "@Enums.ActionSystem.KeepAlive"
+            };
+
+            Config.IsBlock = false;
+
+            var before = function () { }
+            var callback = function () { Config.IsBlock = true;  }
+
+            xJsonObj("@Url.Action("ActionExpediente", "Expedientes")", params, before, callback);
+        }
+
+    </script>
+
+</head>
+
+<body>
+
+    <header id="MainHeaderSite" class="">
+        <div class="contenedor">
+
+            <div class="navbar-header">
+
+                <div class="containers">
+                    <div class="row" style="height: 105px">
+                        <div class="col-sm-2" style="max-width: 200px">
+                            <a class="navbar-brand ac" href="#" style="margin-top: 10px;margin-left: 15px;">
+                                <img src="~/Includes/css/images/logos/principal.png" class="rel imgss-fluid" style="" alt="" />
+                            </a>
+                        </div>
+                        <div class="col header-junji">
+                            <div class="TitleSystem" style="">
+                                <div class="t1" style="font-weight:bold;margin-top:15px">@resources.GlobalResources.TituloCliente</div>
+                                <div class="t2">@resources.GlobalResources.TituloSistema</div>
+                                <div class="t3" style="height: 14px"></div>
+
+
+                                <div id="font_selection_box" style="width: 75px; height: 22px; display: block;">
+                                    <div id="fontsize_opt1" class="multi_font_icon" style="width: 12px; height: 12px; margin: 7px 1px 0px; float: left; cursor: pointer; background-size: 100% 100%; background-image: url(&quot;data:application/octet-stream;base64,R0lGODlhFgAUALMPAOjn59DQ0JWVleDf37u7u8PCwp6dndjY2NHR0dnY2MrJyYeHh6ysrNTU1O/u7v///yH5BAEAAA8ALAAAAAAWABQAAASD8MlJq6Wh6c15qMHhjCQAkOTxTQ06Dovgjg3VuoSwFHPNuoAdw9Cz4WQwhMsnuZEEhJGBiGI+nI7C4uRALAZV45OBEpBJVqcXTNKyHWmSYcGo2xdRmhhm78+5cQ4MMjNBeXFBPDOChHEEW4sOMDxxCgmRI5ZwGCKYKCogHaIbKxemphEAOw==&quot;);"></div>
+                                    <div id="fontsize_opt2" class="multi_font_icon" style="width: 15px; height: 14px; margin: 5px 1px 0px; float: left; cursor: pointer; background-size: 100% 100%; background-image: url(&quot;data:application/octet-stream;base64,R0lGODlhFgAUALMPAOjn59DQ0JWVleDf37u7u8PCwp6dndjY2NHR0dnY2MrJyYeHh6ysrNTU1O/u7v///yH5BAEAAA8ALAAAAAAWABQAAASD8MlJq6Wh6c15qMHhjCQAkOTxTQ06Dovgjg3VuoSwFHPNuoAdw9Cz4WQwhMsnuZEEhJGBiGI+nI7C4uRALAZV45OBEpBJVqcXTNKyHWmSYcGo2xdRmhhm78+5cQ4MMjNBeXFBPDOChHEEW4sOMDxxCgmRI5ZwGCKYKCogHaIbKxemphEAOw==&quot;);"></div>
+                                    <div id="fontsize_opt3" class="multi_font_icon" style="width: 18px; height: 16px; margin: 3px 1px 0px; float: left; cursor: pointer; background-size: 100% 100%; background-image: url(&quot;data:application/octet-stream;base64,R0lGODlhFgAUALMPAOjn59DQ0JWVleDf37u7u8PCwp6dndjY2NHR0dnY2MrJyYeHh6ysrNTU1O/u7v///yH5BAEAAA8ALAAAAAAWABQAAASD8MlJq6Wh6c15qMHhjCQAkOTxTQ06Dovgjg3VuoSwFHPNuoAdw9Cz4WQwhMsnuZEEhJGBiGI+nI7C4uRALAZV45OBEpBJVqcXTNKyHWmSYcGo2xdRmhhm78+5cQ4MMjNBeXFBPDOChHEEW4sOMDxxCgmRI5ZwGCKYKCogHaIbKxemphEAOw==&quot;);"></div>
+                                    <div id="fontsize_opt4" class="multi_font_icon" style="width: 22px; height: 20px; margin: 0px 1px; float: left; cursor: pointer; background-size: 100% 100%; background-image: url(&quot;data:application/octet-stream;base64,R0lGODlhFgAUALMPAOjn59DQ0JWVleDf37u7u8PCwp6dndjY2NHR0dnY2MrJyYeHh6ysrNTU1O/u7v///yH5BAEAAA8ALAAAAAAWABQAAASD8MlJq6Wh6c15qMHhjCQAkOTxTQ06Dovgjg3VuoSwFHPNuoAdw9Cz4WQwhMsnuZEEhJGBiGI+nI7C4uRALAZV45OBEpBJVqcXTNKyHWmSYcGo2xdRmhhm78+5cQ4MMjNBeXFBPDOChHEEW4sOMDxxCgmRI5ZwGCKYKCogHaIbKxemphEAOw==&quot;);"></div>
+                                </div>
+
+                            </div>
+
+                            @{
+                                bool IsTDPI = false;
+                                bool IsINAPI = false;
+                                bool IsSAG = false;
+                                bool IsAdministrador = false;
+                                bool IsInvitado = false;
+
+                                if (Session["IsTDPI"] != null)
+                                {
+                                    IsTDPI = (bool)Session["IsTDPI"];
+                                }
+
+                                if (Session["IsINAPI"] != null)
+                                {
+                                    IsINAPI = (bool)Session["IsINAPI"];
+                                }
+
+                                if (Session["IsSAG"] != null)
+                                {
+                                    IsSAG = (bool)Session["IsSAG"];
+                                }
+
+                                if (Session["IsAdministrador"] != null)
+                                {
+                                    IsAdministrador = (bool)Session["IsAdministrador"];
+                                }
+                                if (Session["IsInvitado"] != null)
+                                {
+                                    IsInvitado = (bool)Session["IsInvitado"];
+                                }
+                            }
+
+                            <div id="divPerfil" class="text-muted ar fr rel " style="margin-right:10px;top: -75px;">
+                                @{
+                                    bool NombreUsuario = (!string.IsNullOrEmpty(HttpContext.Current.Session["FullUserName"] as string));
+                                    string UserName = "";
+                                    string UserID = "";
+
+                                    if (NombreUsuario)
+                                    {
+                                        UserName = HttpContext.Current.Session["FullUserName"].ToString();
+                                        UserID = HttpContext.Current.Session["UsuarioID"].ToString();
+                                    }
+
+                                }
+
+                                @if (!string.IsNullOrEmpty(UserName))
+                                {
+                                    int UsuarioActiveID = Convert.ToInt32(HttpContext.Current.Session["UsuarioID"]);
+
+                                    var AsocUsuarioPerfil = HttpContext.Current.Session["AsocUsuarioPerfil"] as List<Application.DTO.Models.AsocUsuarioPerfil>;
+                                    bool EnableCombo = false;
+
+                                    if (AsocUsuarioPerfil.Count > 1 && WebConfig.IsDesarrollo && EnableCombo)
+                                    {
+                                        <script>
+                                            function ChangeRol(RolID) {
+                                                var params = { __RequestVerificationToken: getVToken(), RolID: RolID };
+                                                var before = function () { };
+                                                var callback = function () {
+
+                                                };
+
+                                                xJsonObj("@Url.Action("ChangeRol", "Account")", params, blockPageUI, function () {
+                                                    blockPageUIclose();
+
+                                                    SelfRedirect();
+                                                })
+                                            }
+                                        </script>
+
+                                        <span class="ib" style="color:#1665C1;">
+                                            <i class='x-icon x-icon-user2 rel' style="top: 3px"></i>
+                                            <select name="PerfilID" class="" onchange="ChangeRol(this.value)">
+                                                @foreach (var item in AsocUsuarioPerfil)
+                                                {
+                                                    string selected = (item.UsuarioID == UsuarioActiveID) ? "selected='selected'" : "";
+                                                    <option value="@item.UsuarioID" class="" @selected>@item.Usuario.GetFullName()</option>
+                                                }
+                                            </select>
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        string perfilName = "";
+                                        if (Session["PerfilDescription"] != null && !IsInvitado)
+                                        {
+                                            perfilName = Session["PerfilDescription"].ToString();
+                                        }
+
+                                        string usr = string.Format("<span class='text-muted' style=''>{0}</span><br><span class='bold'>{1}</span></span>", UserName, perfilName);
+
+                                        @Html.Raw(usr);
+                                    }
+                                }
+
+
+                            </div>
+
+
+
+                        </div>
+
+
+
+                    </div>
+                </div>
+
+            </div>
+
+            @{
+
+
+
+            }
+
+            <nav class="navbar navbar-expand-sm navbar-light bg-light menu">
+
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                    <ul class="navbar-nav">
+
+                        @if (WebConfig.IsAccesoPublico)
+                        {
+                            <li class="nav-item"><a class="nav-link" href="@Url.RouteUrl("ActionInitialSystem")" style="">Acceso</a></li>
+                            <li class="nav-item"><a class="nav-link" href="@Url.RouteUrl("VistaPublicaDashboard")" style="">Inicio</a></li>
+                            if (!IsInvitado)
+                            {
+                                <li class="nav-item"><a class="nav-link" href="javascript:void(0)" onclick="ChangeEmailCiudadano()">Mi Email</a></li>
+                            }
+                            <li class="nav-item"><a class="nav-link" href="javascript:void(0)" onclick="SalirCiudadano()">Salir</a></li>
+                        }
+
+                        @if (!WebConfig.IsAccesoPublico)
+                        {
+                            <li class="nav-item"><a class="nav-link" href="@Url.RouteUrl("EscritorioCausas")" style="">Expedientes</a></li>
+
+                            if (IsTDPI)
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" id="nvListados" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        @resources.Expediente.Listados
+                                    </a>
+                                    <div class="dropdown-menu" aria-labelledby="nvListados">
+                                        <a class="dropdown-item" href="@Url.Action("Index", "Listados")">@resources.Expediente.MenuListadoIngreso</a>
+                                        <a class="dropdown-item" href="@Url.Action("Tablas", "Listados")">@resources.Expediente.MenuListadoTablas</a>
+                                        <a class="dropdown-item" href="@Url.Action("EstadosDiarios", "Listados")">@resources.Expediente.MenuListadoEstadosDiarios</a>
+                                    </div>
+                                </li>
+
+                                <li class="nav-item"><a class="nav-link" href="@Url.Action("Index", "Firmas")" style="">Firmas</a></li>
+                            }
+
+                            if (IsAdministrador)
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" id="nvAdmin" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        @resources.GlobalResources.Administracion
+                                    </a>
+                                    <div class="dropdown-menu" aria-labelledby="nvAdmin">
+                                        <a class="dropdown-item" href="@Url.Action("Usuarios", "Administracion")">Mantenedor de Usuarios</a>
+                                        <a class="dropdown-item" href="@Url.Action("TipoFormato", "Administracion")">Mantenedor de Tipos de Formato</a>
+                                        <a class="dropdown-item" href="@Url.Action("MantenedorTipoDocumento", "Administracion")">Mantenedor de Tipos de Documento</a>
+                                        <a class="dropdown-item" href="@Url.Action("Ayudas", "Administracion")">@resources.Administracion.MantenedorAyudas</a>
+                                        <a class="dropdown-item" href="@Url.Action("TipoNotificacion", "Administracion")">@resources.Administracion.PlantillasEmail</a>
+                                        <a class="dropdown-item" href="@Url.Action("MantenedorGenerico", "Administracion")">Mantenedor Generico</a>
+                                        <a class="dropdown-item" href="@Url.Action("MantenedorOpcionesTipoTramite", "Administracion")">Mantenedor Opciones Tipo Trámite</a>
+                                    </div>
+                                </li>
+                            }
+
+
+
+                            if (IsAdministrador || IsINAPI || IsSAG || IsTDPI)
+                            {
+                                <li class="nav-item"><a class="nav-link" href="@WebConfig.LogOffAuthenticationSystem">@resources.GlobalResources.Salir</a></li>
+                            }
+                        }
+                    </ul>
+                </div>
+            </nav>
+
+
+            <nav class="navbar navbar-default hide">
+
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+
+                    <a href="http://www.tdpi.cl/" id="" title="" class="brand brand-portal-logo ac" style="margin-right:20px;">
+                        <img src="~/Includes/css/images/logos/principal.png" class="rel" style="top:0;" alt="" />
+                    </a>
+
+                </div>
+
+
+                <div class="collapse navbar-collapse menu" id="navbar">
+                    <ul class="nav navbar-nav"></ul>
+                </div><!-- /.navbar-collapse -->
+            </nav>
+        </div>
+    </header>
+
+
+
+
+
+    <section class="mainSection">
+
+        @if (WebConfig.IsAmbienteTest)
+        {
+            <div class="alert alert-danger" role="alert" style="width: 94%;margin: 0 auto 14px auto">
+                <b>@WebConfig.AmbienteTestInfo</b>
+            </div>
+        }
+
+        @RenderBody()
+
+    </section>
+
+
+    <div id="footer">
+
+        <img id="img-footer" src="~/Includes/css/images/banner-top.png" width="164" height="18" alt="" />
+
+        <p class="rel">
+            <a href="http://www.tdpi.cl/" target="_blank">Tribunal de Propiedad Insustrial </a><br />
+            Nueva York 9, piso 13, Santiago, Chile.<br />
+            Teléfono: (56 2) 2 473 3760 <br />
+            <span style="display:block">@Html.GetVersion()</span>
+        </p>
+
+
+
+
+    </div>
+
+</body>
+</html>

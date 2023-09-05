@@ -1,0 +1,89 @@
+﻿@model Application.DTO.Models.TipoFormato
+
+@using resources = Infrastructure.Resources;
+@using Enums = Domain.Infrastructure;
+
+@{
+    bool isNew = (Model.TipoFormatoID == 0) ? true : false;
+}
+
+<script type="text/javascript">
+    ; (function ($) {
+        $(function () {
+                    
+            $("#frmTipoFormato .xCheckbox").bootstrapSwitch({
+                onSwitchChange: function (event, state) {
+
+                }
+            });
+
+            TrimFormByID("#frmTipoFormato");
+
+            @if (!isNew)
+            {
+                if (Model.Vigente)
+                {<text>
+                $("#VigenteTipoFormato").bootstrapSwitch('state', true);
+                </text>
+                }
+                else
+                {<text>
+                $("#VigenteTipoFormato").bootstrapSwitch('state', false);
+                </text>
+                }
+            }
+
+            activateForm("btnSaveTipoFormato", "frmTipoFormato",
+                function () {
+
+                    return true;
+                },
+                function () {
+                    if (xResultJsonData.result == parseInt("@Convert.ToInt32(Enums.ReturnJson.YaExisteDescripcion)")) {
+                        showBlockUIError("Ya existe Descripción, valide e intente nuevamente");
+                    } else {
+                        CloseDialog();
+                        showBlockUI(function () {                            
+                            SelfRedirect();
+                        })
+                    }
+                });
+        });
+    })(jQuery);
+</script>
+
+
+<div class="modal-body" style="padding-top: 6px;">
+    <form class="form-horizontal" id="frmTipoFormato" method="post" action="@Url.Action("SaveTipoFormato", "Administracion")">
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(x => x.TipoFormatoID)        
+
+        <div class="form-group row">
+            <label for="Descripcion" class="col-sm-3 col-form-label">@resources.Administracion.Descripcion <span class="span-obligatorio">*</span></label>
+            <div class="col-sm-9">
+                @Html.TextBoxFor(x => x.Descripcion, new { @class = "form-control verificar", @maxlength = "50", @placeholder = "", @style = "" })
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <label for="ExtraCss" class="col-sm-3 col-form-label">@resources.Administracion.ExtraCSS</label>
+            <div class="col-sm-9">
+                @Html.TextBoxFor(x => x.ExtraCss, new { @class = "form-control", @maxlength = "50", @placeholder = "", @style = "" })
+            </div>
+        </div>
+
+        <div class="form-group row" style="margin-top: 0px !important;">
+            <label for="Vigente" class="col-sm-3 col-form-label">@resources.Administracion.Vigente</label>
+            <div class="col-sm-9">
+                @Html.Raw(Html.MyCheckbox(Model.Vigente, "Vigente", 0, "", "small", 0, false, false, ""))
+            </div>
+        </div>
+    </form>
+</div>
+
+
+<div class="modal-footer">
+    <button id="btnSaveTipoFormato" class="btn btn-default" onclick="$('#frmTipoFormato').submit()" type="button"><i class="x-icon x-icon-save2 icon-in-button"></i> @resources.GlobalResources.BtnGuardar</button>
+    <i class="x-icon-loader hide"></i>
+    <button class="btn btn-default" data-dismiss="modal" type="button"><i class="x-icon x-icon-cancel2 icon-in-button"></i> @resources.GlobalResources.BtnCancelar</button>
+</div>

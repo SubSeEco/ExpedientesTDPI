@@ -1,0 +1,69 @@
+﻿@using resources = Infrastructure.Resources;
+@using Enums = Domain.Infrastructure;
+
+@{
+    string PageTitle = "Gestión de Expedientes - SGDE";
+    ViewBag.Title = PageTitle;
+
+    bool IsINAPI = (bool)ViewBag.IsINAPI;
+    bool isSAG = (bool)ViewBag.isSAG;
+
+}
+
+
+<div class="bodyContent">
+    <div class="cont">
+
+        <fieldset>
+            <legend class="legendTitle">@PageTitle</legend>
+
+            @Html.Raw(Html.GetInfoVentana(Domain.Infrastructure.TipoVentana.EscritorioFirmaDocumentos))
+            <fieldset class="x-fieldset">
+
+                <div class="row">
+                    <div class="col">
+                        <button id="btnBuscar" type="button" class="btn btn-default"><i class="x-icon x-icon-zoom1 icon-in-button"></i> @resources.GlobalResources.BtnBuscar Causa</button>
+                    </div>
+                </div>
+
+                @if (isSAG)
+                {
+                    <div class="row">
+                        <div class="col">
+                            <button id="btnBuscar" type="button" class="btn btn-default"><i class="x-icon x-icon-zoom1 icon-in-button"></i> Variedad Vegetal</button>
+                        </div>
+                    </div>
+                }
+
+                @if (IsINAPI)
+                {
+                    <div class="row">
+                        <div class="col">
+                            <button id="btnBuscar" type="button" class="btn btn-default"><i class="x-icon x-icon-zoom1 icon-in-button"></i> Patente</button>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col">
+                            <button id="btnBuscar" type="button" class="btn btn-default"><i class="x-icon x-icon-zoom1 icon-in-button"></i>Marca</button>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col">
+                            <button id="btnBuscar" type="button" class="btn btn-default"><i class="x-icon x-icon-zoom1 icon-in-button"></i> Protección Suplementaria</button>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col">
+                            <button id="btnBuscar" type="button" class="btn btn-default"><i class="x-icon x-icon-zoom1 icon-in-button"></i> Recurso de Hecho</button>
+                        </div>
+                    </div>
+
+                }
+
+            </fieldset>
+        </fieldset>
+    </div>
+</div>

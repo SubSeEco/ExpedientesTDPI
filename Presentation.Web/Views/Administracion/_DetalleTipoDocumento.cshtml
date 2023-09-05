@@ -1,0 +1,121 @@
+﻿@using resources = Infrastructure.Resources;
+@using Enums = Domain.Infrastructure;
+
+@{
+    int TipoDocumentoID = (int)ViewBag.TipoDocumentoID;
+
+    var AsocTipoDocumentoAdjunto = ViewBag.AsocTipoDocumentoAdjunto as IList<Application.DTO.Models.AsocTipoDocumentoAdjunto>;
+}
+
+<script type="text/javascript">
+    ; (function ($) {
+        $(function () {
+            callToolTips();
+        });
+    })(jQuery);
+
+    function GetDocumentoAdjunto(AsocTipoDocumentoAdjuntoID, DocumentoAdjuntoID) {
+
+        var editNew = (AsocTipoDocumentoAdjuntoID > 0) ? "Editar" : "Agregar";
+
+        var opt = {
+            title: editNew + ": Configuración",
+            url: "@Url.Action("GetDocumentoAdjunto", "Administracion")",
+            params: {
+                __RequestVerificationToken: getVToken(),
+                AsocTipoDocumentoAdjuntoID: AsocTipoDocumentoAdjuntoID,
+                DocumentoAdjuntoID: DocumentoAdjuntoID,
+                TipoDocumentoID: parseInt("@TipoDocumentoID")
+            },
+            size: "modal-lg",
+            callback: function () {
+            }
+        }
+
+        GetModalContent(opt);
+    }
+
+    function DeleteDocumentoAdjuntoConf(AsocTipoDocumentoAdjuntoID, DocumentoAdjuntoID) {
+
+        var optBtn = {
+            title: "Eliminar Configuración",
+            msg1: "@resources.GlobalResources.ConfirmaEliminar",
+            msg2: "@resources.GlobalResources.RegistroEliminado",
+            url: "@Url.Action("DeleteDocumentoAdjuntoConf", "Administracion")",
+            params: {
+                __RequestVerificationToken: getVToken(),
+                AsocTipoDocumentoAdjuntoID: AsocTipoDocumentoAdjuntoID,
+                DocumentoAdjuntoID: DocumentoAdjuntoID
+            },
+            callback: function () {
+                $("#TipoDocumentoID").trigger("change");
+                showBlockUI();
+            },
+            alert: "alert-danger",
+            txtBtn1: "Sí",
+
+        }
+
+        xDialogConfirmAction(optBtn); 
+    }
+
+
+</script>
+
+<div class="row" style="margin-bottom: 10px !important;">
+    <div class="col text-right">
+        <button id="btnAgregar" type="button" class="btn btn-default"
+                onclick="GetDocumentoAdjunto(0,0)">
+            <i class="x-icon x-icon-mas3 icon-in-button"></i> @resources.GlobalResources.BtnAgregar Configuración
+        </button>
+    </div>
+</div>
+
+<div class="table-responsive">
+    
+    <table class="@Html.GetBaseTableCSS() " id="detalleCat" style="width:100%;">
+        <thead>
+            <tr>
+                <th class="al">Descripción</th>
+                <th class="ac" style="">Tipo formato permitido</th>
+                <th class="ac" style="">Tamaño máximo</th>
+                <th class="ac" style="width: 10%">@resources.GlobalResources.TH_Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (AsocTipoDocumentoAdjunto.Count > 0)
+            {
+                foreach (var item in AsocTipoDocumentoAdjunto)
+                {
+                    <tr>
+                        <td>@item.DocumentoAdjunto.Descripcion</td>
+                        <td class="ac">@item.DocumentoAdjunto.TipoFormato.Descripcion</td>
+                        <td class="ac">@item.DocumentoAdjunto.MaximoTamanoArchivo.Tamano MB</td>
+                        <td class="ac">
+                            <a class='x-title-t' style=''
+                               href='javascript:void(0);' onclick="GetDocumentoAdjunto(@item.AsocTipoDocumentoAdjuntoID, @item.DocumentoAdjuntoID)" title='Editar'>
+                                <i class='x-icon x-icon-edit'></i>
+                            </a>
+
+                            <a href="javascript:void(0)" style="margin-left: 3px"
+                               onclick='DeleteDocumentoAdjuntoConf(@item.AsocTipoDocumentoAdjuntoID, @item.DocumentoAdjuntoID)'
+                               class="x-title-t" title="@resources.GlobalResources.BtnEliminar">
+                                <i class="x-icon x-icon-delete rel" style="cursor: pointer;top:-1px"></i>
+                            </a>
+
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="4">@resources.GlobalResources.GridSinResultados</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+</div>
+
+<div id="divDetalleCategoriaSub" style="min-height:300px"></div>

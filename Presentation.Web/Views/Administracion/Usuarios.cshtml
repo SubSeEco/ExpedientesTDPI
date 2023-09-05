@@ -1,0 +1,236 @@
+﻿@using resources = Infrastructure.Resources;
+@using Enums = Domain.Infrastructure;
+
+
+@{
+    string PageTitle = "Mantenedor de Usuarios y Perfiles";
+    ViewBag.Title = PageTitle;
+
+    //var PerfilUsuario = ViewBag.PerfilUsuario as IList<Application.DTO.Models.Perfil>;
+    var Perfiles = ViewBag.Perfiles as IList<Application.DTO.Models.Perfil>;
+
+    DateTime FechaConsulta = DateTime.Now;
+}
+
+<script type="text/javascript">
+
+    ; (function ($) {
+        $(function () {
+
+            $("#btnBuscar").on("click", goGrid);
+
+            $('#Usuario').keyup(function (e) {
+                if (e.keyCode == 13) {
+                    $("#btnBuscar").trigger("click");
+                }
+            });
+
+            var autosearch = (parseInt($.getUrlVar("autosearch")) || 0) == 1;
+            if (autosearch) {
+                $("#btnBuscar").trigger("click");
+            }
+
+        });
+    })(jQuery);
+
+
+    function goGrid() {
+
+        var xBtn = $("#btnBuscar");
+
+        var params = {
+            __RequestVerificationToken: getVToken(),
+            Usuario: $.trim($("#Usuario").val()),
+            PerfilID: parseInt($("#PerfilID").val()) || 0,
+            TipoAcceso: parseInt($("#TipoAcceso").val()) || 0
+        };
+
+        var before = function () { xUIBtnAjax(xBtn, 1); };
+        var callback = function () {
+            //xUIBtnAjax(xBtn, 0);
+            BtnInAction(xBtn, true, true);
+            loadGrid();
+        };
+
+        xJsonObj('@Url.Action("GetUsers", "Administracion")', params, before, callback)
+    }
+
+    function loadGrid() {
+
+        var xJSONResultDisplay = new Array();
+
+        $.each(xJSONResult, function (i, item) {
+
+
+            var Obj = {
+                'Contador': (i + 1),
+                'Usuario': item.User,
+                'NombreUsuario':  function () {
+                    var html = item.Nombres + " " + item.Apellidos;
+                    return html;
+                },
+                'Perfiles': item.Perfiles,
+                'Externo': function () {
+                    if (item.IsClaveUnica) {
+                        return "<i class='x-icon x-icon-accept'></i>";
+                    } else {
+                        return "";
+                    }
+                },
+                'Acciones': item.Actions, //
+                'DT_RowId': 'tr_' + i
+            }
+
+            xJSONResultDisplay.push(Obj);
+        });
+
+        var localGridParams = {
+            //"bSort": false,
+            responsive: true,
+            aaData: xJSONResultDisplay,
+            fnInitComplete: function (oSettings, json) {
+
+            },
+            fnDrawCallback: function (oSettings) {
+                callToolTips();
+            },
+            aoColumns: [{ "sClass": "ac nw", "bSortable": true, "mDataProp": "Contador" },
+						{ "sClass": "al", "bSortable": true, "mDataProp": "Usuario" },
+						{ "sClass": "al", "bSortable": true, "mDataProp": "NombreUsuario" },
+                        { "sClass": "al", "bSortable": true, "mDataProp": "Perfiles" },
+                        { "sClass": "ac", "bSortable": true, "mDataProp": "Externo" },
+						{ "sClass": "ac nw", "bSortable": false, "mDataProp": "Acciones" }]
+        };
+
+        var allGridParams = $.extend({}, localGridParams, generalGridParams);
+        oTableGrid = $('#grilla').removeClass("hide").dataTable(allGridParams);
+    }
+
+    function GetUser(UsuarioID) {
+
+        var title = UsuarioID > 0 ? "Editar" : "Agregar";
+
+        var URL = '@Url.Action("GetUser", "Administracion")';
+        var params = {
+            __RequestVerificationToken: getVToken(),
+            UsuarioID: UsuarioID
+        };
+
+        var callback = function () {
+        };
+
+        var opt = {
+            title: title + " Usuario",
+            url: URL,
+            params: params,
+            size: "modal-lg",
+            callback: callback
+        }
+
+        GetModalContent(opt);
+
+        //GetDivAjaxHtml(URL, title + " Usuario", params, callback, 600);
+    }
+
+</script>
+
+<div class="bodyContent">
+    <div class="cont">
+
+        <fieldset class="">
+            <legend class="legendTitle">@PageTitle</legend>
+
+            @Html.Raw(Html.GetInfoVentana(Enums.TipoVentana.MantenedorUsuarios))
+
+            <form class="form-horizontal" id="frmFiltros" onsubmit="return false">
+                @Html.AntiForgeryToken()
+
+                <fieldset class="x-fieldset" id="fsFiltros" style="">
+                    <legend class="bold celeste">Filtros</legend>
+
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group row">
+                                <label for="Usuario" class="col-sm-4 col-form-label">Usuario</label>
+                                <div class="col-sm-12">
+                                    <input type="text" class="form-control" name="Usuario" id="Usuario" maxlength="100" value="" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group row">
+                                <label for="PerfilID" class="col-sm-3 col-form-label">Perfil</label>
+                                <div class="col-sm-12">
+                                    <select id="PerfilID" name="PerfilID" class="form-control">
+                                        <option value="0">@resources.GlobalResources.OptionInicial</option>
+                                        @foreach (var item in Perfiles)
+                                        {
+                                            <option value="@item.PerfilID">@item.Descripcion</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        @*<div class="col-md-4">
+                            <div class="form-group">
+                                <label for="TipoAcceso" class="col-sm-3 control-label">Acceso</label>
+                                <div class="col-sm-12">
+                                    <select id="TipoAcceso" name="TipoAcceso" class="form-control">
+                                        <option value="0">@resources.GlobalResources.OptionInicial</option>
+                                        <option value="1">Con Acceso</option>
+                                        <option value="2">Sin Acceso</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>*@
+                    </div>
+
+                </fieldset>
+
+            </form>
+            <div class="row">
+                <div class="col">
+                    <button type="button" id="btnBuscar" class="btn btn-default">
+                        <i class="x-icon x-icon-zoom1 icon-in-button"></i>
+                        @resources.GlobalResources.BtnBuscar
+                    </button><i class="x-icon-loader hide"></i>
+
+                    <button type="button" id="btnLimpiar" class="btn btn-default"
+                            onclick='$("#frmFiltros").reset()'>
+                        <i class="x-icon x-icon-limpiar icon-in-button"></i>
+                        @resources.GlobalResources.Limpiar
+                    </button>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col text-right">
+                    <button type="button" id="btnAdd" class="btn btn-default"
+                            onclick="GetUser(-1)">
+                        <i class="x-icon x-icon-mas3 icon-in-button"></i> @resources.GlobalResources.Agregar
+                    </button>
+                </div>
+            </div>
+
+        </fieldset>
+
+
+        <table class="@Html.GetBaseTableCSS() hide" id="grilla">
+            <thead>
+                <tr>
+                    <th class="ac nw" style="width:1%">@resources.GlobalResources.TH_Number</th>
+                    <th class="ac" style="">Usuario</th>
+                    <th class="ac" style="">Nombre Usuario</th>
+                    <th class="ac" style="">Perfil</th>
+                    <th class="ac" style="width:10%">Externo</th>
+                    <th class="ac nw" style="width:10%">@resources.GlobalResources.TH_Acciones</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+    </div>
+</div>
+
+
+

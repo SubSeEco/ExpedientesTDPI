@@ -1,0 +1,370 @@
+﻿@using resources = Infrastructure.Resources;
+@using Enums = Domain.Infrastructure;
+
+@{
+    string PageTitle = "Escritorio Firma de Documentos";
+    ViewBag.Title = PageTitle;
+
+    Application.DTO.FiltrosEscritorio FiltrosEscritorio = ViewBag.FiltrosEscritorio;
+
+    List<SelectListItem> EstadosDoctoFirma = new List<SelectListItem>();
+    EstadosDoctoFirma.Add(new SelectListItem { Text = "Solo Pendientes", Value = "2" });
+    EstadosDoctoFirma.Add(new SelectListItem { Text = "Ver Todas", Value = "1", });
+    EstadosDoctoFirma.Add(new SelectListItem { Text = "Firmadas", Value = "3" });
+
+    string OptionInitial = resources.GlobalResources.OptionInicial;
+
+    DateTime FechaDesde = DateTime.Now.AddMonths(-1);
+    DateTime FechaHasta = DateTime.Now;
+
+}
+
+<script type="text/javascript">
+    var oTableGrid;
+
+    ; (function ($) {
+        $(function () {
+
+            $("#btnBuscar").on("click", goGrid);
+
+            goGrid();
+
+            
+
+        });
+    })(jQuery);
+
+    function goGrid() {
+
+        $("#divDetalleExpediente").empty();
+
+        var ckeck = $("#radio1").is(":checked");
+        if (ckeck) {
+            var ticket = $.trim($("#NumeroTicket").val());
+            if (ticket == "") {
+                showBlockUIError("Debe indicar un Rol");
+                return false;
+            }
+        }
+
+        var ckeck = $("#radio2").is(":checked");
+        if (ckeck) {
+            var ticket = $.trim($("#NumeroSolicitud").val());
+            if (ticket == "") {
+                showBlockUIError("Debe indicar N° Solicitud");
+                return false;
+            }
+        }
+
+        var ckeck = $("#radio3").is(":checked");
+        if (ckeck) {
+            var ticket = $.trim($("#NumeroRegistro").val());
+            if (ticket == "") {
+                showBlockUIError("Debe indicar N° Registro");
+                return false;
+            }
+        }
+
+        var xBtn = $("#btnBuscar");
+        blockPageUI();
+
+        xJsonObj("@Url.Action("GetEscritorioFirma", "Firmas")", $("#frmFiltros").serialize(),
+        function () {
+            BtnInAction(xBtn, false, true);
+        },
+        function () {
+            BtnInAction(xBtn, true, true);
+            blockPageUIclose();
+            loadGrid();
+        });
+
+    }
+
+    function loadGrid() {
+
+        var xJSONResultDisplay = new Array();
+
+        $.each(xJSONResult, function (i, item) {
+
+            var Obj = {
+                'Contador': (i + 1),
+                'ticket': item.ticket,
+                'date': item.date,
+                'denom': item.resp,                                
+                'estado': function () {
+                    var h = '' + item.diasT + ',' + item.St1 + ',' + item.St2 + '';
+                    return h;
+                },              
+                'Acciones': item.AccionesList,
+                'DT_RowId': 'tr_' + i
+            }
+
+            xJSONResultDisplay.push(Obj);
+
+        });
+
+        var localGridParams = {
+            "bSort": true,
+            "aaData": xJSONResultDisplay,
+            "fnInitComplete": function (oSettings, json) {
+
+                var findPage = store.get("volver_Expediente_findPage") || 0;
+                if (findPage != 0) {
+                    if (findPage) {
+
+                        setTimeout(function () {
+                            var nPage = parseInt(GetCurrentPage("DeskTDPI"));
+                            oTableGrid.fnPageChange(nPage);
+                            store.set("volver_Expediente_findPage", false);
+                        }, 300);
+                    }
+                }
+            },
+            "fnDrawCallback": function (oSettings) {
+
+                callToolTips();
+
+                $("#grilla .x-icon-zoom1, #grilla .x-icon-edit").on("click", function () {
+                    SetCurrentPage(oTableGrid.fnPagingInfo().iPage, "DeskTDPI");
+                });
+
+            },
+            "aoColumns": [{ "sClass": "ac nw", "bSortable": true, "mDataProp": "Contador" },
+						  { "sClass": "ac nw", "bSortable": true, "mDataProp": "ticket" },
+						  { "sClass": "ac", "bSortable": true, "mDataProp": "date" },
+						  { "sClass": "ac diasTrans", "bSortable": true, "mDataProp": "estado" },
+						  { "sClass": "ac", "bSortable": true, "mDataProp": "denom" },
+						  { "sClass": "ac nw", "bSortable": false, "mDataProp": "Acciones" }]
+        };
+
+        var allGridParams = $.extend({}, localGridParams, generalGridParams);
+        oTableGrid = $('#grilla').removeClass("hide").dataTable(allGridParams);
+
+        $(".diasTrans").each(function () {
+            if (!$(this).hasClass("sorting")) {
+                var array = $(this).html().split(",", 3);
+                var dias = array[0] || 0;
+                if (dias >= 0) {
+                    var status1 = array[1] || 0;
+                    var status2 = array[2] || 0;
+                    if (status1 > 0 && status2 > 0) {
+                        let html = GetSemaforo(dias, status1, status2);
+                        $(this).html(html);
+                    }
+                    else {
+                        let html = GetSemaforo(dias, Config.IntMaxValue, Config.IntMaxValue);
+                        $(this).html(html);
+                    }
+                    
+                }
+            }            
+        })
+    }
+
+    function seleccionarTR(parent, obj) {
+
+        $("#" + parent + " tr").removeClass("selected");
+
+        var tr = $(obj).parents("tr");
+        $(tr).addClass("selected");
+
+    }
+
+    function FirmarDocumento(ExpedienteID, AsocFirmaDoctoID, UsuarioID)
+    {
+        xDialogConfirmAction({
+            url: "@Url.Action("FirmarDocumento", "Firmas")",
+            title: "Firma Documento",
+            msg1: "¿Confirma firmar documento ?",
+            IsHideMessageEnd: true,
+            params: {
+                __RequestVerificationToken: getVToken(),
+                ExpedienteID: ExpedienteID,
+                AsocFirmaDoctoID: AsocFirmaDoctoID,
+                UsuarioID: UsuarioID
+            },
+            callback: function () {
+            xAlert({
+                title: "Firma Documento",
+                html: $("#messageEnd").html(),
+                onOpen: function () {
+
+                },
+                callback: function () {
+                    goGrid();
+                }
+            })
+        }
+
+    });
+    }
+
+    function FirmarDocumentoSistema(DocumentoSistemaID, FirmaID, UsuarioID)
+    {
+        xDialogConfirmAction({
+            url: "@Url.Action("FirmarDocumentoSistema", "Firmas")",
+            title: "Firma Documento",
+            msg1: "¿Confirma firmar documento ?",
+            IsHideMessageEnd: true,
+            params: {
+                __RequestVerificationToken: getVToken(),
+                FirmaID: FirmaID,
+                DocumentoSistemaID: DocumentoSistemaID,
+                UsuarioID: UsuarioID
+            },
+            callback: function () {
+                xAlert({
+                    title: "Firma Documento",
+                    html: $("#messageEnd").html(),
+                    onOpen: function () {
+
+                    },
+                    callback: function () {
+                        goGrid();
+                    }
+                })
+            }
+     });
+    }
+
+
+</script>
+
+<div id="messageEnd" style="display:none">
+    <p>Se ha firmado correctamente el documento.</p>    
+</div>
+
+<div class="bodyContent">
+    <div class="cont">
+
+        <fieldset>
+            <legend class="legendTitle">@PageTitle</legend>
+
+            @Html.Raw(Html.GetInfoVentana(Domain.Infrastructure.TipoVentana.EscritorioFirmaDocumentos))
+            <fieldset class="x-fieldset">
+                <legend class="bold celeste">Filtros</legend>
+                <form class="" method="POST" id="frmFiltros" onsubmit="return false" autocomplete="on">
+                    @Html.AntiForgeryToken()
+
+                    <div id="tableFiltros" class="">
+
+                        <div class="row ">
+                            <div class="col-md-6">
+                                <div class="form-group row">
+                                    <label for="FechaDesde" class="col-sm-4 col-form-label">Fecha Desde</label>
+                                    <div class="col-sm-8 col-lg-6">
+                                        <div class="input-group">
+                                            @Html.TextBox("FechaDesde", "", new
+                                       {
+                                           @Value = FechaDesde.ToString("dd-MM-yyyy"),
+                                           @class = "ac IsCalendar form-control",
+                                           @style = "",
+                                           @placeholder = "",
+                                           @maxlength = "10",
+                                           @data_year_range = "-10:+0",
+                                           @data_max_date = "+0d"
+                                       })
+                                            <div class="input-group-append">
+                                                <span class="input-group-text" id=""><i class="x-icon x-icon-calendar" data-dateinput="FechaIngreso"></i></span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group row">
+                                    <label for="FechaHasta" class="col-sm-4 col-form-label">Fecha Hasta</label>
+                                    <div class="col-sm-8 col-lg-6">
+                                        <div class="input-group">
+                                            @Html.TextBox("FechaHasta", "", new
+                                       {
+                                           @Value = FechaHasta.ToString("dd-MM-yyyy"),
+                                           @class = "ac IsCalendar form-control",
+                                           @style = "",
+                                           @placeholder = "",
+                                           @maxlength = "10",
+                                           @data_year_range = "-10:+0",
+                                           @data_max_date = "+0d"
+                                       })
+                                            <div class="input-group-append">
+                                                <span class="input-group-text" id=""><i class="x-icon x-icon-calendar" data-dateinput="FechaIngreso"></i></span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <div class="form-group row">
+                                    <label for="NumeroTicket" class="col-sm-4 col-form-label" id="lblNumeroTicket">Rol</label>
+                                    <div class="col-sm-8">
+                                        @Html.TextBox("NumeroTicket", "", new { @class = "form-control", @style = "", @placeholder = "", @maxlength = "20" })
+                                    </div>
+                                </div>
+                            </div>
+                        
+                            <div class="col-md-6">
+                                <div class="form-group row">
+                                    <label for="EstadoDoctoFirma" class="col-sm-4 col-form-label">Estado Firma</label>
+                                    <div class="col-sm-8">
+                                        <select id="EstadoDoctoFirma" name="EstadoDoctoFirma" class="custom-select" data-default="0">
+                                            @foreach (var item in EstadosDoctoFirma)
+                                            {
+                                                <option value="@item.Value">@item.Text</option>
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+
+
+                    </div>
+
+                </form>
+            </fieldset>
+
+            <div class="row">
+                <div class="col">
+                    <button id="btnBuscar" type="button" class="btn btn-default"><i class="x-icon x-icon-zoom1 icon-in-button"></i> @resources.GlobalResources.BtnBuscar</button>
+                    <i class="x-icon-loader hide"></i>
+                    <button style="" type="button" onclick="LimpiaForm(0)" class="btn btn-default" id="btnLimpiar"><i class="x-icon x-icon-limpiar icon-in-button"></i> @resources.GlobalResources.Limpiar  Filtros</button>
+                </div>
+            </div>
+
+            <div class="table-responsive-not">
+                <table class="table table-striped table-sm table-bordered table-hover x-table allW hide" id="grilla">
+                    <thead>
+                        <tr>
+                            <th class="ac" style="">@resources.GlobalResources.TH_Number</th>
+                            <th class="ac" style="">N° Rol TDPI</th>
+                            <th class="ac " style="">Fecha Evento</th>
+                            <th class="ac" style="">Días Transcurridos</th>
+                            <th class="ac" style="">Responsable Actual</th>                            
+                            <th class="ac" style="">@resources.GlobalResources.TH_Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+
+            <div id="divDetalleExpediente" style="margin-top: 5px;"></div>
+
+
+        </fieldset>
+
+
+    </div>
+</div>
+
+

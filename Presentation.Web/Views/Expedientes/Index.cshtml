@@ -1,0 +1,323 @@
+﻿@using resources = Infrastructure.Resources;
+@using Enums = Domain.Infrastructure;
+
+@{
+    string PageTitle = "Escritorio TDPI - Gestión de Expedientes";
+
+    Application.DTO.FiltrosEscritorio FiltrosEscritorio = ViewBag.FiltrosEscritorio;
+    var DataForm = ViewBag.DataForm as Application.DTO.DataForm;
+
+    bool PuedeIngresar = DataForm.PerfilActive.IsTDPI;
+
+    PageTitle = (Domain.Infrastructure.WebConfigValues.IsAccesoPublico) ? "Buscador de Causas" : PageTitle;
+    ViewBag.Title = PageTitle;
+
+    IList<Application.DTO.Models.TipoCausa> TipoCausa = new List<Application.DTO.Models.TipoCausa>();
+
+    if (Domain.Infrastructure.WebConfigValues.IsAccesoPublico)
+    {
+        TipoCausa = FiltrosEscritorio.TipoCausa.Where(x => x.Vigente && x.IsPublico).OrderBy(x => x.Descripcion).ToList();
+    }
+    else
+    {
+        TipoCausa = FiltrosEscritorio.TipoCausa.Where(x => x.Vigente && x.IsInterno).OrderBy(x => x.Descripcion).ToList();
+    }
+}
+
+<script type="text/javascript">
+    var oTableGrid;
+
+    ; (function ($) {
+        $(function () {
+
+            $("#btnBuscar").on("click", goGrid);
+
+        });
+    })(jQuery);
+
+    function goGrid() {
+
+        $("#divDetalleExpediente").empty();
+
+        var ckeck = $("#radio1").is(":checked");
+        if (ckeck) {
+            var ticket = $.trim($("#NumeroTicket").val());
+            if (ticket == "") {
+                showBlockUIError("Debe indicar un Rol");
+                return false;
+            }
+        }
+
+        var ckeck = $("#radio2").is(":checked");
+        if (ckeck) {
+            var ticket = $.trim($("#NumeroSolicitud").val());
+            if (ticket == "") {
+                showBlockUIError("Debe indicar N° Solicitud");
+                return false;
+            }
+        }
+
+        var ckeck = $("#radio3").is(":checked");
+        if (ckeck) {
+            var ticket = $.trim($("#NumeroRegistro").val());
+            if (ticket == "") {
+                showBlockUIError("Debe indicar N° Registro");
+                return false;
+            }
+        }
+
+        var xBtn = $("#btnBuscar");
+        blockPageUI();
+
+        xJsonObj("@Url.Action("GetEscritorioTDPI", "Expedientes")", $("#frmFiltrosEscritorio").serialize(),
+        function () {
+            BtnInAction(xBtn, false, true);
+        },
+        function () {
+            BtnInAction(xBtn, true, true);
+            blockPageUIclose();
+            loadGrid();
+        });
+
+    }
+
+    function loadGrid() {
+
+        var xJSONResultDisplay = new Array();
+
+        $.each(xJSONResult, function (i, item) {
+
+            var Obj = {
+                'Contador': (i + 1),
+                'ticket': item.ticket,
+                'date': item.date,
+                'denom': item.denom,
+                'tcau': item.tcau,
+                'num': item.num,
+                'estado': function () {
+                    var h = item.ec + '<span class="azul db">' + item.us + '</span>';
+                    return h;
+                },
+                'Acciones': function () {
+
+                    var html = GetIconAction(item.Act);
+
+                    return html;
+                },
+                'DT_RowId': 'tr_' + i
+            }
+
+            xJSONResultDisplay.push(Obj);
+
+        });
+
+        var localGridParams = {
+            "bSort": true,
+            "aaData": xJSONResultDisplay,
+            "fnInitComplete": function (oSettings, json) {
+
+                var findPage = store.get("volver_Expediente_findPage") || 0;
+                if (findPage != 0) {
+                    if (findPage) {
+
+                        setTimeout(function () {
+                            var nPage = parseInt(GetCurrentPage("DeskTDPI"));
+                            oTableGrid.fnPageChange(nPage);
+                            store.set("volver_Expediente_findPage", false);
+                        }, 300);
+                    }
+                }
+            },
+            "fnDrawCallback": function (oSettings) {
+
+                callToolTips();
+
+                $("#grilla .x-icon-zoom1, #grilla .x-icon-edit").on("click", function () {
+                    SetCurrentPage(oTableGrid.fnPagingInfo().iPage, "DeskTDPI");
+                });
+
+            },
+            "aoColumns": [{ "sClass": "ac nw", "bSortable": true, "mDataProp": "Contador" },
+						  { "sClass": "ac nw", "bSortable": true, "mDataProp": "ticket" },
+						  { "sClass": "ac", "bSortable": true, "mDataProp": "date" },
+						  { "sClass": "al", "bSortable": true, "mDataProp": "denom" },
+						  { "sClass": "al", "bSortable": true, "mDataProp": "tcau" },
+						  { "sClass": "ac", "bSortable": true, "mDataProp": "num" },
+						  { "sClass": "ac nw", "bSortable": true, "mDataProp": "estado" },
+						  { "sClass": "ac nw", "bSortable": false, "mDataProp": "Acciones" }]
+        };
+
+        generalGridParams.paging = true;
+        generalGridParams.ordering = true;
+
+        var allGridParams = $.extend({}, localGridParams, generalGridParams);
+        oTableGrid = $('#grilla').removeClass("hide").dataTable(allGridParams);
+    }
+
+    function seleccionarTR(parent, obj) {
+
+        $("#" + parent + " tr").removeClass("selected");
+
+        var tr = $(obj).parents("tr");
+        $(tr).addClass("selected");
+
+    }
+
+    function GetEventosExpediente(CausaID, obj) {
+
+
+        var $divDet = $("#divDetalleExpediente");
+        $divDet.html("");
+
+        var before = function () { $divDet.html(divLoaderHtml()); };
+        var params = {
+            __RequestVerificationToken: getVToken(),
+            CausaID: CausaID
+        };
+
+        xAjaxHtml("@Url.Action("GetEventosExpediente", "Expedientes")", params, before, function ()
+        {
+            $divDet.html(DataHTM);
+
+            scrollToElement($divDet);
+        });
+
+    }
+
+    @if (PuedeIngresar)
+    {<text>
+
+    function CreateExpediente(option) {
+
+        var opts = {
+            title: "Seleccione Tipo Expediente a Ingresar",
+            msg1: $("#btnsAddExpediente").html(),
+            url: null,
+            params: {},
+            btn1Hide: true,
+            replaceParrafo: true,
+            callback: function () {
+
+            }
+        }
+
+        xDialogConfirmAction(opts);
+
+    }
+
+    </text>}
+
+    function GenerarExpedientePDF(CausaID) {
+
+        let tipoDocumentoID = parseInt("@Html.EnumToInt(Enums.TipoDocumento.ExpedienteElectronicoPDF)");
+
+        xJsonObj("@Url.Action("ActionExpediente", "Expedientes")",
+            {
+                __RequestVerificationToken: getVToken(),
+                action: "@Enums.ActionSystem.GenerarExpedientePDF",
+                Identidad: CausaID
+            },
+            function () {
+                blockPageUI();
+            }, function () {
+
+                if (xJSONResult.result == ReturnJson.ActionSuccess)
+                {
+                    setTimeout(function () {
+                        blockPageUIclose();
+                        getDownloadFile(xJSONResult.d, xJSONResult.i, xJSONResult.h, tipoDocumentoID);
+                    }, 1000)
+
+                }
+                else
+                {
+                    showBlockUIError("No fue posible generar el Expediente, favor intente más tarde");
+                    return false;
+                }
+
+            });
+    }
+
+
+
+
+
+</script>
+
+<div class="bodyContent">
+    <div class="cont">
+
+        <fieldset>
+            <legend class="legendTitle">@PageTitle</legend>
+
+            @Html.Raw(Html.GetInfoVentana(Domain.Infrastructure.TipoVentana.EscritorioGestionExpedientes))
+
+            @Html.Partial("_FiltrosEscritorio", FiltrosEscritorio, new ViewDataDictionary {
+               { "IsEscritorioTDPI", true },
+               { "NamePage", "EscTDPI" }
+           })
+
+            <div class="row">
+                <div class="col">
+                    <button id="btnBuscar" type="button" class="btn btn-default"><i class="x-icon x-icon-zoom1 icon-in-button"></i> @resources.GlobalResources.BtnBuscar</button>
+                    <i class="x-icon-loader hide"></i>
+                    <button style="" type="button" onclick="LimpiaForm(0)" class="btn btn-default" id="btnLimpiar"><i class="x-icon x-icon-limpiar icon-in-button"></i> @resources.GlobalResources.Limpiar  Filtros</button>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col text-right" id="btnsCreateExpediente">
+                    @if (PuedeIngresar)
+                    {
+                        <button type="button" id="" class="btn btn-default"
+                                onclick="CreateExpediente(true)">
+                            <i class="x-icon x-icon-mas3 icon-in-button"></i> Ingresar Expediente
+                        </button>
+                    }
+
+                </div>
+            </div>
+
+
+
+            <div class="table-responsive-not">
+                <table class="table table-striped table-sm table-bordered table-hover x-table allW hide" id="grilla">
+                    <thead>
+                        <tr>
+                            <th class="ac" style="">@resources.GlobalResources.TH_Number</th>
+                            <th class="ac" style="">N° Rol TDPI</th>
+                            <th class="ac " style="">Fecha</th>
+                            <th class="ac" style="text-align: left !important">@resources.Expediente.lblDenominacionHelp</th>
+                            <th class="ac" style="">Tipo Causa</th>
+                            <th class="ac" style="">N° Solicitud</th>
+                            <th class="ac" style="text-align: left !important">Estado<br />Responsable</th>
+                            <th class="ac" style="">@resources.GlobalResources.TH_Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+
+            <div id="divDetalleExpediente" style="margin-top: 5px;"></div>
+
+
+        </fieldset>
+
+
+    </div>
+</div>
+
+<div id="btnsAddExpediente" style="display:none">
+    <fieldset class="x-fieldset">
+        <legend class="celeste bold">Tipo Expediente</legend>
+
+        @foreach (var item in TipoCausa)
+        {
+            string url = Url.Action("Registro", "Expedientes", new { @id = 0, @id2 = item.TipoCausaID });
+
+            <button type="button" id="" class="btn btn-default btn-lg btn-block btnVI" onclick="LinkRedirect('@url')">@item.Descripcion</button>
+        }
+
+    </fieldset>
+</div>

@@ -1,0 +1,248 @@
+﻿@using resources = Infrastructure.Resources;
+@using Enums = Domain.Infrastructure;
+
+@{
+    string PageTitle = "Expediente Electrónico";
+    ViewBag.Title = PageTitle;
+
+    bool IsRequiereMail = (bool)ViewBag.IsRequiereMail; 
+
+    var TipoCausa = ViewBag.TipoCausa as IList<Application.DTO.Models.TipoCausa>;
+
+    IList<Application.DTO.Models.TipoCausa> TipoCausaRecursoHecho = new List<Application.DTO.Models.TipoCausa>();
+    IList<Application.DTO.BoxHome> Boxes = new List<Application.DTO.BoxHome>();
+
+    foreach (var item in TipoCausa)
+    {
+        bool add = false;
+
+        if (item.IsRecurdoDeHecho())
+        {
+            TipoCausaRecursoHecho.Add(item);
+
+            if (!Boxes.Any(x => x.IsRecurdoDeHecho()))
+            {
+                add = true;
+                item.DescripcionHTML = "Recurso de<br>Hecho";
+            }
+        }
+        else
+        {
+            add = true;
+        }
+
+        if (add)
+        {
+            if (!item.IsRecurdoDeHecho())
+            {
+                item.DescripcionHTML = item.Descripcion.Trim().Replace(" ", "<br>");
+            }
+
+            item.Descripcion = item.Descripcion.Trim();
+
+            item.SetIcon();
+
+            Boxes.Add(new Application.DTO.BoxHome()
+            {
+                TipoCausaID = item.TipoCausaID,
+                Descripcion = item.Descripcion,
+                DescripcionHTML = item.DescripcionHTML,
+                DescripcionLarga = item.DescripcionLarga.Trim(),
+                icon = item.Icon
+            });
+        }
+    }
+
+    Boxes.Add(new Application.DTO.BoxHome()
+    {
+        TipoCausaID = 100,
+        DescripcionHTML = "Buscar<br>Causas",
+        Descripcion = "Buscar Causas",
+        DescripcionLarga = "Aliquam accumsan libero non ligula facilisis finibus.",
+        icon = "fa-search",
+        IsSearch = true
+    });
+
+    IList<Application.DTO.BoxHome> Boxes1 = Boxes.Take(3).ToList();
+    var last = Boxes1.LastOrDefault();
+    IList<Application.DTO.BoxHome> Boxes2 = Boxes.Where(x => x.TipoCausaID > last.TipoCausaID).ToList();
+
+}
+
+
+<script type="text/javascript">
+    var oTableGrid;
+
+    ; (function ($) {
+        $(function () {
+
+            @if (IsRequiereMail)
+            {
+                @:ChangeEmailCiudadano();
+            }
+
+        });
+    })(jQuery);
+
+    function CreateExpedienteRDE(option) {
+
+        var opts = {
+            title: "Seleccione Tipo Expediente a Ingresar",
+            msg1: $("#btnsAddExpediente").html(),
+            url: null,
+            params: {},
+            btn1Hide: true,
+            replaceParrafo: true,
+            callback: function () {
+
+            }
+        }
+
+        xDialogConfirmAction(opts);
+    }
+
+</script>
+
+<div class="bodyContent">
+    <div class="cont">
+
+        <fieldset>
+            <legend class="legendTitle">@PageTitle</legend>
+            @Html.AntiForgeryToken()
+            @Html.Raw(Html.GetInfoVentana(Domain.Infrastructure.TipoVentana.ExternoPrincipal))
+
+
+            <fieldset class="x-fieldset fsIndex">
+
+                @if (Boxes.Count == 1 && Boxes.Any(x => x.IsSearch))
+                {
+                    <div class="container containerIndex" style="margin-top:20px">
+                        <div class="row">
+                            @foreach (var item in Boxes)
+                            {
+                                var link = string.Format("LinkRedirect('{0}')", Url.RouteUrl("EscritorioCausas"));
+
+                                <div class="col-md-12 ac d-none d-lg-block cursorp" onclick="@link">
+                                    <div class="box">
+                                        <i class="fas @item.icon"></i>
+                                    </div>
+                                    <span class="nameBox">@Html.Raw(item.DescripcionHTML)</span>
+                                </div>
+
+                                <div class="box2 row d-block d-lg-none cursorp" onclick="@link">
+                                    <div class="col-12 d-flex align-items-center">
+                                        <i class="fas @item.icon d-inline-block"></i>
+                                        <h4 class="fw-500 d-inline-block ml-3">@item.Descripcion</h4>
+                                    </div>
+                                    <div class="col-12 mt-3">
+                                        <label>@item.DescripcionLarga</label>
+                                    </div>
+                                </div>
+
+                            }
+                        </div>
+
+                    </div>
+                }
+                else
+                {
+                    <div class="container containerIndex" style="margin-top:20px">
+                        <div class="row">
+                            @foreach (var item in Boxes1)
+                            {
+                                var link = "";
+
+                                if (item.IsRecurdoDeHecho())
+                                {
+                                    link = "CreateExpedienteRDE()";
+                                }
+                                else if (item.IsSearch)
+                                {
+                                    link = string.Format("LinkRedirect('{0}')", Url.RouteUrl("EscritorioCausas"));
+                                }
+                                else
+                                {
+                                    link = string.Format("LinkRedirect('{0}')", Url.Action("Registro", "Expedientes", new { @id = 0, @id2 = item.TipoCausaID }));
+                                }
+
+                                <div class="col-md-4 ac d-none d-lg-block cursorp" onclick="@link">
+                                    <div class="box">
+                                        <i class="fas @item.icon"></i>
+                                    </div>
+                                    <span class="nameBox">@Html.Raw(item.DescripcionHTML)</span>
+                                </div>
+
+                                <div class="box2 row d-block d-lg-none cursorp" onclick="@link">
+                                    <div class="col-12 d-flex align-items-center">
+                                        <i class="fas @item.icon d-inline-block"></i>
+                                        <h4 class="fw-500 d-inline-block ml-3">@item.Descripcion</h4>
+                                    </div>
+                                    <div class="col-12 mt-3">
+                                        <label>@item.DescripcionLarga</label>
+                                    </div>
+                                </div>
+                            }
+
+                        </div>
+
+                        <div class="row">
+                            @foreach (var item in Boxes2)
+                            {
+                                var link = "";
+
+                                if (item.IsRecurdoDeHecho())
+                                {
+                                    link = "CreateExpedienteRDE()";
+                                }
+                                else if (item.IsSearch)
+                                {
+                                    link = string.Format("LinkRedirect('{0}')", Url.RouteUrl("EscritorioCausas"));
+                                }
+                                else
+                                {
+                                    link = string.Format("LinkRedirect('{0}')", Url.Action("Registro", "Expedientes", new { @id = 0, @id2 = item.TipoCausaID }));
+                                }
+
+                                <div class="col-md-4 ac d-none d-lg-block cursorp" onclick="@link">
+                                    <div class="box">
+                                        <i class="fas @item.icon"></i>
+                                    </div>
+                                    <span class="nameBox">@Html.Raw(item.DescripcionHTML)</span>
+                                </div>
+
+                                <div class="box2 row d-block d-lg-none cursorp" onclick="@link">
+                                    <div class="col-12 d-flex align-items-center">
+                                        <i class="fas @item.icon d-inline-block"></i>
+                                        <h4 class="fw-500 d-inline-block ml-3">@item.Descripcion</h4>
+                                    </div>
+                                    <div class="col-12 mt-3">
+                                        <label>@item.DescripcionLarga</label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+
+
+            </fieldset>
+        </fieldset>
+    </div>
+</div>
+
+<div id="btnsAddExpediente" style="display:none">
+    <fieldset class="x-fieldset">
+        <legend class="celeste bold">Recurso de Hecho</legend>
+        @foreach (var item in TipoCausaRecursoHecho)
+        {
+            string Descripcion = item.Descripcion.Replace("Recurso de Hecho", "");
+
+            <button type="button" id="" class="btn btn-default btn-lg btn-block"
+                    onclick="LinkRedirect('@Url.Action("Registro", "Expedientes", new { @id = 0, @id2 = item.TipoCausaID})')">
+                @Descripcion
+                </button>
+        }
+
+    </fieldset>
+</div>

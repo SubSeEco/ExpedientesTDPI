@@ -1,0 +1,13 @@
+﻿[
+  {
+    "outputFile": "Includes/css/login.internal.css",
+    "inputFile": "Includes/scss/login.scss",
+    "minify": {
+      "enabled": true
+    },
+    "includeInProject": true,
+    "options": {
+      "sourceMap": false
+    }
+  }
+]

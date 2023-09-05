@@ -1,0 +1,84 @@
+﻿@using resources = Infrastructure.Resources;
+@using Enums = Domain.Infrastructure;
+
+@{
+    string PageTitle = "Mantenedor de Opciones Tipos de Trámite";
+    ViewBag.Title = PageTitle;
+
+    var TipoTramite = ViewBag.TipoTramiteList as IList<Application.DTO.Models.TipoTramite>;
+
+    //Oficio no tiene opciones
+    //TipoTramite = TipoTramite.Where(x=> x.TipoTramiteID != (int)Enums.TipoTramite.Oficio).ToList();
+
+}
+
+<script type="text/javascript">
+
+
+    ; (function ($) {
+        $(function () {
+
+            $("#TipoTramiteID").on("change", function (e) {
+
+                e.preventDefault();
+
+                var $divDet = $("#divDetalle");
+                $divDet.html("");
+
+                var TipoTramiteID = parseInt($(this).val()) || 0;
+
+                if (TipoTramiteID == 0) {
+                    return false;
+                }
+
+                var before = function () { $divDet.html(divLoaderHtml()); };
+                var params = { __RequestVerificationToken: getVToken(), TipoTramiteID: TipoTramiteID };
+
+                xAjaxHtml("@Url.Action("GetOpcionesTipoTramite", "Administracion")", params, before, function ()
+                {
+                    $divDet.html(DataHTM);
+                });
+            });
+
+        });
+    })(jQuery);
+
+
+
+
+</script>
+
+<div class="bodyContent">
+    <div class="cont">
+
+        <fieldset>
+            <legend class="legendTitle">@PageTitle</legend>
+            @Html.Raw(Html.GetInfoVentana(Enums.TipoVentana.MantenedorOpcionesTipoTramite))
+
+            @Html.AntiForgeryToken()
+
+            <fieldset id="fsTipoTramite" class="x-fieldset" style="">
+                <legend class="bold celeste">Selección</legend>
+
+                <div class="col-md-12">
+                    <div class="form-group" id="">
+                        <select id="TipoTramiteID" name="TipoTramiteID" class="form-control" style="">
+                            <option value="0">@resources.GlobalResources.OptionInicial</option>
+                            @foreach (var item in TipoTramite.OrderBy(x => x.Descripcion))
+                            {
+                                <option value="@item.TipoTramiteID">@item.Descripcion</option>
+                            }
+
+                        </select>
+                    </div>
+                </div>
+
+            </fieldset>
+
+            <div id="divDetalle" style="min-height:300px"></div>
+
+        </fieldset>
+
+    </div>
+</div>
+<div class="clearfix"></div>

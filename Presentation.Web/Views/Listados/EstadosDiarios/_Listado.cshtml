@@ -1,0 +1,230 @@
+﻿@using Enums = Domain.Infrastructure;
+@using resources = Infrastructure.Resources;
+
+@{
+
+    int count = 1;
+
+    var Listado = ViewBag.Listado as IList<Application.DTO.Models.EstadoDiario>;
+
+}
+
+
+<script type="text/javascript">
+
+    var oTableGrid;
+
+    ; (function ($) {
+        $(function () {
+
+            var ParamsGrid1 = generalGridParams;
+
+            var localGridParams = {
+                fnDrawCallback: function () {
+                    callToolTipsGrid("grillaListadoEstadoDiario");
+                }
+            }
+
+            generalGridParams.paging = true;
+            generalGridParams.pageLength = parseInt("@Domain.Infrastructure.WebConfigValues.CantidadResultadosGrilla");
+            //generalGridParams.ordering = false;
+
+            var allGridParams = $.extend({}, localGridParams, generalGridParams);
+            oTableGrid = $('#grillaListadoEstadoDiario').removeClass("hide").dataTable(allGridParams);
+
+        });
+    })(jQuery);
+
+    function GetEliminarEstadoDiario(key) {
+
+        var optBtn = {
+            title: "Eliminar Estado Diario",
+            msg1: "@resources.GlobalResources.ConfirmaEliminar",
+            msg2: "@resources.GlobalResources.RegistroEliminado",
+            url: "@Url.Action("ActionExpediente", "Expedientes")",
+            params: {
+                __RequestVerificationToken: getVToken(),
+                action: "@Enums.ActionSystem.EliminarEstadoDiario",
+                Identidad: key
+            },
+            callback: function () {
+                GetListadoEstadoDiario();
+            },
+            alert: "alert-danger",
+            txtBtn1: "Sí"
+        }
+
+        xDialogConfirmAction(optBtn);
+    }
+
+    function GetFinalizarEstadoDiario(key) {
+
+        var optBtn = {
+            title: "Finalizar Estado Diario",
+            msg1: "¿Confirma finalizar Estado Diario para publicación?",
+            msg2: "",
+            url: "@Url.Action("ActionExpediente", "Expedientes")",
+            params: {
+                __RequestVerificationToken: getVToken(),
+                action: "@Enums.ActionSystem.FinalizarEstadoDiario",
+                Identidad: key
+            },
+            callback: function () {
+                GetListadoEstadoDiario();
+            },
+            alert: "alert-danger",
+            txtBtn1: "Sí"
+        }
+
+        xDialogConfirmAction(optBtn);
+    }
+
+    function GetDetalleExpedientes(EstadoDiarioID)
+    {
+        var $divDet = $("#divExpedietesEstadoDiario");
+
+        $divDet.html("");
+
+        var before = function () { $divDet.html(divLoaderHtml()); };
+        var params = {
+            __RequestVerificationToken: getVToken(),
+            EstadoDiarioID: EstadoDiarioID
+        };
+
+        xAjaxHtml("@Url.Action("GetDetalleExpedientes", "Listados")", params, before, function ()
+        {
+            $divDet.html(DataHTM);
+
+            scrollToElement($divDet);
+        });
+    }
+
+    function GetGenerarPDF(EstadoDiarioID, Fecha) {
+
+
+        xDialogConfirmAction({
+            url: "@Url.Action("GenerarListadoEstadoDiarioPDF", "Listados")",
+            title: "Estado Diario PDF",
+            msg1: "¿Confirma generar documento PDF para la fecha <b>" + Fecha + "</b>?",
+            IsHideMessageEnd: true,
+            params: {
+                __RequestVerificationToken: getVToken(),
+                EstadoDiarioID: EstadoDiarioID
+            },
+            callback: function () {
+
+                if (xJSONResult.result == ReturnJson.SinAccion) {
+                    showBlockUIError("No es posible generar el PDF, favor reintente mas tarde.");
+                    return false;
+                }
+
+                if (xJSONResult.result == ReturnJson.DatoNoEncontrado) {
+                    showBlockUIError("No hay Expedientes asignados para generar el PDF");
+                    return false;
+                }
+
+                if (xJSONResult.result == ReturnJson.ActionSuccess) {
+                    showBlockUI();
+                    $("#btnBuscar").click();
+                }
+
+            }
+
+        });
+    }
+
+</script>
+
+<div class="table-responsive-not">
+    <table class="table table-striped table-sm table-bordered table-hover x-table allW" id="grillaListadoEstadoDiario">
+        <thead>
+            <tr>
+                <th class="ac" style="width:1%">@resources.GlobalResources.TH_Number</th>
+                <th class="ac nw" style="text-align: center !important">Fecha</th>
+                <th class="ac " style="">Estado</th>
+                <th class="ac" style="width:10%">@resources.GlobalResources.Seleccionar</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Listado.OrderByDescending(x => x.Fecha))
+            {
+                string iconVer = item.IsGenerado() ? "zoom1" : "edit";
+                string stringVer = item.IsGenerado() ? resources.GlobalResources.Editar : resources.GlobalResources.BtnVer;
+
+                bool PuedeEditar = item.IsBorrador();
+                bool PuedeEliminar = item.IsBorrador() || item.IsGenerado();
+                bool PuedeGenerar = PuedeEliminar;
+                bool PuedeDescargar = item.IsGenerado() || item.IsPublicado();
+                bool PuedeVerDetalle = !item.IsEliminado();
+                bool PuedeFinalizar = PuedeVerDetalle && item.IsGenerado() && !item.IsPublicado();
+
+                string Fecha = Html.DatetimeToString(item.Fecha, "dd-MM-yyyy");
+
+                <tr class="@(item.IsEliminado() ? "rowDeleted" : "") ">
+                    <td class="ac">@count</td>
+                    <td class="ac nw">@Fecha</td>
+                    <td class="">@item.TipoEstadoDiario.Descripcion</td>
+                    <td class="ac">
+
+                        @if (PuedeEditar)
+                        {
+                            <a class='x-title-l' style=''
+                               onclick="GetEstadoDiario(@item.EstadoDiarioID)"
+                               href='javascript:void(0);'
+                               title='@resources.GlobalResources.Editar'><i class='x-icon x-icon-edit'></i></a>
+                        }
+
+                        @if (PuedeDescargar && item.DocumentoSistemaTabla.Count > 0)
+                        {
+                            int TipoDocumentoEnum = (int)Enums.TipoDocumento.EstadoDiario;
+                            int CausaID = 0;
+                            var doc = item.DocumentoSistemaTabla.LastOrDefault();
+
+                            <a style="margin-right:2px" href="javascript:void(0)"
+                               onclick='getDownloadFile(@doc.DocumentoSistemaID, @CausaID, "@doc.Hash.Trim()", @TipoDocumentoEnum)'
+                               class="x-title-l" title="Descargar PDF">
+                                <i class="x-icon x-icon-pdf" style="cursor: pointer;"></i>
+                            </a>
+                        }
+
+                        @if (PuedeVerDetalle)
+                        {
+                            <a class='x-title-l' style=''
+                               onclick="GetDetalleExpedientes(@item.EstadoDiarioID);seleccionarTRGrid('grillaListadoEstadoDiario', this)"
+                               href='javascript:void(0);'
+                               title='Ver Detalle'><i class='x-icon x-icon-org'></i></a>
+                        }
+
+                        @if (PuedeGenerar)
+                        {
+                            <a class='x-title-l' style=''
+                               onclick="GetGenerarPDF(@item.EstadoDiarioID, '@Fecha');"
+                               href='javascript:void(0);'
+                               title='Generar PDF'><i class='x-icon x-icon-folder2'></i></a>
+                        }
+
+                        @if (PuedeEliminar)
+                        {
+                            <a class='x-title-l' style=''
+                               onclick="GetEliminarEstadoDiario(@item.EstadoDiarioID)"
+                               href='javascript:void(0);'
+                               title='@resources.GlobalResources.BtnEliminar'><i class='x-icon x-icon-delete'></i></a>
+                        }
+
+                        @if (PuedeFinalizar)
+                        {
+                            <a class='x-title-l' style=''
+                               onclick="GetFinalizarEstadoDiario(@item.EstadoDiarioID)"
+                               href='javascript:void(0);'
+                               title='@resources.GlobalResources.Finalizar'><i class='x-icon x-icon-ended'></i></a>
+                        }
+
+                    </td>
+                </tr>
+                count++;
+            }
+        </tbody>
+    </table>
+</div>
+
+<div id="divExpedietesEstadoDiario"></div>

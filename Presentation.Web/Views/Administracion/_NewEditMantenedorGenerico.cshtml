@@ -1,0 +1,130 @@
+﻿@using resources = Infrastructure.Resources;
+@using Enums = Domain.Infrastructure;
+
+@{
+    int codigoObjeto = ViewBag.codigoObjeto;
+    string Descripcion = ViewBag.Descripcion;
+    bool IsVigente = (bool)ViewBag.IsVigente;
+
+    bool isNew = (codigoObjeto == 0 && Descripcion == string.Empty);
+
+}
+
+<script type="text/javascript">
+    ; (function ($) {
+        $(function () {
+    
+            $(".xCheckbox").bootstrapSwitch({
+                onSwitchChange: function (event, state) {
+
+                }
+            });
+
+        });
+    })(jQuery);
+
+    function btnEditar() {
+
+        var tablaID = $("#tablaID").val();
+        var isVigente = ($("#Vigente").is(":checked"));
+        var txtEnd = $.trim($("[name='additemDescripcion']").val());
+        var codigoObj = $("[name='codigoObjeto']").val();
+
+        if (txtEnd == "") {
+            showBlockUIError("@resources.Administracion.DebeSeleccionarDescripcion");
+            return false;
+        }
+
+        var btnEvent = $(this);
+        xUIBtnAjax(btnEvent, 1);
+
+        $.ajax({
+                type: "POST", cache: false, url: "@Url.Action("UpdateMantenedor", "Administracion")",
+                data: { codigoObj: codigoObj, TableName: tablaID, txtDesc: txtEnd, isVigente: isVigente, __RequestVerificationToken: getVToken() },
+                success: function (data) {
+                    showBlockUI(getDatailMantenedor);
+                    CloseDialog();
+                    xUIBtnAjax(btnEvent, 0);
+                },
+                error: function (error) {
+
+                if (error.status == 403) {
+                    window.location.href = HomeSistemas;
+                    return false;
+                } else {
+                    showBlockUIError("@resources.GlobalResources.HaOcurridoError: " + error.statusText);
+                }
+            }
+        });
+
+    }
+
+    function btnCrear() {
+
+        var tablaID = $("#tablaID").val();
+        var isVigente = ($("#Vigente").is(":checked"));
+        var txtEnd = $.trim($("[name='additemDescripcion']").val());
+
+        if (txtEnd == "") {
+            showBlockUIError("@resources.Administracion.DebeSeleccionarDescripcion");
+            return false;
+        }
+
+        var btnEvent = $(this);
+        xUIBtnAjax(btnEvent, 1);
+
+        $.ajax({
+                type: "POST", cache: false, url: "@Url.Action("CreateMantenedor", "Administracion")",
+                data: { TableName: tablaID, txtDesc: txtEnd, isVigente: isVigente, __RequestVerificationToken: getVToken() },
+                success: function (data) {
+                    showBlockUI(getDatailMantenedor);
+                    CloseDialog();
+                    xUIBtnAjax(btnEvent, 0);
+                },
+                error: function (error) {
+
+                if (error.status == 403) {
+                    window.location.href = HomeSistemas;
+                    return false;
+                } else {
+                    showBlockUIError("@resources.GlobalResources.HaOcurridoError: " + error.statusText);
+                }
+            }
+
+        });
+    }
+
+</script>
+
+<div class="modal-body" style="padding-top: 6px;">
+    
+    @Html.Hidden("codigoObjeto", codigoObjeto)
+    
+    <div class="form-group row">
+        <label for="additemDescripcion" class="col-md-3 col-form-label">@resources.Administracion.Descripcion <span class="span-obligatorio">(*)</span> </label>
+        <div class="col-sm-9">
+            @Html.TextBox("additemDescripcion", Descripcion, new { @class = "form-control", @style = "", @placeholder = "", @maxlength = "100" })
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label for="itemCodigo" class="col-md-3 col-form-label">@resources.Administracion.Vigente </label>
+        <div class="col-sm-4" style="margin-top: 5px">
+            @Html.Raw(Html.MyCheckbox(IsVigente, "Vigente", 0, "", "small", 0, false, false, ""))
+        </div>
+    </div>       
+    
+    <div class="modal-footer">
+        @if (isNew)
+        {
+            <button id="btnCrear" onclick="btnCrear()" class="btn btn-default"><i class="x-icon x-icon-save2 icon-in-button"></i> @resources.GlobalResources.BtnGuardar</button><i class="x-icon-loader hide"></i>            
+        }
+        else
+        {
+            <button id="btnEditar" onclick="btnEditar()" class="btn btn-default"><i class="x-icon x-icon-save2 icon-in-button"></i> @resources.GlobalResources.BtnGuardar</button><i class="x-icon-loader hide"></i>
+        }
+        
+        <button class="btn btn-default" data-dismiss="modal" type="button"><i class="x-icon x-icon-cancel2 icon-in-button"></i> @resources.GlobalResources.BtnCancelar</button>
+    </div>
+
+</div>

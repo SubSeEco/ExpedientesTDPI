@@ -1,0 +1,82 @@
+﻿@using resources = Infrastructure.Resources;
+@using Enums = Domain.Infrastructure;
+
+@{
+    string PageTitle = "Mantenedor de Tipos de Documento";
+    ViewBag.Title = PageTitle;
+
+    var TipoDocumento = ViewBag.TipoDocumento as IList<Application.DTO.Models.TipoDocumento>;
+
+}
+
+<script type="text/javascript">
+
+
+    ; (function ($) {
+        $(function () {
+
+            $("#TipoDocumentoID").on("change", function (e) {
+
+                e.preventDefault();
+
+                var $divDet = $("#divDetalle");
+                $divDet.html("");
+
+                var TipoDocumentoID = parseInt($(this).val()) || 0;
+
+                if (TipoDocumentoID == 0) {
+                    return false;
+                }
+
+                var before = function () { $divDet.html(divLoaderHtml()); };
+                var params = { __RequestVerificationToken: getVToken(), TipoDocumentoID: TipoDocumentoID };
+
+                xAjaxHtml("@Url.Action("GetDetalleTipoDocumento", "Administracion")", params, before, function ()
+                {
+                    $divDet.html(DataHTM);
+                });
+            });
+
+        });
+    })(jQuery);
+
+
+
+
+</script>
+
+<div class="bodyContent">
+    <div class="cont">
+
+        <fieldset>
+            <legend class="legendTitle">@PageTitle</legend>
+
+            @Html.Raw(Html.GetInfoVentana(Enums.TipoVentana.MantenedorTipoDocumento))
+
+            @Html.AntiForgeryToken()
+
+            <fieldset id="" class="x-fieldset" style="">
+                <legend class="bold celeste">Selección</legend>
+
+                <div class="col-md-12">
+                    <div class="form-group" id="">
+                        <select id="TipoDocumentoID" name="TipoDocumentoID" class="form-control" style="">
+                            <option value="0">@resources.GlobalResources.OptionInicial</option>
+                            @foreach (var item in TipoDocumento.OrderBy(x => x.Descripcion))
+                            {
+                                <option value="@item.TipoDocumentoID">@item.Descripcion</option>
+                            }
+
+                        </select>
+                    </div>
+                </div>
+
+            </fieldset>
+
+            <div id="divDetalle" style="min-height:300px"></div>
+
+        </fieldset>
+
+    </div>
+</div>
+<div class="clearfix"></div>

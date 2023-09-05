@@ -1,0 +1,45 @@
+﻿@using resources = Infrastructure.Resources;
+
+
+@{
+    Layout = null;
+
+}
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Tribunal de Propiedad Industrial - TDPI</title>
+    <link rel="shortcut icon" href="favicon.ico" />
+    <meta name="description" content="SIAC" />
+    <meta charset="UTF-8">
+
+    <script src="/Includes/js/jquery-3.4.1.min.js"></script>
+
+    <link rel="stylesheet" href="~/Includes/bootstrap-4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="~/Includes/css/app.css">
+    <link rel="stylesheet" href="~/Includes/css/site.css">
+    <script src="/Includes/bootstrap-4.3.1/js/bootstrap.min.js"></script>
+
+
+
+</head>
+<body>
+
+    <div id="">
+        <br /><br /><br />
+        <fieldset class="ma" style="width: 96%;">
+            <legend>TDPI: @resources.UploadFiles.Error_Descarga</legend>
+
+
+            <div class="alert alert-danger" role="alert">
+                <h4>@resources.UploadFiles.Error_EnLaDescarga</h4>
+                <br />
+                @resources.UploadFiles.Error_ElDocumento <b>@ViewBag.Archivo</b> @resources.UploadFiles.Error_NoHaPosisoDescargarse
+            </div>
+
+        </fieldset>
+
+    </div>
+
+</body>
+</html>

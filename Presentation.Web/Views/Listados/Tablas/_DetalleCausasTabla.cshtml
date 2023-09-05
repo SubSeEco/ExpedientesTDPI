@@ -1,0 +1,134 @@
+﻿@model Application.DTO.Models.Tabla
+
+@using Enums = Domain.Infrastructure;
+@using resources = Infrastructure.Resources;
+
+@{
+    int count = 1;
+    string title = string.Format("{0} / {1} / {2}", Model.NombreRelator, Model.Sala.Descripcion, Model.TipoTabla.Descripcion);
+}
+
+
+<h4>@title</h4>
+
+<script type="text/javascript">
+
+
+    ; (function ($) {
+        $(function () {
+
+            var localGridParams = {
+                fnDrawCallback: function () {
+                    callToolTipsGrid("grillaDetalleTabla");
+                }
+            }
+
+            generalGridParams.paging = true;
+            generalGridParams.pageLength = parseInt("@Domain.Infrastructure.WebConfigValues.CantidadResultadosGrilla");
+
+            var allGridParams = $.extend({}, localGridParams, generalGridParams);
+            var oTableGrid2 = $('#grillaDetalleTabla').removeClass("hide").dataTable(allGridParams);
+
+        });
+    })(jQuery);
+
+
+    function GetDeleteDetalleTabla(DetalleTablaID) {
+
+        var optBtn = {
+            title: "Quitar Causa",
+            msg1: "¿Confirma quitar la Causa de la Tabla?",
+            msg2: "Operación realizada",
+            url: "@Url.Action("ActionExpediente", "Expedientes")",
+            params: {
+                __RequestVerificationToken: getVToken(),
+                action: "@Enums.ActionSystem.QuitarVigenciaDetalleTabla",
+                Identidad: DetalleTablaID
+            },
+            callback: function () {
+                GetDetalleCausasTabla(@Model.TablaID);
+            },
+            alert: "alert-danger",
+            txtBtn1: "Sí"
+        }
+
+        xDialogConfirmAction(optBtn);
+     }
+
+
+    function GetAgregarCausaTabla(TablaID) {
+
+        var opt = {
+            title: "Agregar Causa a Tabla",
+            url: "@Url.Action("GetAgregarCausaTabla", "Listados")",
+            params:  {
+                __RequestVerificationToken: getVToken(),
+                TablaID: TablaID
+            },
+            size: "modal-xl",
+            callback: function () {
+
+            }
+        }
+
+        GetModalContent(opt);
+    }
+
+</script>
+
+
+@if (Model.IsBorrador())
+{
+    <div class="row">
+        <div class="col text-right" id="">
+            <button type="button" id="" class="btn btn-default"
+                    onclick="GetAgregarCausaTabla(@Model.TablaID)">
+                <i class="x-icon x-icon-mas3 icon-in-button"></i> @resources.GlobalResources.Agregar Causa
+            </button>
+        </div>
+    </div>
+}
+
+
+<div class="table-responsive-not">
+    <table class="table table-striped table-sm table-bordered table-hover x-table allW" id="grillaDetalleTabla">
+        <thead>
+            <tr>
+                <th class="ac" style="width:1%">@resources.GlobalResources.TH_Number</th>
+                <th class="ac" style="">N° Rol TDPI</th>
+                <th class="ac " style="">Fecha</th>
+                <th class="ac" style="">@resources.Expediente.lblDenominacion</th>
+                <th class="ac" style="">Órden</th>
+                <th class="ac" style="">N° de Solicitud</th>
+                <th class="ac nw" style="">Estado</th>
+                <th class="ac" style="width:10%">@resources.GlobalResources.TH_Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.DetalleTabla.Where(x => x.Vigente).OrderBy(x => x.Orden))
+            {
+                <tr id="trCauTab_@item.DetalleTablaID">
+                    <td class="ac">@count</td>
+                    <td class="ac nw">@item.Causa.NumeroTicket</td>
+                    <td class="ac nw">@Html.DatetimeToString(item.Causa.FechaIngreso)</td>
+                    <td>@item.Causa.Denominacion</td>
+                    <td class="ac">@item.Orden</td>
+                    <td class="nw">@item.Causa.Numero</td>
+                    <td class="nw">@item.Causa.EstadoCausa.Descripcion</td>
+                    <td class="ac">
+
+                    @if (Model.IsBorrador())
+                    {
+                        <a class='x-title-t getDialog' style=''
+                           onclick="GetDeleteDetalleTabla(@item.DetalleTablaID)"
+                           href='javascript:void(0);'
+                           title='@resources.GlobalResources.BtnEliminar'><i class='x-icon x-icon-delete'></i></a>
+                    }
+
+                    </td>
+                </tr>
+                count++;
+            }
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,121 @@
+﻿@using Enums = Domain.Infrastructure;
+@using resources = Infrastructure.Resources;
+
+@{
+    var FormatosPermitidos = ViewBag.FormatosPermitidos as IList<Application.DTO.Models.AsocTipoDocumentoAdjunto>;
+    var TipoDocumentoEnum = (int)ViewBag.TipoDocumentoEnum;
+
+    var DataForm = ViewBag.DataForm as Application.DTO.DataForm;
+}
+
+<script>
+    ; (function ($) {
+        $(function () {
+
+
+        });
+    })(jQuery);
+
+</script>
+
+<fieldset class="x-fieldset">
+    <legend class="celeste bold">Documentos adjuntos</legend>
+
+    <div class="alert alert-info" role="alert">
+        Al seleccionar un archivo deberá indicar el contenido del mismo en el campo de texto
+    </div>
+
+    <form class="" id="frmFileCausa" enctype="multipart/form-data" action="@Url.Action("SubirArchivo", "Uploader")" method="POST">
+        @Html.AntiForgeryToken()
+
+        @Html.Hidden("CausaID", DataForm.CausaID)
+        @Html.Hidden("ExpedienteID", DataForm.ExpedienteID)
+
+        <input type="hidden" id="_TipoDocumentoID" name="TipoDocumentoID" value="@TipoDocumentoEnum" />
+
+        <div class="form-group row" id="divDescArchivo">
+            <label for="Descripcion" id="" class="col-sm-3 col-form-label">Indique el contenido del archivo</label>
+            <div class="col-sm-9">
+                <input type="text" id="Descripcion" name="Descripcion" class="form-control notBlock" value="" />
+            </div>
+        </div>
+
+        <div class="input-group">
+            <div class="custom-file">
+                <input type="file" class="custom-file-input notBlock" id="file" name="file">
+                <label class="custom-file-label" for="file"
+                       data-browse="@resources.UploadFiles.FileInput_changeText"
+                       aria-describedby="inputGroupFileAddon">@resources.UploadFiles.FileInput_inputText</label>
+                </div>
+                <div class="input-group-append">
+                    <button class="btn btn-info btn-file" onclick='$("#frmFileCausa").submit();' type="button" id="inputGroupFileAddon">
+                        <i class="x-icon x-icon-upload2 icon-in-upload"></i> @resources.UploadFiles.lblSubirArchivo
+                    </button>
+                </div>
+            </div>
+            <small id="" class="form-text text-muted ac" style="margin-bottom: 10px;">
+                @resources.GlobalResources.ExtensionesPermitidas: @Html.Raw(Html.GetExtensionesPermitidas(DataForm.AsocTipoDocumentoAdjunto, IncluyeTamanio: true))
+            </small>
+
+        </form>
+
+
+        <div class="table-responsive">
+
+            <table class="@Html.GetBaseTableCSS()" id="">
+                <thead>
+                    <tr>
+                        <th class="ac" style="">#</th>
+                        <th class="ac" style="">Nombre Documento</th>
+                        <th class="ac" style="">Descripción</th>
+                        <th class="ac" style="">Fecha Carga</th>
+                        <th class="ac" style="">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.DocumentoCausa.Count > 0)
+                    {
+                        count = 1;
+
+                        foreach (var item in Model.DocumentoCausa)
+                        {
+                            <tr>
+                                <td class="ac">@count</td>
+                                <td class="">@item.NombreArchivoFisico</td>
+                                <td style="max-width:200px" class="fixWord">@item.Descripcion</td>
+                                <td class="ac">@Html.DatetimeToString(item.Fecha, "dd-MM-yyyy HH:mm")</td>
+                                <td class="ac">
+
+                                    <a style="margin-right:2px" href="javascript:void(0)"
+                                       onclick='getDownloadFile(@item.DocumentoCausaID, @Model.CausaID, "@item.Hash.Trim()", @TipoDocumentoEnum)'
+                                       class="x-title-l" title="@resources.GlobalResources.BtnDescargar">
+                                        <i class="x-icon @Html.GetCSS(item.NombreArchivoFisico)" style="cursor: pointer;"></i>
+                                    </a>
+
+                                    @if (PuedeAgregarDocumentos)
+                                    {
+                                        <a href="javascript:void(0)"
+                                           onclick='getDeleteFile(@item.DocumentoCausaID, @TipoDocumentoEnum, @item.VersionEncriptID, "@item.Hash.Trim()", @Model.CausaID)'
+                                           class="x-title-l" title="@resources.GlobalResources.BtnEliminar">
+                                            <i class="x-icon x-icon-delete notRemove" style="cursor: pointer;"></i>
+                                        </a>
+                                    }
+
+                                </td>
+                            </tr>
+                            count++;
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="" style="padding:5px 10px;">No hay información para desplegar</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+        </div>
+
+    </fieldset>
+

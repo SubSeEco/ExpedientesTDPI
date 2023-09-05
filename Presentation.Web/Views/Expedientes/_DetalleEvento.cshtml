@@ -1,0 +1,199 @@
+﻿@model Application.DTO.Models.Expediente
+
+@using Enums = Domain.Infrastructure;
+@using resources = Infrastructure.Resources;
+
+@{
+    var DataForm = ViewBag.DataForm as Application.DTO.DataForm;
+
+    bool IsIngresoPlazoDias = DataForm.EstadosAplica.AsocTipoTramiteOpciones.PlazoDias > 0;
+    bool IsPermiteFechaAnterior = DataForm.EstadosAplica.AsocTipoTramiteOpciones.IsPermiteFechaAnterior;
+
+    int PlazoDias = 0;
+    int NumeroFirmas = DataForm.EstadosAplica.AsocTipoTramiteOpciones.NumeroFirmas;
+
+    if (IsIngresoPlazoDias)
+    {
+        if (Model.ExpedienteID == 0)
+        {
+            PlazoDias = DataForm.EstadosAplica.AsocTipoTramiteOpciones.PlazoDias;
+        }
+        else
+        {
+            PlazoDias = Model.PlazoDias;
+        }
+    }
+
+    if (Model.ExpedienteID == 0)
+    {
+        Model.FechaExpediente = DateTime.Now;
+    }
+
+}
+
+<script>
+
+    var paramsEvento = {
+        IsDiasHabiles: "@DataForm.EstadosAplica.AsocTipoTramiteOpciones.IsDiasHabiles".bool(),
+        IsPermiteFechaAnterior: "@IsPermiteFechaAnterior".bool()
+    }
+
+    ; (function ($) {
+        $(function () {
+
+            @if (NumeroFirmas > 0)
+            {
+                @:$("#fsFirmasExpediente").show();
+                @:SetAppFirmas();
+            }
+
+            IsIntegerValidate();
+            SetCalendar();
+
+            $("#PlazoDias").on("blur", function () {
+
+                let valor = parseInt($(this).val()) || 0;
+                if (valor == 0) {
+                    $(this).val("");
+                    $("#frmExpediente #FechaCalculada").val("");
+                    return false;
+                }
+
+                SetComportamientoPlazo();
+
+            });
+
+            SetComportamientoPlazo();
+
+
+        });
+    })(jQuery);
+
+    function SetCalendar() {
+
+        let elemento = "#frmExpediente #FechaExpediente";
+
+        $(elemento).attr("maxlength", "10");
+
+        var _yearRange = $(this).attr("data-year-range") || "-100:+1"; //yearRange: '1999:2012',
+        var _maxDate = $(this).attr("data-max-date") || null;
+        var old_date = $(this).attr("data-old-date") || "";
+
+        $(elemento).datepicker({
+            yearRange: _yearRange,
+            maxDate: _maxDate,
+            minDate: paramsEvento.IsPermiteFechaAnterior ? "-1y" : "-0d",
+            beforeShow: function (i, e) {
+                var z = jQuery(i).closest(".ui-dialog").css("z-index") + 4;
+                e.dpDiv.css('z-index', z);
+            },
+            onSelect: function (dateText, inst) {
+
+                SetComportamientoPlazo();
+                $(elemento).blur();
+            }
+        });
+
+        $("#iconCal1").on('click', function () {
+            $("#frmExpediente #FechaExpediente").datepicker("show");
+        });
+    }
+
+    function SetComportamientoPlazo() {
+
+        if ($("#frmExpediente #PlazoDias").length > 0) {
+
+            let $_campoFechaIngreso = $("#frmExpediente #FechaExpediente");
+            let $_campoPlazoDias = $("#frmExpediente #PlazoDias");
+            let $_campoFechaCalculada = $("#frmExpediente #FechaCalculada");
+
+            let valorFechaIngreso = $.trim($_campoFechaIngreso.val());
+            let valorPlazoDias = parseInt($_campoPlazoDias.val()) || 0;
+
+            if (valorFechaIngreso != "" && valorPlazoDias > 0) {
+
+                let startdate = moment(valorFechaIngreso, "DD-MM-YYYY");
+
+                let newDate;
+                if (paramsEvento.IsDiasHabiles)
+                {
+                    newDate = moment(startdate, "DD-MM-YYYY").businessAdd(valorPlazoDias, 'days');
+                    console.log("solo Días habiles");
+                }
+                else
+                {
+                    newDate = moment(startdate, "DD-MM-YYYY").add(valorPlazoDias, 'days');
+                    console.log("Días corridos");
+                }
+
+
+
+                $_campoFechaCalculada.val(newDate.format("DD-MM-YYYY"));
+
+            } else {
+
+                $_campoFechaCalculada.val("");
+            }
+        }
+    }
+
+
+
+</script>
+
+
+<div class="form-group row align-items-center">
+    <label for="FechaIngreso" class="col-md-3 col-form-label" id="">Fecha Ingreso <span class="span-obligatorio">*</span></label>
+    <div class="col-md-4">
+        <div class="input-group">
+            @{
+                string year = IsPermiteFechaAnterior ? "-10:+0" : "0:+0";
+            }
+
+           @Html.TextBoxFor(x => x.FechaExpediente, new
+           {
+               @Value = Html.DatetimeToString(Model.FechaExpediente),
+               @class = "ac form-control verificar",
+               @style = "",
+               @placeholder = "",
+               @maxlength = "10",
+               @readonly ="readonly",
+               @data_year_range = year,
+               @data_max_date = "+0d",
+               @data_old_date = IsPermiteFechaAnterior
+           })
+
+            <div class="input-group-append">
+                <span class="input-group-text" id=""><i class="x-icon x-icon-calendar" id="iconCal1" data-dateinput=""></i></span>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+@if (IsIngresoPlazoDias)
+{
+    <div class="form-group row align-items-center">
+        <label for="PlazoDias" class="col-md-3 col-form-label" id="">Días Plazo <span class="span-obligatorio">*</span></label>
+        <div class="col-md-4">
+            <input type="text" class="verificar form-control IsInteger ac" 
+                   maxlength="3" id="PlazoDias" name="PlazoDias" value="@Html.DecimalFormat(PlazoDias)" />
+        </div>
+    </div>
+
+    <div class="form-group row align-items-center">
+        <label for="" class="col-md-3 col-form-label" id="">Fecha Plazo</label>
+        <div class="col-md-4">
+            <div class="input-group">
+                <input type="text" id="FechaCalculada" name="FechaCalculada" class="form-control ac" value="" readonly="readonly" />
+                <div class="input-group-append">
+                    <span class="input-group-text" id=""><i class="x-icon x-icon-calendar" ></i></span>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+

@@ -1,0 +1,186 @@
+﻿
+@model Application.DTO.FiltrosEscritorio
+
+@using resources = Infrastructure.Resources;
+@using Enums = Domain.Infrastructure;
+
+@{
+    string PageTitle = "Listado de Estados Diarios";
+    ViewBag.Title = PageTitle;
+
+    string OptionInitial = resources.GlobalResources.OptionInicial;
+
+    DateTime FechaDesde = DateTime.Now.AddDays(-7);
+    DateTime FechaHasta = DateTime.Now.AddDays(7);
+
+    int AnioOld = DateTime.Now.Year - Domain.Infrastructure.WebConfigValues.AnioInicial;
+}
+
+<script type="text/javascript">
+
+    ; (function ($) {
+        $(function () {
+
+            $("#btnBuscar").on("click", GetListadoEstadoDiario);
+            GetListadoEstadoDiario();
+
+        });
+    })(jQuery);
+
+    function GetListadoEstadoDiario() {
+
+        var desde = $.trim($("#FechaDesde").val());
+        var hasta = $.trim($("#FechaHasta").val());
+
+        if (desde == "" || hasta == "") {
+            showBlockUIError("Debe indicar las fechas Desde/Hasta");
+            return false;
+        }
+
+        if (!IsFechaValida("FechaDesde")) {
+            showBlockUIError("Ingrese una Fecha Desde válida.");
+            return false;
+        }
+
+        if (!IsFechaValida("FechaHasta")) {
+            showBlockUIError("Ingrese una Fecha Hasta válida.");
+            return false;
+        }
+
+        if (!IsFechaMenorIgual(desde, hasta)) {
+            showBlockUIError("La fecha Desde debe ser menor a la Fecha Hasta");
+            return false;
+        }
+
+        var xBtn = $("#btnBuscar");
+        //blockPageUI();
+
+        var $divDet = $("#divEstadosDiarios");
+        $divDet.html("");
+
+        var before = function () { $divDet.html(divLoaderHtml()); };
+        var params = {
+            __RequestVerificationToken: getVToken(),
+            FechaDesde: desde,
+            FechaHasta: hasta
+        };
+
+        xAjaxHtml("@Url.Action("GetListadoEstadoDiario", "Listados")", params, before, function ()
+        {
+            $divDet.html(DataHTM);
+        });
+
+    }
+
+    function GetEstadoDiario(EstadoDiarioID) {
+
+        var opt = {
+            title: (EstadoDiarioID == 0) ? "Agregar" : "Editar" + " Estado Diario",
+            url: "@Url.Action("GetEstadoDiario", "Listados")",
+            params:  {
+                __RequestVerificationToken: getVToken(),
+                EstadoDiarioID: EstadoDiarioID
+            },
+            size: "modal-lg",
+            callback: function () {
+
+            }
+        }
+
+        GetModalContent(opt);
+    }
+
+    function LimpiaForm() {
+        $("#frmFiltrosEscritorio").reset();
+    }
+
+</script>
+
+<div class="bodyContent">
+    <div class="cont">
+
+        <fieldset>
+            <legend class="legendTitle">@PageTitle</legend>
+
+            @Html.Raw(Html.GetInfoVentana(Domain.Infrastructure.TipoVentana.ListadosEstadosDiarios))
+
+            <fieldset class="x-fieldset">
+                <legend class="bold celeste">Filtros</legend>
+
+                <form class="" method="POST" id="frmFiltrosEscritorio" onsubmit="return false" autocomplete="on">
+                    @Html.AntiForgeryToken()
+
+                    <div class="row ">
+                        <div class="col-md-6">
+                            <div class="form-group row">
+                                <label for="FechaDesde" class="col-sm-4 col-form-label">Fecha Desde</label>
+                                <div class="col-sm-8 col-lg-5">
+                                    <div class="input-group">
+                                        @Html.TextBoxFor(x => x.FechaDesde, new
+                                   {
+                                       @Value = FechaDesde.ToString("dd-MM-yyyy"),
+                                       @class = "ac IsCalendar form-control",
+                                       @style = "",
+                                       @placeholder = "",
+                                       @maxlength = "10",
+                                       @data_year_range = string.Format("-{0}:+1", AnioOld),
+                                       @data_max_date = "+12m"
+                                   })
+                                        <div class="input-group-append">
+                                            <span class="input-group-text" id=""><i class="x-icon x-icon-calendar" data-dateinput="FechaDesde"></i></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group row">
+                                <label for="FechaHasta" class="col-sm-4 col-form-label">Fecha Hasta</label>
+                                <div class="col-sm-8 col-lg-5">
+                                    <div class="input-group">
+                                        @Html.TextBoxFor(x => x.FechaHasta, new
+                                   {
+                                       @Value = FechaHasta.ToString("dd-MM-yyyy"),
+                                       @class = "ac IsCalendar form-control",
+                                       @style = "",
+                                       @placeholder = "",
+                                       @maxlength = "10",
+                                       @data_year_range = string.Format("-{0}:+1", AnioOld),
+                                       @data_max_date = "+30d"
+                                   })
+                                        <div class="input-group-append">
+                                            <span class="input-group-text" id=""><i class="x-icon x-icon-calendar" data-dateinput="FechaHasta"></i></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+            </fieldset>
+
+        </fieldset>
+
+        <div class="row">
+            <div class="col">
+                <button id="btnBuscar" type="button" class="btn btn-default"><i class="x-icon x-icon-zoom1 icon-in-button"></i> @resources.GlobalResources.BtnBuscar</button>
+                <i class="x-icon-loader hide"></i>
+                <button style="" type="button" onclick="LimpiaForm(0)" class="btn btn-default" id="btnLimpiar"><i class="x-icon x-icon-limpiar icon-in-button"></i> @resources.GlobalResources.Limpiar  Filtros</button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col text-right" id="">
+                <button type="button" id="" class="btn btn-default" onclick="GetEstadoDiario(0)">
+                    <i class="x-icon x-icon-mas3 icon-in-button"></i> Agregar Estado Diario
+                </button>
+            </div>
+        </div>
+
+
+        <div id="divEstadosDiarios"></div>
+
+    </div>
+</div>

@@ -1,0 +1,249 @@
+﻿@model Application.DTO.FiltrosEscritorio
+
+@using resources = Infrastructure.Resources;
+@using Enums = Domain.Infrastructure;
+
+@{
+    string PageTitle = "Listado de Tablas";
+    ViewBag.Title = PageTitle;
+
+    string OptionInitial = resources.GlobalResources.OptionInicial;
+
+    DateTime FechaDesde = DateTime.Now.AddMonths(-1);
+    DateTime FechaHasta = DateTime.Now.AddMonths(1);
+
+    int AnioOld = DateTime.Now.Year - Domain.Infrastructure.WebConfigValues.AnioInicial;
+
+}
+
+<script type="text/javascript">
+
+    ; (function ($) {
+        $(function () {
+
+            $("#btnBuscar").on("click", GetListadoTablas);
+            GetListadoTablas();
+
+        });
+    })(jQuery);
+
+    function GetListadoTablas() {
+
+        var desde = $.trim($("#FechaDesde").val());
+        var hasta = $.trim($("#FechaHasta").val());
+
+        if (desde == "" || hasta == "") {
+            showBlockUIError("Debe indicar las fechas Desde/Hasta");
+            return false;
+        }
+
+        if (!IsFechaValida("FechaDesde")) {
+            showBlockUIError("Ingrese una Fecha Desde válida.");
+            return false;
+        }
+
+        if (!IsFechaValida("FechaHasta")) {
+            showBlockUIError("Ingrese una Fecha Hasta válida.");
+            return false;
+        }
+
+        if (!IsFechaMenorIgual(desde, hasta)) {
+            showBlockUIError("La fecha Desde debe ser menor a la Fecha Hasta");
+            return false;
+        }
+
+        var xBtn = $("#btnBuscar");
+        BtnInAction(xBtn, false, true);
+
+        var $divDet = $("#divTablas");
+        $divDet.html("");
+
+        var before = function () { $divDet.html(divLoaderHtml()); };
+
+        xAjaxHtml("@Url.Action("GetListadoTablas", "Listados")", $("#frmFiltrosEscritorio").serialize(), before, function ()
+        {
+            BtnInAction(xBtn, true, true);
+            $divDet.html(DataHTM);
+        });
+
+    }
+
+    function GetTabla(TablaID) {
+
+        var opt = {
+            title: (TablaID == 0) ? "Agregar" : "Editar" + " Tabla",
+            url: "@Url.Action("GetTabla", "Listados")",
+            params:  {
+                __RequestVerificationToken: getVToken(),
+                TablaID: TablaID
+            },
+            size: "modal-lg",
+            callback: function () {
+
+            }
+        }
+
+        GetModalContent(opt);
+    }
+
+    function LimpiaForm() {
+        $("#frmFiltrosEscritorio").reset();
+    }
+
+</script>
+
+
+<div class="bodyContent">
+    <div class="cont">
+
+        <fieldset>
+            <legend class="legendTitle">@PageTitle</legend>
+
+            @Html.Raw(Html.GetInfoVentana(Domain.Infrastructure.TipoVentana.ListadosIngreso))
+
+            <fieldset class="x-fieldset">
+                <legend class="bold celeste">Filtros</legend>
+
+                <form class="" method="POST" id="frmFiltrosEscritorio" onsubmit="return false" autocomplete="on">
+                    @Html.AntiForgeryToken()
+
+                    <div class="row ">
+                        <div class="col-md-6">
+                            <div class="form-group row">
+                                <label for="FechaDesde" class="col-sm-4 col-form-label">Fecha Desde</label>
+                                <div class="col-sm-8 col-lg-5">
+                                    <div class="input-group">
+                                        @Html.TextBoxFor(x => x.FechaDesde, new
+                                       {
+                                           @Value = FechaDesde.ToString("dd-MM-yyyy"),
+                                           @class = "ac IsCalendar form-control",
+                                           @style = "",
+                                           @placeholder = "",
+                                           @maxlength = "10",
+                                           @data_year_range = string.Format("-{0}:+1", AnioOld),
+                                           @data_max_date = "+60d"
+                                       })
+                                        <div class="input-group-append">
+                                            <span class="input-group-text" id=""><i class="x-icon x-icon-calendar" data-dateinput="FechaDesde"></i></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group row">
+                                <label for="FechaHasta" class="col-sm-4 col-form-label">Fecha Hasta</label>
+                                <div class="col-sm-8 col-lg-5">
+                                    <div class="input-group">
+                                        @Html.TextBoxFor(x => x.FechaHasta, new
+                                       {
+                                           @Value = FechaHasta.ToString("dd-MM-yyyy"),
+                                           @class = "ac IsCalendar form-control",
+                                           @style = "",
+                                           @placeholder = "",
+                                           @maxlength = "10",
+                                           @data_year_range = string.Format("-{0}:+1", AnioOld),
+                                           @data_max_date = "+30d"
+                                       })
+                                        <div class="input-group-append">
+                                            <span class="input-group-text" id=""><i class="x-icon x-icon-calendar" data-dateinput="FechaHasta"></i></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row ">
+                        <div class="col-md-6">
+                            <div class="form-group row">
+                                <label for="UsuarioRelatorID" class="col-sm-4 col-form-label">Relator </label>
+                                <div class="col-sm-8">
+                                    <select id="UsuarioRelatorID" name="UsuarioRelatorID" class="custom-select" data-default="-1">
+                                        <option value="-1">@OptionInitial</option>
+                                        @foreach (var item in Model.Usuario.Where(x => x.UsuarioID > 0))
+                                        {
+                                            <option value="@item.UsuarioID">@item.GetFullName()</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group row">
+                                <label for="SalaID" class="col-sm-4 col-form-label">Sala</label>
+                                <div class="col-sm-8">
+                                    <select id="SalaID" name="SalaID" class="custom-select" data-default="0">
+                                        <option value="0">@OptionInitial</option>
+                                        @foreach (var item in Model.Sala)
+                                        {
+                                            <option value="@item.SalaID">@item.Descripcion</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-sm-6">
+                            <div class="form-group row">
+                                <label for="NumeroTicket" class="col-sm-4 col-form-label">N° Rol TDPI</label>
+                                <div class="col-sm-8">
+                                    @Html.TextBoxFor(x => x.NumeroTicket, new { @class = "form-control", @style = "", @placeholder = "", @maxlength = "20" })
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group row">
+                                <label for="EstadoTablaID" class="col-sm-4 col-form-label">Estado</label>
+                                <div class="col-sm-8">
+                                    <select id="EstadoTablaID" name="EstadoTablaID" class="custom-select" data-default="0">
+                                        <option value="0">@OptionInitial</option>
+                                        @foreach (var item in Model.EstadoTabla)
+                                        {
+                                            <option value="@item.EstadoTablaID">@item.Descripcion</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+
+
+                </form>
+
+            </fieldset>
+
+        </fieldset>
+
+        <div class="row">
+            <div class="col">
+                <button id="btnBuscar" type="button" class="btn btn-default"><i class="x-icon x-icon-zoom1 icon-in-button"></i> @resources.GlobalResources.BtnBuscar</button>
+                <i class="x-icon-loader hide"></i>
+                <button style="" type="button" onclick="LimpiaForm(0)" class="btn btn-default" id="btnLimpiar"><i class="x-icon x-icon-limpiar icon-in-button"></i> @resources.GlobalResources.Limpiar  Filtros</button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col text-right" id="">
+                <button type="button" id="" class="btn btn-default" onclick="GetTabla(0)">
+                    <i class="x-icon x-icon-mas3 icon-in-button"></i> Agregar Tabla
+                </button>
+            </div>
+        </div>
+
+
+        <div id="divTablas"></div>
+
+    </div>
+</div>
+
+
+

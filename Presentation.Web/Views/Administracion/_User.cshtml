@@ -1,0 +1,222 @@
+﻿@model Application.DTO.Models.Usuario
+
+@using resources = Infrastructure.Resources;
+@using Enums = Domain.Infrastructure;
+
+@{
+    var Perfiles = ViewBag.Perfiles as IList<Application.DTO.Models.Perfil>;
+
+    string rutUsuario = (Model.IsClaveUnica) ? Model.Rut + "-" + Html.GetDv(Convert.ToInt32(Model.Rut)): string.Empty;
+
+    var TipoGeneroList = ViewBag.TipoGeneroList as IList<Application.DTO.Models.TipoGenero>;
+}
+
+<script type="text/javascript">
+    //@@ sourceURL=_Derivar.cshtml
+    var perINAPI = parseInt(@Html.EnumToInt(Enums.Perfil.INAPI));
+    var perSAG = parseInt(@Html.EnumToInt(Enums.Perfil.SAG));
+    var perTDPI = parseInt(@Html.EnumToInt(Enums.Perfil.TDPI));
+    var perAdmin = parseInt(@Html.EnumToInt(Enums.Perfil.Administrador));
+
+    ; (function ($) {
+        $(function () {
+
+            $(".xCheckbox").bootstrapSwitch({
+                onSwitchChange: function (event, state) {
+                    if (state) {
+
+                    } else {
+
+                    }
+                }
+            });
+
+            $(".chekPerfil").click(function () {
+                var val = $(this).val();
+                if ($(this).is(":checked")) 
+                {
+                    if (val == perINAPI) {
+                        $('#chk_' + perSAG).attr("disabled",true);
+                    }
+
+                    if (val == perSAG) {
+                        $('#chk_' + perINAPI).attr("disabled", true);
+                    }
+
+                } else {
+                    if (val == perINAPI) {
+                        $('#chk_' + perSAG).attr("disabled", false);
+                    }
+                    if (val == perSAG) {
+                        $('#chk_' + perINAPI).attr("disabled", false);
+                    }
+                }
+            });
+
+            activateForm("btnUser", "frmUser",
+                function () {
+
+
+
+                    return true;
+                },
+                function () {
+
+                    IsEdit = false;
+
+                    if (xResultJsonData.Update == 1) {
+
+                        var url = "/Administracion/Usuarios?autosearch=1";
+                        showBlockUI(LinkRedirect(url));
+
+                    } else {
+
+                        showBlockUI();
+                        DialogClose();
+                        $("#btnBuscar").trigger("click");
+
+                    }
+
+
+
+                });
+
+        });
+    })(jQuery);
+
+</script>
+
+<div class="modal-body" style="padding-top: 6px;">
+
+    <form class="form-horizontal" id="frmUser" method="post" action="@Url.Action("SaveUser", "Administracion")">
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(x => x.UsuarioID)
+        @Html.HiddenFor(x => x.IsClaveUnica)
+        @Html.HiddenFor(x => x.FechaRegistro)
+        @Html.HiddenFor(x => x.Rut)
+
+        @if (Model.IsClaveUnica)
+        {
+            <div class="form-group row">
+                <label for="Rut" id="" class="col-md-3 col-form-label">Rut </label>
+                <div class="col-md-9">
+                    @Html.TextBox("_rut", rutUsuario, new { @class = "form-control", @maxlength = "100", @disabled = true })
+                </div>
+            </div>
+        }
+
+        <div class="form-group row">
+            <label for="Nombres" id="" class="col-md-3 col-form-label">Nombres <span class="span-obligatorio">(*)</span></label>
+            <div class="col-md-9">
+                @Html.TextBoxFor(x => x.Nombres, new { @class = "form-control verificar", @maxlength = "100" })
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <label for="Apellidos" id="" class="col-md-3 col-form-label">Apellidos <span class="span-obligatorio">(*)</span></label>
+            <div class="col-md-9">
+                @Html.TextBoxFor(x => x.Apellidos, new { @class = "form-control verificar", @maxlength = "100" })
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <label for="TipoGeneroID" id="" class="col-md-3 col-form-label">Genero <span class="span-obligatorio">(*)</span></label>
+            <div class="col-md-9">
+                <select id="TipoGeneroID" name="TipoGeneroID" class="custom-select verificar" data-default="">
+                    <option value="">@resources.GlobalResources.OptionInicial</option>
+                    @foreach (var item in TipoGeneroList)
+                    {
+                        string selected = (item.TipoGeneroID == Model.TipoGeneroID) ? "selected='selected'" : "";
+                        <option value="@item.TipoGeneroID" @selected>@item.Descripcion</option>
+                    }
+                </select>
+
+            </div>
+        </div>
+        
+        <div class="form-group row">
+            <label for="Mail" id="" class="col-md-3 col-form-label">Mail <span class="span-obligatorio">(*)</span></label>
+            <div class="col-md-9">
+                @Html.TextBoxFor(x => x.Mail, new { @class = "form-control IsEmail verificar", @maxlength = "100" })
+            </div>
+        </div>
+
+        @if (!Model.IsClaveUnica)
+        {
+            <div class="form-group row">
+                <label for="AdID" id="" class="col-md-3 col-form-label">Usuario TDPI</label>
+                <div class="col-md-9">
+                    @Html.TextBoxFor(x => x.AdID, new { @class = "form-control", @maxlength = "100" })
+                </div>
+            </div>
+        }
+
+
+        <fieldset class="x-fieldset">
+            <legend class="celeste">Asignación de Perfiles</legend>
+
+            <table class="@Html.GetBaseTableCSS() " id="">
+                <thead>
+                    <tr>
+                        <th class="ac" style="">Perfil</th>
+                        <th class="ac nw" style="width:10%">Asignado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Perfiles)
+                    {
+                        #region Parametros
+                        if ((item.PerfilID == (int)Enums.Perfil.Administrador || item.PerfilID == (int)Enums.Perfil.TDPI) && Model.IsClaveUnica)
+                        {
+                            continue;
+                        }
+                        if ((item.PerfilID == (int)Enums.Perfil.INAPI || item.PerfilID == (int)Enums.Perfil.SAG) && !Model.IsClaveUnica)
+                        {
+                            continue;
+                        }
+
+                        bool Seleccionado = false;
+                        string selected = "";
+                        string disabled = "";
+
+                        if (Model.AsocUsuarioPerfil != null)
+                        {
+                            Seleccionado = Model.AsocUsuarioPerfil.Any(x => x.PerfilID == item.PerfilID);
+                            selected = Seleccionado ? "checked='checked'" : "";
+                        }
+
+                        if (item.PerfilID == (int)Enums.Perfil.INAPI)
+                        {
+                            Seleccionado = Model.AsocUsuarioPerfil.Any(x => x.PerfilID == (int)Enums.Perfil.SAG);
+                            disabled = Seleccionado ? "disabled='true'" : "";
+                        }
+
+                        if (item.PerfilID == (int)Enums.Perfil.SAG)
+                        {
+                            Seleccionado = Model.AsocUsuarioPerfil.Any(x => x.PerfilID == (int)Enums.Perfil.INAPI);
+                            disabled = Seleccionado ? "disabled='true'" : "";
+                        }
+                        #endregion
+
+                        <tr>
+                            <td>@item.Descripcion</td>
+                            <td class="ac">
+                                <input type="checkbox" class="chekPerfil" name="PerfilIDs" value="@item.PerfilID" id="chk_@item.PerfilID" @selected @disabled/>
+                                @*@Html.Raw(Html.MyCheckbox(Seleccionado, "PerfilIDs", item.PerfilID, "", "small", 0, false, false))*@
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+
+            </table>
+
+        </fieldset>
+
+    </form>
+
+    <div class="modal-footer">
+       <button id="btnUser" onclick="$('#frmUser').submit()" class="btn btn-default"><i class="x-icon x-icon-save2 icon-in-button"></i> @resources.GlobalResources.BtnGuardar</button><i class="x-icon-loader hide"></i>
+        <button class="btn btn-default" data-dismiss="modal" type="button"  onclick="CloseDialog()"><i class="x-icon x-icon-cancel2 icon-in-button"></i> @resources.GlobalResources.BtnVolver</button>
+    </div>
+
+</div>

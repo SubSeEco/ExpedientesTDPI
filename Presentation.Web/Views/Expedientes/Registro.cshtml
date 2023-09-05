@@ -1,0 +1,912 @@
+﻿@model Application.DTO.Models.Causa
+@using resources = Infrastructure.Resources;
+@using Enums = Domain.Infrastructure;
+
+@{
+    string PageTitle = Model.TipoCausa.Descripcion;
+    ViewBag.Title = PageTitle;
+
+    var config = ViewBag.ConfTipoCausa as Application.DTO.Models.ConfTipoCausa;
+    var DataForm = ViewBag.DataForm as Application.DTO.DataForm;
+
+    bool IsNew = Model.CausaID == 0;
+    int count = 1;
+    bool PuedeAgregarDocumentos = true;
+
+    string lblButtonGuardar = IsNew ? resources.GlobalResources.BtnGuardar : resources.GlobalResources.BtnActualizar;
+
+
+    int AnioActual = DateTime.Now.Year;
+    int AnioInicio = Domain.Infrastructure.WebConfigValues.AnioInicial;
+    int AnioFin = AnioActual;
+
+    string UrlView = Url.Action("Registro", "Expedientes", new { @id = -1, @id2 = Model.TipoCausaID });
+
+    string UrlVolver = "";
+
+    if (Domain.Infrastructure.WebConfigValues.IsAccesoPublico)
+    {
+        UrlVolver = Url.RouteUrl("VistaPublicaDashboard");
+    }
+    else
+    {
+        UrlVolver = Url.RouteUrl("EscritorioCausas");
+    }
+}
+
+
+<script type="text/javascript">
+
+    var appParte;
+    var parteList = [];
+
+
+    ; (function ($) {
+        $(function () {
+
+            @foreach (var item in Model.Parte)
+            {<text>
+                parteList.push({
+                    ParteID: parseInt("@item.ParteID"),
+                    PaisID: parseInt("@item.PaisID"),
+                    Pais: "@Html.Raw(item.Pais.Descripcion.Trim())",
+                    CausaID: parseInt("@item.CausaID"),
+                    TipoParteID: parseInt("@item.TipoParteID"),
+                    TipoParte: "@Html.Raw(item.TipoParte.Descripcion.Trim())",
+                    Rut: parseInt("@item.Rut"),
+                    Nombre: "@Html.Raw(item.Nombre.Trim())",
+                    RutRepresentante: parseInt("@item.RutRepresentante"),
+                    NombreRepresentante: "@Html.Raw(item.NombreRepresentante.Trim())",
+                    NombreAbogado: "@Html.Raw(item.NombreAbogado.Trim())",
+                    EmailAbogado: "@Html.Raw(item.EmailAbogado.Trim())",
+                    NombreEstudioJuridico: "@Html.Raw(item.NombreEstudioJuridico.Trim())",
+                    FolioConsignacion: "@Html.Raw(item.FolioConsignacion.Trim())",
+                    FechaConsignacion: "@Html.DatetimeToString(item.FechaConsignacion)",
+                    RutConsignacion: parseInt("@item.RutConsignacion"),
+                    NombreConsignacion: "@Html.Raw(item.NombreConsignacion.Trim())",
+                    dato: 0
+                });
+            </text>
+            }
+
+            SetAppPartes();
+
+            $("#UploadFileFrm #archivo").val("");
+            TrimFormByID("#frmCausa");
+
+            setCounter($("#Denominacion"), "#counter");
+            setCounter($("#Observacion"), "#counter2");
+
+            $("#frmCausa #IsContencioso").bootstrapSwitch({
+                onSwitchChange: function (event, state) {
+                    if (state)
+                    {
+                        $("#divTipoContencioso").show();
+                        $("#fsTipo2").show();
+                    }
+                    else
+                    {
+                        $("#divTipoContencioso").hide();
+                        $("#fsTipo2").hide();
+                    }
+                }
+            });
+
+            @if (!IsNew)
+            {
+                @:fixFakePath("file");
+                @:SetUploadForm();
+            }
+
+                activateForm("btnGuardar", "frmCausa",
+                    function () {
+
+                        let IsCausaNew = "@IsNew".bool();
+
+                        if (IsCausaNew) {
+
+                            //if (!$("#frmCausa #IsContencioso").bootstrapSwitch("state")) {
+                            //    let fsTip2 = parseInt($("#frmCausa #fsTipo2").data("tipo")) || 0;
+                            //    appParte.deleteTipoParte(fsTip2);
+                            //}
+
+                            ParseDocsAdjuntos("frmCausa");
+
+                            if (appParte.lista.length > 0) {
+                                $("#strPartes").val(JSON.stringify(appParte.lista));
+                            }
+                        }
+
+                    return true;
+                },
+				function () {
+
+                if (xResultJsonData.result == ReturnJson.ErrorSharePoint) {
+                    showBlockUIError("No es posible almacenar los archivos adjuntos, favor intente mas tarde.");
+                    return false;
+                }
+
+                if (xResultJsonData.result == ReturnJson.ErrorCaptcha) {
+                    showBlockUIError("El Código de Validación no corresponde");
+				        $("#SolicitudCaptcha").addError();
+                    return false;
+                }
+
+                if (xResultJsonData.result == ReturnJson.ActionSuccess) {
+
+                    if (xResultJsonData.updated)
+                    {
+                        xAlert({
+                            title: "Expediente Electrónico Número: " + xResultJsonData.NumeroTicket,
+                            alert: "alert-primary",
+                            html: "Información actualizada correctamente",
+                            callback: function () {
+
+                                SelfRedirect();
+                            }
+                        })
+                    }
+                    else
+                    {
+                        xAlert({
+                            title: "Expediente Electrónico",
+                            alert: "alert-primary",
+                            html: "El número de Rol generado es: <b>" + xResultJsonData.NumeroTicket + "</b>",
+                            callback: function () {
+
+                                var Url = "@UrlView";
+                                Url = Url.replace("-1", xResultJsonData.SolicitudID);
+                                LinkRedirect(Url);
+                            }
+                        })
+                    }
+
+
+		        }
+
+            }, function () {
+
+                //Otras validaciones
+                //console.log("validateFalse");
+                //if ($(".FormatoRespuesta.verificar:visible").length > 0) {
+                //    if ($(".FormatoRespuesta.verificar:checked").length == 0) {
+                //        $(".FormatoRespuesta").addClass("is-invalid");
+                //    }
+                //}
+
+                scrollToElement($(".is-invalid:visible").eq(0));
+
+            });
+
+            @if (!Model.IsContencioso)
+            {
+                @:$("#frmCausa #fsTipo2").hide();
+            }
+
+            //CallSelect2("Anio");
+
+        });
+    })(jQuery);
+
+    function SetUploadForm() {
+
+        activateFormUpload_New("frmFileCausa",
+            function () {
+                //showBlockUI(SelfRedirect)
+                //SelfRedirect();
+            }, false, false, function () {
+
+                var _DescArchivo = $.trim($("#Descripcion").val());
+                if (_DescArchivo == "") {
+                    showBlockUIError("Debe indicar el contenido del archivo");
+                    return false;
+                }
+
+                var _file = $("#file").val();
+                if (_file == "") {
+                    showBlockUIError(Labels._messageErrorSelect);
+                    return false;
+                }
+
+            }, true, true, false);
+
+    }
+
+    function SetAppPartes() {
+        appParte = new Vue({
+            el: '#appPartes',
+            data: {
+                lista: parteList
+            },
+            computed: {
+                //totalUSD: function () {
+                //    var sum = 0;
+                //    this.lista.forEach(e => { sum += e.USD; });
+                //    return sum
+                //}
+            },
+            methods: {
+                getItems(tipo_id) {
+                    return _.where(this.lista, { TipoParteID: tipo_id });
+                },
+                getRutNombre(rut, nombre) {
+
+                    let datos = [];
+
+                    if (rut != 0) {
+                        let f = "<span class='azul'>" + rut + "-" + $.Rut.getDigito(rut.toString()) + "</span>";
+                        datos.push(f);
+                    }
+
+                    datos.push(nombre);
+
+                    return datos.join("<br>");
+                },
+                getParte(id, tipo, causa_id, tipoId, tipoCausaID, index)
+                {
+                    GetParte(id, tipo, causa_id, tipoId, tipoCausaID, index);
+                },
+                borrar: function (index) {
+                    this.lista.splice(index, 1);
+                },
+                deleteTipoParte: function (tipo_id) {
+
+                    let filter = [];
+
+                    $.each(this.lista, function (key, value) {
+
+                        if (value.TipoParteID != tipo_id) {
+                            filter.push(value);
+                        }
+                    })
+
+                    return filter;
+
+                },
+                createParte(obj) {
+
+                    let item = {
+                        ParteID: obj.ParteID,
+                        PaisID: obj.PaisID,
+                        Pais: obj.Pais,
+                        CausaID: obj.CausaID,
+                        TipoParteID: obj.TipoParteID,
+                        TipoParte: obj.TipoParte,
+                        Rut: obj.Rut,
+                        Nombre: obj.Nombre,
+                        RutRepresentante: obj.RutRepresentante,
+                        NombreRepresentante: obj.NombreRepresentante,
+                        NombreAbogado: obj.NombreAbogado,
+                        EmailAbogado: obj.EmailAbogado,
+                        NombreEstudioJuridico: obj.NombreEstudioJuridico,
+                        FolioConsignacion: obj.FolioConsignacion,
+                        FechaConsignacion: obj.FechaConsignacion,
+                        RutConsignacion: obj.RutConsignacion,
+                        NombreConsignacion: obj.NombreConsignacion,
+                        dato: 0
+                    }
+
+                    this.lista.push(item);
+
+                },
+                updateParteTemp(obj, index) {
+
+                    console.log("updateParteTemp");
+
+                    var item = this.lista[index];
+
+                    item.PaisID = obj.PaisID;
+                    item.Pais = obj.Pais;
+                    item.CausaID = obj.CausaID;
+                    item.TipoParteID = obj.TipoParteID;
+                    item.TipoParte = obj.TipoParte;
+                    item.Rut = obj.Rut;
+                    item.Nombre = obj.Nombre;
+                    item.RutRepresentante = obj.RutRepresentante;
+                    item.NombreRepresentante = obj.NombreRepresentante;
+                    item.NombreAbogado = obj.NombreAbogado;
+                    item.EmailAbogado = obj.EmailAbogado;
+                    item.NombreEstudioJuridico = obj.NombreEstudioJuridico;
+                    item.FolioConsignacion = obj.FolioConsignacion;
+                    item.FechaConsignacion = obj.FechaConsignacion;
+                    item.RutConsignacion = obj.RutConsignacion;
+                    item.NombreConsignacion = obj.NombreConsignacion;
+
+                },
+                updateParte(IsNew, result, obj) {
+
+                    if (result == ReturnJson.ActionSuccess)
+                    {
+                        if (IsNew) {
+                            console.log("new");
+
+                            let item = {
+                                ParteID: obj.ParteID,
+                                PaisID: obj.PaisID,
+                                Pais: obj.Pais,
+                                CausaID: obj.CausaID,
+                                TipoParteID: obj.TipoParteID,
+                                TipoParte: obj.TipoParte,
+                                Rut: obj.Rut,
+                                Nombre: obj.Nombre,
+                                RutRepresentante: obj.RutRepresentante,
+                                NombreRepresentante: obj.NombreRepresentante,
+                                NombreAbogado: obj.NombreAbogado,
+                                EmailAbogado: obj.EmailAbogado,
+                                NombreEstudioJuridico: obj.NombreEstudioJuridico,
+                                FolioConsignacion: obj.FolioConsignacion,
+                                FechaConsignacion: obj.FechaConsignacion,
+                                RutConsignacion: obj.RutConsignacion,
+                                NombreConsignacion: obj.NombreConsignacion,
+                                dato: 0
+                            }
+
+                            this.lista.push(item);
+                        }
+                        else
+                        {
+                            console.log("update");
+
+                            var item = this.lista.find(x => x.ParteID === obj.ParteID);
+                            item.PaisID = obj.PaisID;
+                            item.Pais = obj.Pais;
+                            item.CausaID = obj.CausaID;
+                            item.TipoParteID = obj.TipoParteID;
+                            item.TipoParte = obj.TipoParte;
+                            item.Rut = obj.Rut;
+                            item.Nombre = obj.Nombre;
+                            item.RutRepresentante = obj.RutRepresentante;
+                            item.NombreRepresentante = obj.NombreRepresentante;
+                            item.NombreAbogado = obj.NombreAbogado;
+                            item.EmailAbogado = obj.EmailAbogado;
+                            item.NombreEstudioJuridico = obj.NombreEstudioJuridico;
+                            item.FolioConsignacion = obj.FolioConsignacion;
+                            item.FechaConsignacion = obj.FechaConsignacion;
+                            item.RutConsignacion = obj.RutConsignacion;
+                            item.NombreConsignacion = obj.NombreConsignacion;
+                        }
+                    }
+                },
+                borrarDatabase(parteID) {
+
+                    var optBtn = {
+                        title: "Eliminar Parte",
+                        msg1: "@resources.GlobalResources.ConfirmaEliminar",
+                        msg2: "@resources.GlobalResources.RegistroEliminado",
+                        url: "@Url.Action("ActionExpediente", "Expedientes")",
+                        params: {
+                            __RequestVerificationToken: getVToken(),
+                            action: "@Enums.ActionSystem.EliminarParte",
+                            Identidad: parteID
+                        },
+                        callback: function () {
+                            SelfRedirect();
+                        },
+                        alert: "alert-danger",
+                        txtBtn1: "Sí"
+                    }
+
+                    xDialogConfirmAction(optBtn);
+                }
+            }
+        });
+    }
+
+    function VolverAction() {
+
+        var UrlVolver = '@UrlVolver';
+        var name = "Registro";
+
+        var IsAccesoPublico = "@Domain.Infrastructure.WebConfigValues.IsAccesoPublico".bool();
+        if (!IsAccesoPublico) {
+            SetVolverLS(name);
+        }
+
+        LinkRedirect(UrlVolver);
+    }
+
+    function GetParte(ParteID, ParteNombre, CausaID, TipoParteID, TipoCausaID, index) {
+
+        var params = {
+            __RequestVerificationToken: getVToken(),
+            ParteID: ParteID,
+            CausaID: CausaID,
+            TipoParteID: TipoParteID,
+            TipoCausaID: TipoCausaID,
+            index: 0,
+            objTemp: ""
+        }
+
+        if (ParteID == -1) {
+
+            let listItems = appParte.getItems(TipoParteID);
+            let item = listItems[index];
+            let endIndex = -1;
+
+            $.each(appParte.lista, function (index, obj) {
+                if (obj === item) {
+                    endIndex = index;
+                }
+            })
+
+            console.log(endIndex);
+
+            if (endIndex != -1) {
+                params.objTemp = JSON.stringify(appParte.lista[endIndex]);
+                params.index = endIndex;
+            }
+        }
+
+        var opt = {
+            title: (ParteID == 0) ? "Agregar " + ParteNombre : "Editar " + ParteNombre,
+            url: "@Url.Action("GetParte", "Expedientes")",
+            params: params,
+            size: "modal-lg",
+            callback: function () {
+                //goGrid();
+            }
+        }
+
+        GetModalContent(opt);
+    }
+
+    function OnlyK(event, campo) {
+
+        var v = $("#" + campo).val().replace(/[^kK0-9\,]/g, '');
+        $("#" + campo).val(v);
+    }
+
+</script>
+
+<div class="bodyContent">
+    <div class="cont">
+
+        <fieldset id="fsCausa" class="fsCausa">
+            <legend class="legendTitle">@PageTitle</legend>
+            @if (!DataForm.IsNew)
+            {
+                <div class="ar" style="position: absolute;right: 37px;top: 30px;">
+                    @if (!Domain.Infrastructure.WebConfigValues.IsAccesoPublico)
+                    {
+                        <a href="javascript:void(0)" onclick="VerHistorial(@Model.CausaID)" class="x-title-t rel" title="Ver Historial" style="margin-right:6px;top:3px">
+                            <i class="x-icon x-icon-historial"></i>
+                        </a>
+                    }
+                    <span class="badge badge-success">@Model.EstadoCausa.Descripcion</span>
+                </div>
+            }
+            <form action="@Url.Action("SaveCausa", "Expedientes")" enctype="multipart/form-data" method="POST" class="form-horizontal" id="frmCausa">
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(x => x.CausaID)
+                @Html.HiddenFor(x => x.TipoCausaID)
+                @Html.Hidden("strPartes", "")
+
+                @if (!IsNew)
+                {
+                    @Html.HiddenFor(x => x.NumeroTicket);
+                    @Html.HiddenFor(x => x.Anio);
+                }
+
+                <fieldset class="x-fieldset">
+                    <legend class="bold celeste">Expediente electrónico</legend>
+
+                    @if (!IsNew)
+                    {
+                        <div class="row ">
+                            <div class="col-md-6">
+                                <div class="form-group row">
+                                    <label for="NumeroTicket" class="col-sm-4 col-form-label" id="lblNumeroTicket">Número <span class="span-obligatorio">*</span></label>
+                                    <div class="col-sm-6">
+                                        @Html.TextBoxFor(x => x.NumeroTicket, new { @class = "form-control verificar", @style = "", @placeholder = "", @maxlength = "20", @disabled= "disabled" })
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                @if (config.IsAnio)
+                                {
+                                    <div class="form-group row">
+                                        <label for="Anio" class="col-sm-4 col-form-label">Año <span class="span-obligatorio">*</span></label>
+                                        <div class="col-sm-8">
+                                            <select style="" name="Anio" id="Anio" class="custom-select" data-default="@Model.Anio" disabled="disabled">
+                                                @for (int i = AnioFin; i >= AnioInicio; i--)
+                                                {
+                                                    string selected = (i == Model.Anio) ? "selected='selected'" : "";
+                                                    <option value="@i" @selected>@i</option>
+                                                }
+                                            </select>
+
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
+
+                    <div class="form-group row" id="">
+                        <label for="Denominacion" class="col-sm-2 col-form-label">Denominación <span class="span-obligatorio">*</span></label>
+                        <div class="col-sm-10">
+                            <textarea class="notFilter verificar form-control " name="Denominacion" id="Denominacion" cols="4" rows="4" maxlength="4000">@Model.Denominacion</textarea>
+                            <span id="counter" class="db ar counter" style="margin-right: 8px;"></span>
+                        </div>
+                    </div>
+
+                    @if (config.IsObservacion)
+                    {
+                        <div class="form-group row" id="">
+                            <label for="Observacion" class="col-sm-2 col-form-label">Observación</label>
+                            <div class="col-sm-10">
+                                <textarea class="notFilter form-control " name="Observacion" id="Observacion" cols="4" rows="3" maxlength="500">@Model.Observacion</textarea>
+                                <span id="counter2" class="db ar counter" style="margin-right: 8px;"></span>
+                            </div>
+                        </div>
+                    }
+
+                    @if (config.IsContencioso)
+                    {
+                        string displayTipo = Model.IsContencioso ? "flex" : "none";
+
+                        <div class="row ">
+                            <div class="col-md-6">
+                                <div class="form-group row">
+                                    <label for="Contencioso" class="col-sm-4 col-form-label" id="">Contencioso <span class="span-obligatorio">*</span></label>
+                                    <div class="col-sm-4">
+                                        @Html.Raw(Html.MyCheckbox(Model.IsContencioso, "IsContencioso", 0, "", "small", 0, false, DataForm.IsView, ""))
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group row" id="divTipoContencioso" style="display: @displayTipo">
+                                    <label for="TipoContenciosoID" class="col-sm-4 col-form-label">Tipo <span class="span-obligatorio">*</span></label>
+                                    <div class="col-sm-8">
+                                        <select id="TipoContenciosoID" name="TipoContenciosoID" class="custom-select verificar" data-default="">
+                                            <option value="">@resources.GlobalResources.OptionInicial</option>
+                                            @foreach (var item in DataForm.TipoContencioso)
+                                            {
+                                                string selected = (item.TipoContenciosoID == Model.TipoContenciosoID) ? "selected='selected'" : "";
+                                                <option value="@item.TipoContenciosoID" @selected>@item.Descripcion</option>
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                     }
+
+
+                    @if (config.IsNumeroSolicitud || config.IsNumeroRegistro)
+                    {
+                        <div class="row">
+                            @if (config.IsNumeroSolicitud)
+                            {
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <label for="Numero" class="col-sm-4 col-form-label">N° Solicitud <span class="span-obligatorio">*</span></label>
+                                        <div class="col-sm-8">
+                                            @Html.TextBoxFor(x => x.Numero, new { @class = "form-control verificar", @style = "", @placeholder = "", @maxlength = "50" })
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+
+                            @if (config.IsNumeroRegistro)
+                            {
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <label for="NumeroRegistro" class="col-sm-4 col-form-label">N° Registro </label>
+                                        <div class="col-sm-8">
+                                            @Html.TextBoxFor(x => x.NumeroRegistro, new { @class = "form-control", @style = "", @placeholder = "", @maxlength = "50" })
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+
+                </fieldset>
+
+                <div id="appPartes">
+                    @if (config.TipoParteID1 > 0)
+                    {
+                        var TipoParte1 = DataForm.TipoParte.FirstOrDefault(x => x.TipoParteID == config.TipoParteID1);
+                        var lblTipoParte = TipoParte1.Descripcion;
+                        var TipoParteID = TipoParte1.TipoParteID;
+
+                        <fieldset class="x-fieldset" id="fsTipo1" data-tipo="@TipoParteID">
+                            <legend class="bold celeste">@lblTipoParte</legend>
+
+                            <div class="row">
+                                <div class="col text-right" id="btnAdd_@lblTipoParte">
+                                    <button type="button" id="" class="btn btn-default" onclick="GetParte(0, '@lblTipoParte', @Model.CausaID, @TipoParteID, @Model.TipoCausaID, 0)">
+                                        <i class="x-icon x-icon-mas3 icon-in-button"></i> Agregar @lblTipoParte
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-striped table-sm table-bordered table-hover x-table allW" id="" style="margin-top:10px">
+                                    <thead>
+                                        <tr>
+                                            <th class="ac" style="">@resources.GlobalResources.TH_Number</th>
+                                            <th class="ac" style="text-align: left !important">RUT<br />Nombre</th>
+                                            <th class="ac" style="">País</th>
+                                            <th class="ac" style="text-align: left !important">RUT<br />Representante</th>
+                                            <th class="ac" style="">Estudio Jurídico</th>
+                                            <th class="ac" style="text-align: left !important">Abogado<br />Email</th>
+                                            <th class="ac" style="">@resources.GlobalResources.TH_Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="(parte, index in getItems(@TipoParteID)">
+                                            <td class="ac">{{index + 1}}</td>
+                                            <td v-html="getRutNombre(parte.Rut, parte.Nombre)"></td>
+                                            <td>{{ parte.Pais }}</td>
+                                            <td v-html="getRutNombre(parte.RutRepresentante, parte.NombreRepresentante)"></td>
+                                            <td>{{ parte.NombreEstudioJuridico }}</td>
+                                            <td><span class="azul">{{ parte.NombreAbogado }}</span><br />{{ parte.EmailAbogado }}</td>
+                                            <td class="ac">
+
+                                                <div v-if="parte.ParteID != 0">
+                                                    <a class='x-title-t' style=''
+                                                       v-on:click="getParte(parte.ParteID, '@lblTipoParte', @Model.CausaID, @TipoParteID, @Model.TipoCausaID, 0)"
+                                                       href='javascript:void(0);'
+                                                       title='@resources.GlobalResources.Editar'><i class='x-icon x-icon-edit'></i></a>
+
+                                                    <a href='javascript:void(0)' v-on:click="borrarDatabase(parte.ParteID)"><i class='x-icon x-icon-delete'></i></a>
+                                                </div>
+
+                                                <div v-if="parte.ParteID == 0">
+                                                    <a href='javascript:void(0)' v-on:click="getParte(-1, '@lblTipoParte', @Model.CausaID, @TipoParteID, @Model.TipoCausaID, index)"><i class='x-icon x-icon-edit'></i></a>
+                                                    <a href='javascript:void(0)' v-on:click="borrar(index)"><i class='x-icon x-icon-delete'></i></a>
+                                                </div>
+
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </fieldset>
+                    }
+
+
+                    @if (config.TipoParteID2 > 0)
+                    {
+                        var TipoParte2 = DataForm.TipoParte.FirstOrDefault(x => x.TipoParteID == config.TipoParteID2);
+                        var lblTipoParte = TipoParte2.Descripcion;
+                        var TipoParteID = TipoParte2.TipoParteID;
+
+                        <fieldset class="x-fieldset" id="fsTipo2" data-tipo="@TipoParteID">
+                            <legend class="bold celeste">@lblTipoParte</legend>
+
+                            <div class="row">
+                                <div class="col text-right" id="btnAdd_@lblTipoParte">
+                                    <button type="button" id="" class="btn btn-default" onclick="GetParte(0, '@lblTipoParte', @Model.CausaID, @TipoParteID, @Model.TipoCausaID, 0)">
+                                        <i class="x-icon x-icon-mas3 icon-in-button"></i> Agregar @lblTipoParte
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-striped table-sm table-bordered table-hover x-table allW" id="" style="margin-top:10px">
+                                    <thead>
+                                        <tr>
+                                            <th class="ac" style="">@resources.GlobalResources.TH_Number</th>
+                                            <th class="ac" style="text-align: left !important">RUT<br />Nombre</th>
+                                            <th class="ac" style="">País</th>
+                                            <th class="ac" style="text-align: left !important">RUT<br />Representante</th>
+                                            <th class="ac" style="">Estudio Jurídico</th>
+                                            <th class="ac" style="text-align: left !important">Abogado<br />Email</th>
+                                            <th class="ac" style="">@resources.GlobalResources.TH_Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="(parte, index in getItems(@TipoParteID)">
+                                            <td class="ac">{{index + 1}}</td>
+                                            <td v-html="getRutNombre(parte.Rut, parte.Nombre)"></td>
+                                            <td>{{ parte.Pais }}</td>
+                                            <td v-html="getRutNombre(parte.RutRepresentante, parte.NombreRepresentante)"></td>
+                                            <td>{{ parte.NombreEstudioJuridico }}</td>
+                                            <td><span class="azul">{{ parte.NombreAbogado }}</span><br />{{ parte.EmailAbogado }}</td>
+                                            <td class="ac">
+
+                                                <div v-if="parte.ParteID != 0">
+                                                    <a class='x-title-l' style=''
+                                                       v-on:click="getParte(parte.ParteID, '@lblTipoParte', @Model.CausaID, @TipoParteID, @Model.TipoCausaID, 0)"
+                                                       href='javascript:void(0);'
+                                                       title='@resources.GlobalResources.Editar'><i class='x-icon x-icon-edit'></i></a>
+                                                    <a href='javascript:void(0)' v-on:click="borrarDatabase(parte.ParteID)"><i class='x-icon x-icon-delete'></i></a>
+                                                </div>
+
+                                                <div v-if="parte.ParteID == 0">
+                                                    <a href='javascript:void(0)' v-on:click="getParte(-1, '@lblTipoParte', @Model.CausaID, @TipoParteID, @Model.TipoCausaID, index)"><i class='x-icon x-icon-edit'></i></a>
+                                                    <a href='javascript:void(0)' v-on:click="borrar(index)"><i class='x-icon x-icon-delete'></i></a>
+                                                </div>
+
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </fieldset>
+                    }
+                </div>
+
+
+
+
+            </form>
+
+            @if (IsNew)
+            {
+                @Html.Partial("_UploadFileTemp", new ViewDataDictionary {
+                    { "FormatosPermitidos", DataForm.AsocTipoDocumentoAdjunto },
+                    { "TipoDocumentoEnum", Enums.TipoDocumento.Causa } })
+            }
+            else
+            {
+                int TipoDocumentoEnum = (int)Enums.TipoDocumento.Causa;
+
+                <fieldset class="x-fieldset">
+                    <legend class="celeste bold">Documentos adjuntos</legend>
+
+                    <div class="alert alert-info" role="alert">
+                        Al seleccionar un archivo deberá indicar el contenido del mismo en el campo de texto
+                    </div>
+
+                    <form class="" id="frmFileCausa" enctype="multipart/form-data" action="@Url.Action("SubirArchivo", "Uploader")" method="POST">
+                        @Html.AntiForgeryToken()
+
+                        @Html.Hidden("CausaID", Model.CausaID)
+
+                        <input type="hidden" id="_TipoDocumentoID" name="TipoDocumentoID" value="@TipoDocumentoEnum" />
+
+                        <div class="form-group row" id="divDescArchivo">
+                            <label for="Descripcion" id="" class="col-sm-3 col-form-label">Indique el contenido del archivo</label>
+                            <div class="col-sm-9">
+                                <input type="text" id="Descripcion" name="Descripcion" class="form-control notBlock" value="" />
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input notBlock" id="file" name="file">
+                                <label class="custom-file-label" for="file"
+                                       data-browse="@resources.UploadFiles.FileInput_changeText"
+                                       aria-describedby="inputGroupFileAddon">@resources.UploadFiles.FileInput_inputText</label>
+                                </div>
+                                <div class="input-group-append">
+                                    <button class="btn btn-info btn-file" onclick='$("#frmFileCausa").submit();' type="button" id="inputGroupFileAddon">
+                                        <i class="x-icon x-icon-upload2 icon-in-upload"></i> @resources.UploadFiles.lblSubirArchivo
+                                    </button>
+                                </div>
+                            </div>
+                            <small id="" class="form-text text-muted ac" style="margin-bottom: 10px;">
+                                @resources.GlobalResources.ExtensionesPermitidas: @Html.Raw(Html.GetExtensionesPermitidas(DataForm.AsocTipoDocumentoAdjunto, IncluyeTamanio: true))
+                            </small>
+
+                        </form>
+
+
+                    <div class="table-responsive">
+
+                        <table class="@Html.GetBaseTableCSS()" id="">
+                            <thead>
+                                <tr>
+                                    <th class="ac" style="">#</th>
+                                    <th class="ac" style="">Nombre Documento</th>
+                                    <th class="ac" style="">Descripción</th>
+                                    <th class="ac" style="">Fecha Carga</th>
+                                    <th class="ac" style="">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.DocumentoCausa.Count > 0)
+                                {
+                                    count = 1;
+
+                                    foreach (var item in Model.DocumentoCausa)
+                                    {
+                                        <tr>
+                                            <td class="ac">@count</td>
+                                            <td class="">@item.NombreArchivoFisico</td>
+                                            <td style="max-width:200px" class="fixWord">@item.Descripcion</td>
+                                            <td class="ac">@Html.DatetimeToString(item.Fecha, "dd-MM-yyyy HH:mm")</td>
+                                            <td class="ac">
+
+                                                <a style="margin-right:2px" href="javascript:void(0)"
+                                                   onclick='getDownloadFile(@item.DocumentoCausaID, @Model.CausaID, "@item.Hash.Trim()", @TipoDocumentoEnum)'
+                                                   class="x-title-l" title="@resources.GlobalResources.BtnDescargar">
+                                                    <i class="x-icon @Html.GetCSS(item.NombreArchivoFisico)" style="cursor: pointer;"></i>
+                                                </a>
+
+                                                @if (PuedeAgregarDocumentos)
+                                                {
+                                                    <a href="javascript:void(0)"
+                                                       onclick='getDeleteFile(@item.DocumentoCausaID, @TipoDocumentoEnum, @item.VersionEncriptID, "@item.Hash.Trim()", @Model.CausaID)'
+                                                       class="x-title-l" title="@resources.GlobalResources.BtnEliminar">
+                                                        <i class="x-icon x-icon-delete notRemove" style="cursor: pointer;"></i>
+                                                    </a>
+                                                }
+
+                                            </td>
+                                        </tr>
+                                        count++;
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="5" class="" style="padding:5px 10px;">No hay información para desplegar</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+
+                    </div>
+
+                    </fieldset>
+            }
+
+
+
+
+
+
+
+
+        </fieldset>
+
+        <div class="form-actions ac">
+
+            <button class="btn btn-default" onclick="$('#frmCausa').submit()" id="btnGuardar" type="button"><i class="x-icon x-icon-save2 icon-in-button"></i> @lblButtonGuardar</button>
+            <i class="x-icon-loader hide"></i>
+
+            @if (DataForm.IsNew)
+            {
+                <button class="btn btn-default" onclick="SelfRedirect()" id="btnLimpiar" style="" type="button">
+                    <i class="x-icon x-icon-limpiar icon-in-button"></i> @resources.GlobalResources.BtnLimpiar
+                </button>
+            }
+
+            <button class="btn btn-default" onclick="VolverAction()" id="btnVolver" type="button">
+                <i class="x-icon x-icon-back5 icon-in-button"></i> @resources.GlobalResources.BtnVolver
+            </button>
+        </div>
+
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    ; (function ($) {
+        $(function () {
+
+
+            @if ((DataForm.IsView && !DataForm.IsNew))
+            {<text>
+
+            //setIsView();
+
+            setTimeout(function () {
+                setIsView();
+
+                //$("#CategoriaID").change();
+                //$("#frmSolicitud #DescripcionCategoria").attr('disabled', 'disabled');
+                console.log("setTimeout 1000");
+
+            }, 1000);
+
+            setTimeout(function () {
+                //$("#frmSolicitud select:visible:enabled").attr('disabled', 'disabled');
+                console.log("setTimeout 3000");
+            }, 3000);
+
+            </text>}
+
+
+        });
+    })(jQuery);
+
+</script>

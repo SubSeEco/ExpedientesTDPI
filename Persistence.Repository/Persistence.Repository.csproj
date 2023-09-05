@@ -1,0 +1,306 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{FD61F8D0-4E7A-4AE0-B6B0-682883E9C9A8}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Persistence.Repository</RootNamespace>
+    <AssemblyName>Persistence.Repository</AssemblyName>
+    <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data.Entity" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AsocCausaDocumento.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="AsocDocSistemaFirma.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="AsocDocumentoSistemaEstadoDiario.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="AsocDocumentoSistemaTabla.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="AsocEscritoDocto.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="AsocExpedienteOpcion.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="AsocExpeFirma.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="AsocFirmaDocto.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="AsocTipoCausaPerfil.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="AsocTipoDocumentoAdjunto.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="AsocTipoNotificacionPerfil.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="AsocTipoTramiteOpciones.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="AsocUsuarioPerfil.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Causa.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Commons.cs" />
+    <Compile Include="ConfigurarDescripcion.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ConfTipoCausa.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Contract\ICommonRepository.cs" />
+    <Compile Include="Contract\IConfigurarDescripcionRepository.cs" />
+    <Compile Include="Contract\IExpedienteRepository.cs" />
+    <Compile Include="Derivacion.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="DetalleEstadoDiario.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="DetalleTabla.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="DocumentoAdjunto.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="DocumentoCausa.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="DocumentoSistema.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="DocumentoTmp.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EstadoCausa.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EstadoDiario.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EstadosAplica.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EstadoTabla.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Expediente.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="FamiliasMimeType.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Feriado.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Firma.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Folio.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="History.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Implementation\CommonRepository.cs" />
+    <Compile Include="Implementation\ConfigurarDescripcionRepository.cs" />
+    <Compile Include="Implementation\ExpedienteRepository.cs" />
+    <Compile Include="LogCausa.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="LogSistema.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="MaximoTamanoArchivo.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Model_SGDE.Context.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Model_SGDE.Context.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Model_SGDE.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Model_SGDE.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Model_SGDE.edmx</DependentUpon>
+    </Compile>
+    <Compile Include="ObjetoGenerico.cs" />
+    <Compile Include="OpcionesTramite.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Pais.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Parte.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Perfil.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Sala.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="SP_Causas_Result.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="SP_FlujoEstado_Result.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Tabla.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TipoCanal.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TipoCausa.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TipoContencioso.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TipoDocumento.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TipoEstadoDiario.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TipoFormato.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TipoGenero.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TipoNotificacion.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TipoParte.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TipoTabla.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TipoTramite.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TipoVentana.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Usuario.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Ventana.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+    <Compile Include="VersionEncript.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.Config" />
+    <None Include="App_old.Config" />
+    <EntityDeploy Include="Model_SGDE.edmx">
+      <Generator>EntityModelCodeGenerator</Generator>
+      <LastGenOutput>Model_SGDE.Designer.cs</LastGenOutput>
+    </EntityDeploy>
+    <None Include="Model_SGDE.edmx.diagram">
+      <DependentUpon>Model_SGDE.edmx</DependentUpon>
+    </None>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Domain.Infraestructure\Domain.Infrastructure.csproj">
+      <Project>{361a79a9-670e-4391-8225-702209b1795d}</Project>
+      <Name>Domain.Infrastructure</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Infraestructure.Logging\Infrastructure.Logging.csproj">
+      <Project>{489c1a89-394b-4120-8e9b-ce8cb0289b35}</Project>
+      <Name>Infrastructure.Logging</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Model_SGDE.Context.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <DependentUpon>Model_SGDE.edmx</DependentUpon>
+      <LastGenOutput>Model_SGDE.Context.cs</LastGenOutput>
+    </Content>
+    <Content Include="Model_SGDE.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <DependentUpon>Model_SGDE.edmx</DependentUpon>
+      <LastGenOutput>Model_SGDE.cs</LastGenOutput>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

@@ -1,0 +1,286 @@
+﻿@model Application.DTO.Models.Parte
+
+@using Enums = Domain.Infrastructure;
+@using resources = Infrastructure.Resources;
+
+@{
+
+    //int count = 1;
+    bool IsNew = Model.ParteID == 0;
+    bool IsTemp = Model.ParteID == (int)Enums.GenericJson.TempData;
+    int CausaID = Model.CausaID;
+
+    var DataForm = ViewBag.DataForm as Application.DTO.DataForm;
+    var config = ViewBag.ConfTipoCausa as Application.DTO.Models.ConfTipoCausa;
+
+    if (IsNew)
+    {
+        Model.PaisID = Domain.Infrastructure.WebConfigValues.LocalCountryID;
+    }
+
+    int Index = (int)ViewBag.Index;
+
+}
+
+<script type="text/javascript">
+
+    ; (function ($) {
+        $(function () {
+
+
+            //$("#frmGrupoPregunta .xCheckbox").bootstrapSwitch({
+            //    onSwitchChange: function (event, state) {
+
+            //    }
+            //});
+
+            TrimFormByID("#frmParte");
+            IsIntegerValidate();
+            IsNumericValidate();
+            IsEmail();
+            callCalendarPopup("frmParte");
+
+            ValidateRUT("Rut", "Dv");
+            ValidateRUT("RutRepresentante", "DvRep");
+            ValidateRUT("RutConsignacion", "DvCon");
+
+            CallSelect2("PaisID");
+
+            @if (CausaID == 0)
+            {<text>
+
+
+
+            </text>}else {<text>
+
+
+            </text>}
+
+
+            activateForm("btSaveParte", "frmParte",
+                function () {
+
+                    return true;
+                },
+                function () {
+
+                    let IsCausaNew = "@IsNew".bool();
+                    let IsParteTemp = "@IsTemp".bool();
+
+                    let objForm = objectifyForm($("#frmParte").serializeArray());
+                    objForm.CausaID = parseInt(objForm.CausaID);
+                    objForm.PaisID = parseInt(objForm.PaisID);
+                    objForm.ParteID = parseInt(xResultJsonData.ParteID);
+                    objForm.Rut = parseInt(objForm.Rut);
+                    objForm.RutConsignacion = parseInt(objForm.RutConsignacion);
+                    objForm.RutRepresentante = parseInt(objForm.RutRepresentante);
+                    objForm.TipoParteID = parseInt(objForm.TipoParteID);
+                    objForm.Pais = $("#PaisID option:selected").text();
+
+                    if (IsParteTemp) {
+                        let index = parseInt("@Index");
+                        appParte.updateParteTemp(objForm, index);
+                    }
+                    else {
+                        if (IsCausaNew) {
+                            appParte.createParte(objForm);
+                        }
+                        else {
+                            appParte.updateParte(xResultJsonData.IsNew, xResultJsonData.result, objForm);
+                        }
+                    }
+
+                    CloseDialog();
+                    showBlockUI();
+                });
+
+            @if (!IsNew || IsTemp)
+            {<text>
+            SetRutInForm("@Model.Rut", "Rut", "Dv");
+            SetRutInForm("@Model.RutRepresentante", "RutRepresentante", "DvRep");
+            SetRutInForm("@Model.RutConsignacion", "RutConsignacion", "DvCon");
+            </text>}
+
+        });
+    })(jQuery);
+
+    function EliminarParte(ParteID) {
+
+
+    }
+
+</script>
+
+<div class="modal-body ">
+
+    <form class="form-horizontal " id="frmParte" method="post" action="@Url.Action("SaveParte", "Expedientes")">
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(x => x.ParteID)
+        @Html.HiddenFor(x => x.TipoParteID)
+        @Html.HiddenFor(x => x.CausaID)
+        @Html.Hidden("TipoParte", Model.TipoParte.Descripcion.Trim())
+        @Html.Hidden("IsConsignacion", config.IsConsignacion)
+
+        <fieldset class="x-fieldset">
+            <legend class="celeste">Datos del @Model.TipoParte.Descripcion</legend>
+
+            <div class="form-group row align-items-center" id="">
+                <label for="Rut" class="col-md-3 col-form-label">RUT <span class="span-obligatorio">*</span></label>
+                <div class="col-md-3 ">
+                    <input type="text" class="form-control IsNumeric IsRut verificar" maxlength="10" value="" name="Rut" id="Rut">
+                </div>
+                <div class="col-md-1 col-sm-3">
+                    <input type="text" onkeyup="return OnlyK(event, 'Dv')" style="margin-left: -20px;min-width: 60px;"
+                           class="form-control ac verificar" value="" name="Dv" id="Dv" maxlength="1">
+                </div>
+            </div>
+
+            <div class="form-group row align-items-center">
+                <label for="Nombre" class="col-md-3 col-form-label" id="">Nombre <span class="span-obligatorio">*</span></label>
+                <div class="col-md-9">
+                    <input type="text" class="verificar form-control" maxlength="250" id="Nombre" name="Nombre" value="@Model.Nombre" />
+                </div>
+            </div>
+
+            <div class="form-group row align-items-center">
+                <label for="PaisID" class="col-md-3 col-form-label" id="">País Nacionalidad <span class="span-obligatorio">*</span></label>
+                <div class="col-md-7">
+                    <select id="PaisID" name="PaisID" class="custom-select verificar" data-default="">
+                        <option value="">@resources.GlobalResources.OptionInicial</option>
+                        @foreach (var item in DataForm.Pais)
+                        {
+                            string selected = (item.PaisID == Model.PaisID) ? "selected='selected'" : "";
+                            <option value="@item.PaisID" @selected>@item.Descripcion</option>
+                        }
+                    </select>
+
+                </div>
+            </div>
+
+        </fieldset>
+
+        <fieldset class="x-fieldset">
+            <legend class="celeste">Datos del Representante</legend>
+
+            <div class="form-group row align-items-center" id="">
+                <label for="RutRepresentante" class="col-md-3 col-form-label">RUT <span class="span-obligatorio">*</span></label>
+                <div class="col-md-3 ">
+                    <input type="text" class="form-control IsNumeric IsRut verificar" maxlength="10" value="" name="RutRepresentante" id="RutRepresentante">
+                </div>
+                <div class="col-md-1 col-sm-3">
+                    <input type="text" onkeyup="return OnlyK(event, 'DvRep')" style="margin-left: -20px;min-width: 60px;"
+                           class="form-control ac verificar" value="" name="DvRep" id="DvRep" maxlength="1">
+                </div>
+            </div>
+
+            <div class="form-group row align-items-center">
+                <label for="NombreRepresentante" class="col-md-3 col-form-label" id="">Nombre <span class="span-obligatorio">*</span></label>
+                <div class="col-md-9">
+                    <input type="text" class="verificar form-control" maxlength="250" id="NombreRepresentante" name="NombreRepresentante" value="@Model.NombreRepresentante" />
+                </div>
+            </div>
+
+        </fieldset>
+
+        <fieldset class="x-fieldset">
+            <legend class="celeste">Estudio Juridico</legend>
+
+            <div class="form-group row align-items-center">
+                <label for="NombreAbogado" class="col-md-4 col-form-label" id="">Nombre Abogado <span class="span-obligatorio">*</span></label>
+                <div class="col-md-8">
+                    <input type="text" class="verificar form-control" maxlength="250" 
+                           id="NombreAbogado" name="NombreAbogado" value="@Model.NombreAbogado" />
+                </div>
+            </div>
+
+            <div class="form-group row align-items-center">
+                <label for="EmailAbogado" class="col-md-4 col-form-label" id="">Email <span class="span-obligatorio">*</span></label>
+                <div class="col-md-8">
+                    <input type="text" class="verificar form-control IsEmail" maxlength="60"
+                           id="EmailAbogado" name="EmailAbogado" value="@Model.EmailAbogado" />
+                </div>
+            </div>
+
+            <div class="form-group row align-items-center">
+                <label for="NombreEstudioJuridico" class="col-md-4 col-form-label" id="">Nombre del Estudio Juridico <span class="span-obligatorio">*</span></label>
+                <div class="col-md-8">
+                    <input type="text" class="verificar form-control" maxlength="250"
+                           id="NombreEstudioJuridico" name="NombreEstudioJuridico" value="@Model.NombreEstudioJuridico" />
+                </div>
+            </div>
+
+        </fieldset>
+
+        @if (config.IsConsignacion)
+        {
+            <fieldset class="x-fieldset">
+                <legend class="celeste">Consignación</legend>
+
+
+                <div class="form-group row align-items-center">
+                    <label for="FolioConsignacion" class="col-md-3 col-form-label" id="">Folio <span class="span-obligatorio">*</span></label>
+                    <div class="col-md-5">
+                        <input type="text" class="verificar form-control" maxlength="30"
+                               id="FolioConsignacion" name="FolioConsignacion" value="@Model.FolioConsignacion" />
+                    </div>
+                </div>
+
+                <div class="form-group row align-items-center">
+                    <label for="FechaConsignacion" class="col-md-3 col-form-label" id="">Fecha <span class="span-obligatorio">*</span></label>
+                    <div class="col-md-5">
+                        <div class="input-group">
+                            @Html.TextBoxFor(x => x.FechaConsignacion, new
+                            {
+                                @Value = Html.DatetimeToString(Model.FechaConsignacion),
+                                @class = "ac IsCalendar form-control",
+                                @style = "",
+                                @placeholder = "",
+                                @maxlength = "10",
+                                @data_year_range = "-10:+0",
+                                @data_max_date = "+0d"
+                            })
+                            <div class="input-group-append">
+                                <span class="input-group-text" id=""><i class="x-icon x-icon-calendar" data-dateinput="FechaConsignacion"></i></span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="form-group row align-items-center" id="">
+                    <label for="RutConsignacion" class="col-md-3 col-form-label">RUT <span class="span-obligatorio">*</span></label>
+                    <div class="col-md-3 ">
+                        <input type="text" class="form-control IsNumeric IsRut verificar" maxlength="10" value="" name="RutConsignacion" id="RutConsignacion">
+                    </div>
+                    <div class="col-md-1 col-sm-3">
+                        <input type="text" onkeyup="return OnlyK(event, 'DvCon')" style="margin-left: -20px;min-width: 60px;"
+                               class="form-control ac verificar" value="" name="DvCon" id="DvCon" maxlength="1">
+                    </div>
+                </div>
+
+                <div class="form-group row align-items-center">
+                    <label for="NombreConsignacion" class="col-md-3 col-form-label" id="">Nombre <span class="span-obligatorio">*</span></label>
+                    <div class="col-md-9">
+                        <input type="text" class="verificar form-control"
+                               maxlength="250" id="NombreConsignacion" name="NombreConsignacion" value="@Model.NombreConsignacion" />
+                    </div>
+                </div>
+
+            </fieldset>
+        }
+
+
+
+
+    </form>
+
+
+</div>
+<div class="modal-footer">
+
+    <button id="btSaveParte" class="btn btn-default" onclick="$('#frmParte').submit()" type="button"><i class="x-icon x-icon-save2 icon-in-button"></i> @resources.GlobalResources.BtnGuardar</button>
+    <i class="x-icon-loader hide"></i>
+    <button class="btn btn-default" data-dismiss="modal" type="button"><i class="x-icon x-icon-cancel2 icon-in-button"></i> @resources.GlobalResources.BtnCancelar</button>
+
+</div>
+

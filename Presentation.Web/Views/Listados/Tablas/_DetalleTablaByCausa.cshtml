@@ -1,0 +1,40 @@
+﻿
+@using Enums = Domain.Infrastructure;
+@using resources = Infrastructure.Resources;
+
+@{
+    int count = 1;
+    var DetalleTabla = ViewBag.DetalleTabla as IList<Application.DTO.Models.DetalleTabla>;
+    var Rol = ViewBag.Rol;
+}
+
+
+<fieldset class="x-fieldset">
+    <legend class="celeste bold">N° Rol @Rol en Tabla</legend>
+
+    <table class="table table-striped table-sm table-bordered table-hover x-table allW " id="grillaRolEnTabla" style="margin-top:10px;">
+        <thead>
+            <tr>
+                <th class="ac" style="width:1%">@resources.GlobalResources.TH_Number</th>
+                <th class="ac nw" style="">Fecha</th>
+                <th class="ac nw" style="">Relator</th>
+                <th class="ac nw" style="">Sala</th>
+                <th class="ac" style="">Tipo</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in DetalleTabla)
+            {
+                <tr id="">
+                    <td class="ac">@count</td>
+                    <td class="ac nw">@Html.DatetimeToString(item.Tabla.Fecha)</td>
+                    <td class="">@item.Tabla.NombreRelator</td>
+                    <td class="">@item.Tabla.Sala.Descripcion</td>
+                    <td class="">@item.Tabla.TipoTabla.Descripcion</td>
+                </tr>
+                count++;
+            }
+        </tbody>
+    </table>
+
+</fieldset>

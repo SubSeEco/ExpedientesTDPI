@@ -1,0 +1,149 @@
+﻿@using Enums = Domain.Infrastructure;
+@using resources = Infrastructure.Resources;
+
+@{
+    int count = 1;
+    var Causas = ViewBag.Causas as IList<Application.DTO.Models.Causa>;
+    var EstadoDiario = ViewBag.EstadoDiario as Application.DTO.Models.EstadoDiario;
+}
+
+<script type="text/javascript">
+
+    var oTableGridBusca;
+
+    ; (function ($) {
+        $(function () {
+
+            callToolTipsGrid("grillaSelectExpediente");
+
+            generalGridParams.paging = true;
+            generalGridParams.pageLength = 5;
+
+            var allGridParams = $.extend({}, {
+                fnDrawCallback: function () {
+                    callToolTipsGrid("grillaSelectExpediente");
+                }
+            }, generalGridParams);
+
+            oTableGridBusca = $('#grillaSelectExpediente').removeClass("hide").dataTable(allGridParams);
+
+        });
+    })(jQuery);
+
+    function SeleccionarExpediente(CausaID, Num, Rol) {
+
+        var optBtn = {
+            title: "Seleccionar Expedientes",
+            msg1: "¿Confirma seleccionar <b>" + Num + "</b> expediente(s) de la Causa N° Rol: <b>" + Rol + "</b>?",
+            msg2: "Operación realizada",
+            url: "@Url.Action("ActionExpediente", "Expedientes")",
+            params: {
+                __RequestVerificationToken: getVToken(),
+                action: "@Enums.ActionSystem.AgregarExpedienteEstadoDiario",
+                Identidad: CausaID,
+                EstadoDiarioID: parseInt("@EstadoDiario.EstadoDiarioID")
+            },
+            callback: function () {
+                GetDetalleExpedientes(parseInt("@EstadoDiario.EstadoDiarioID"));
+            },
+            alert: "alert-success",
+            txtBtn1: "Sí"
+        }
+
+        xDialogConfirmAction(optBtn);
+
+    }
+
+    function GetExpedientesByCausa(CausaID) {
+
+        var $divDet = $("#divEventosExpediente");
+
+        $divDet.html("");
+
+        var before = function () { $divDet.html(divLoaderHtml()); };
+        var params = {
+            __RequestVerificationToken: getVToken(),
+            CausaID: CausaID,
+            EstadoDiarioID: parseInt("@EstadoDiario.EstadoDiarioID")
+        };
+
+        xAjaxHtml("@Url.Action("GetExpedientesByCausa", "Listados")", params, before, function () {
+            $divDet.html(DataHTM);
+
+        });
+
+    }
+
+</script>
+
+<table class="table table-striped table-sm table-bordered table-hover x-table allW hide" id="grillaSelectExpediente" style="margin-top:10px;">
+    <thead>
+        <tr>
+            <th class="ac" style="width:1%">@resources.GlobalResources.TH_Number</th>
+            <th class="ac nw" style="">N° Rol TDPI</th>
+            <th class="ac " style="">Fecha</th>
+            <th class="ac" style="">@resources.Expediente.lblDenominacion</th>
+            <th class="ac" style="">N° de Solicitud</th>
+            <th class="ac" style="">N° de Resoluciones</th>
+            <th class="ac" style="width:10%">@resources.GlobalResources.TH_Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Causas)
+        {
+            //int EnTabla = item.DetalleTabla.Count;
+            //bool estaAca = false;
+            //if (EnTabla > 0)
+            //{
+            //    estaAca = item.DetalleTabla.Any(x => x.TablaID == TablaID);
+            //}
+
+            int NumResoluciones = 0;
+            bool EnEstadoDiario = false;
+
+            if (item.Expediente.Count > 0)
+            {
+                NumResoluciones = item.Expediente.Count(x => x.IsDisponibleResolucion(EstadoDiario.Fecha));
+
+                foreach (var ex in item.Expediente)
+                {
+                    if (ex.DetalleEstadoDiario.Any(x => x.EstadoDiarioID == EstadoDiario.EstadoDiarioID))
+                    {
+                        EnEstadoDiario = true;
+                    }
+                }
+            }
+
+            <tr id="">
+                <td class="ac">@count</td>
+                <td class="ac nw">@item.NumeroTicket</td>
+                <td class="ac nw">@Html.DatetimeToString(item.FechaIngreso)</td>
+                <td>@item.Denominacion</td>
+                <td>@item.Numero</td>
+                <td class="ac">@NumResoluciones</td>
+                <td class="ac">
+
+                    @if (!EnEstadoDiario && NumResoluciones > 0)
+                    {
+                        <a class='x-title-t' style=''
+                           onclick="SeleccionarExpediente(@item.CausaID, @NumResoluciones, '@item.NumeroTicket.Trim()')"
+                           href='javascript:void(0);'
+                           title='@resources.GlobalResources.Seleccionar'><i class='x-icon x-icon-green-right'></i></a>
+                    }
+
+                    @if (NumResoluciones > 0)
+                    {
+                        <a class='x-title-t' style=''
+                           onclick="GetExpedientesByCausa(@item.CausaID);seleccionarTRGrid('grillaSelectExpediente', this)"
+                           href='javascript:void(0);'
+                           title='Eventos Expediente'><i class='x-icon x-icon-org'></i></a>
+                    }
+
+                </td>
+            </tr>
+            count++;
+        }
+    </tbody>
+</table>
+
+<div id="divEventosExpediente"></div>

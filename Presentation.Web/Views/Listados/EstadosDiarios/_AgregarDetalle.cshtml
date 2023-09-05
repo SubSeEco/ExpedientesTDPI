@@ -1,0 +1,93 @@
+﻿@model Application.DTO.Models.EstadoDiario
+
+@using Enums = Domain.Infrastructure;
+@using resources = Infrastructure.Resources;
+
+@{
+    int count = 1;
+    int AnioActual = DateTime.Now.Year;
+    int AnioInicio = Domain.Infrastructure.WebConfigValues.AnioInicial;
+    int AnioFin = AnioActual;
+}
+
+
+<script type="text/javascript">
+
+    ; (function ($) {
+        $(function () {
+
+            IsIntegerValidate();
+
+            $("#btnBuscarCausa").on("click", function () {
+
+                var rol = $.trim($("#buscaRol").val());
+                var anio = parseInt($("#buscaAnio").val()) || 0;
+
+                xAjaxHtml("@Url.Action("GetBuscarExpediente", "Listados")",
+                {
+                    __RequestVerificationToken: getVToken(),
+                    buscaRol: rol,
+                    buscaAnio: anio,
+                    EstadoDiarioID: parseInt("@Model.EstadoDiarioID")
+                },
+                function () {
+                    $("#divResultBusqueda").html(divLoaderHtml());
+                },
+                function ()
+                {
+                    $("#divResultBusqueda").html(DataHTM);
+                });
+
+            });
+
+        });
+    })(jQuery);
+
+</script>
+
+<div class="modal-body ">
+
+
+    <fieldset class="x-fieldset">
+        <legend class="celeste bold">Buscar Causa</legend>
+
+        <div class="row">
+            <div class="col-sm-6">
+                <div class="form-group row">
+                    <label for="buscaRol" class="col-sm-3 col-form-label">N° Rol TDPI</label>
+                    <div class="col-sm-9">
+                        @Html.TextBox("buscaRol", "", new { @class = "form-control", @style = "", @placeholder = "", @maxlength = "20" })
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="form-group row">
+                    <label for="buscaAnio" class="col-sm-3 col-form-label">Año</label>
+                    <div class="col-sm-5">
+                        @Html.TextBox("buscaAnio", "", new { @class = "form-control IsInteger", @style = "", @placeholder = "", @maxlength = "4" })
+                    </div>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+
+    <div class="row">
+        <div class="col">
+            <button id="btnBuscarCausa" type="button" class="btn btn-default"><i class="x-icon x-icon-zoom1 icon-in-button"></i> @resources.GlobalResources.BtnBuscar</button>
+            <i class="x-icon-loader hide"></i>
+        </div>
+    </div>
+
+    <div id="divResultBusqueda"></div>
+
+</div>
+
+<div class="modal-footer">
+
+    <button class="btn btn-default" data-dismiss="modal" type="button">
+        <i class="x-icon x-icon-cancel2 icon-in-button"></i> @resources.GlobalResources.BtnVolver
+    </button>
+
+</div>
+

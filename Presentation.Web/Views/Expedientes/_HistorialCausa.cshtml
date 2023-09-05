@@ -1,0 +1,87 @@
+﻿@model Application.DTO.Models.Causa 
+
+@using Enums = Domain.Infrastructure;
+@using resources = Infrastructure.Resources;
+
+
+@{
+    int count = 1;    
+    var historial = ViewBag.Historial as IList<Application.DTO.Models.LogCausa>;
+
+}
+<script type="text/javascript">
+
+    ; (function ($) {
+        $(function () {
+
+
+        });
+    })(jQuery);
+
+</script>
+
+<div class="modal-body">
+
+
+    <fieldset class="x-fieldset">
+        <legend></legend>
+        <p class="bold mb0">N° ROL: @Model.NumeroTicket</p>
+    </fieldset>
+        
+    <fieldset class="x-fieldset" id="fsCausaHist">
+        <legend class="celeste bold">Historial</legend>
+
+        <div class="table-responsive">
+
+            <table class="@Html.GetBaseTableCSS()" id="">
+                <thead>
+                    <tr>
+                        <th class="ac" style="">#</th>
+                        <th class="ac" style="">Fecha</th>
+                        <th class="ac" style="">Descripción</th>
+                        <th class="ac" style="">Usuario</th>
+                        <th class="ac" style="">Observaciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (historial.Count > 0)
+                    {
+                        count = 1;
+
+                        foreach (var item in historial)
+                        {
+                            
+                            <tr>
+                                <td class="ac">@count</td>
+                                <td class="">@Html.DatetimeToString(item.Fecha, "dd-MM-yyyy HH:mm") </td>
+                                <td style="max-width:200px" class="fixWord">@Html.SplitToUpper(item.Descripcion.Trim())</td>
+                                <td class="ac">@item.Responsable</td>
+                                <td class="ac">@item.Observaciones.Trim()</td>
+                            </tr>
+                            count++;
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="" style="padding:5px 10px;">No hay información para desplegar</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+        </div>
+
+
+    </fieldset>
+
+
+
+</div>
+
+<div class="modal-footer">
+    <button class="btn btn-default" data-dismiss="modal" type="button">
+        <i class="x-icon x-icon-cancel2 icon-in-button"></i> @resources.GlobalResources.BtnAceptar
+    </button>
+</div>
+

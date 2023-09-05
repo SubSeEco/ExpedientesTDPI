@@ -1,0 +1,387 @@
+﻿
+@using Enums = Domain.Infrastructure;
+@using resources = Infrastructure.Resources;
+
+@{
+
+    string PageTitle = "Tipos de Formato";
+    ViewBag.Title = PageTitle;
+    int _ClickTipoFormato = ViewBag.clickTipoFormato;
+
+}
+
+
+<script type="text/javascript">
+
+    var xJSONResult;
+    var ajaxError;
+    var oTableGrid;
+
+    ; (function ($) {
+        $(function () {
+
+            goGrid();
+
+            $("#legendMimeTypes").hide();
+            $("#btnAgregarMimeType").hide();
+            $("#divTxtMimeType").hide();
+
+            $("#itemVisibleSW").bootstrapSwitch('state', false);
+
+            $("#additemVisibleSW").bootstrapSwitch({
+                onSwitchChange: function (event, state) {
+                    if (state) {
+                        $("#additemVisible").addClass("x-icon-checkOn");
+                    } else {
+                        $("#additemVisible").removeClass("x-icon-checkOn");
+
+                    }
+                }
+            });
+
+            $("#itemVisibleSW").bootstrapSwitch({
+                onSwitchChange: function (event, state) {
+                    if (state) {
+                        $("#itemVisible").addClass("x-icon-checkOn");
+                    } else {
+                        $("#itemVisible").removeClass("x-icon-checkOn");
+
+                    }
+                }
+            });
+
+        });
+    })(jQuery);
+
+    function setCurrentTipoFormato(TipoFormatoID)
+    {
+        TipoFormatoID = (TipoFormatoID == 0 || typeof TipoFormatoID === 'undefined') ? @_ClickTipoFormato : TipoFormatoID;
+        if (TipoFormatoID != 0)
+            $("#btMimeTypes_TipoFormatoID_" + TipoFormatoID).trigger("click");
+    }
+
+    function seleccionarTR(obj) {
+
+        //selected
+        $("#GridResults tr").removeClass("selected");
+
+        var tr = $(obj).parents("tr");
+        $(tr).addClass("selected");
+
+    }
+
+    function goGrid() {
+
+        var xBtn = $("#btnBuscar");
+        var TipoFormatoID = $("#searchTipoFormatoID").val();//searchTipoFormatoID
+
+        var params = {
+            __RequestVerificationToken: getVToken(), TipoFormatoID: TipoFormatoID
+
+        };
+        var before = function () { xUIBtnAjax(xBtn, 1); };
+        var callback = function () {
+            xUIBtnAjax(xBtn, 0);
+            loadGrid();
+        };
+
+        xJsonObj('@Url.Action("GetListaTipoFormato", "Administracion")', params, before, callback)
+
+    }
+
+    function loadGrid() {
+
+        var xJSONResultDisplay = new Array();
+
+        $.each(xJSONResult, function (i, item) {
+
+            var Obj = {
+                'Contador': (i + 1),
+                'Descripcion': item.Descripcion,
+                'ExtraCss': item.ExtraCss,
+                'Vigente': function () {
+                    var html = (item.Vigente) ? '<i class="x-icon x-icon-accept"></i>' : "";
+                    return html;
+                },
+                'Acciones': item.Acciones,
+                'DT_RowId': 'tr_' + i
+            }
+
+            xJSONResultDisplay.push(Obj);
+
+        });
+
+        var localGridParams = {
+            //"bSort": false,
+            responsive: true,
+            aaData: xJSONResultDisplay,
+            //fixedColumns: true,
+
+            fnInitComplete: function (oSettings, json) { },
+            fnDrawCallback: function (oSettings) {
+                callToolTips();
+            },
+            aoColumns: [{ "sClass": "ac nw", "bSortable": true, "mDataProp": "Contador" },
+						{ "sClass": "al nw", "bSortable": true, "mDataProp": "Descripcion" },
+						{ "sClass": "al nw", "bSortable": true, "mDataProp": "ExtraCss" },
+						{ "sClass": "ac nw", "bSortable": true, "mDataProp": "Vigente" },
+						{ "sClass": "ac nw", "bSortable": false, "mDataProp": "Acciones" }]
+        };
+
+        var allGridParams = $.extend({}, localGridParams, generalGridParams);
+        oTableGrid = $('#GridResults').removeClass("hide").dataTable(allGridParams);
+        $("#btnAgregarFondo").show();
+
+
+    }
+
+    function GetMimeTypesByTipoFormato(TipoFormatoID, obj) {
+
+        var txtTipoFormato = $(obj).data("txt");
+        var txtLegend = "@resources.Administracion.MimeTypesDe";
+        $("#legendMimeTypes").html(txtLegend +" "+txtTipoFormato);
+        $("#legendMimeTypes").data("tipoformatoID", TipoFormatoID);
+        //console.log(TipoFormatoID);
+
+        $("#btnAgregarMimeType").data("tipoformatoID", TipoFormatoID);
+
+        var xBtn = $("#btnBuscar");
+        var params = {
+            __RequestVerificationToken: getVToken(),
+            TipoFormatoID: TipoFormatoID
+        };
+        var before = function () { xUIBtnAjax(xBtn, 1); };
+        var callback = function () {
+            xUIBtnAjax(xBtn, 0);
+            loadMimeTypes();
+        };
+
+        xJsonObj('@Url.Action("GetListaMimeTypes", "Administracion")', params, before, callback)
+    }
+
+    function loadMimeTypes() {
+        var xJSONResultDisplay = new Array();
+
+        $.each(xJSONResult, function (i, item) {
+
+            var Obj = {
+                'Contador': (i + 1),
+                'Descripcion': item.Descripcion,
+                'Vigente': function () {
+                    var html = (item.Vigente) ? '<i class="x-icon x-icon-accept"></i>' : "";
+                    return html;
+                },
+                'Acciones': item.Acciones,
+                'DT_RowId': 'tr_' + item.LineaID
+            }
+
+            xJSONResultDisplay.push(Obj);
+
+        });
+
+        var localGridParams = {
+            //"bSort": false,
+            responsive: true,
+            bFilter: true,
+            aaData: xJSONResultDisplay,
+            fnInitComplete: function (oSettings, json) { },
+            fnDrawCallback: function (oSettings) {
+                callToolTips();
+            },
+            aoColumns: [{ "sClass": "ac nw", "bSortable": true, "mDataProp": "Contador" },
+						{ "sClass": "al nw", "bSortable": true, "mDataProp": "Descripcion" },
+						{ "sClass": "ac nw", "bSortable": true, "mDataProp": "Vigente" },
+						{ "sClass": "ac nw", "bSortable": false, "mDataProp": "Acciones" }]
+        };
+
+        var allGridParams = $.extend({}, localGridParams, generalGridParams);
+        oTableGrid = $('#GridMimeTypes').removeClass("hide").dataTable(allGridParams);
+        $("#btnAgregarMimeType").show();
+        $("#legendMimeTypes").show();
+        $("#divTxtMimeType").show();
+        $('#TextoLinea').keyup(function () {
+            oTableGrid.fnFilter(this.value);
+            oTableGrid.fnDraw()
+        });
+
+    }
+
+    function _NewEditTipoFormato(TipoFormatoID)
+    {
+        var title = (TipoFormatoID > 0) ? "@resources.Administracion.EditarTipoFormato" : "@resources.Administracion.AgregarTipoFormato";
+
+        var opt = {
+            title: title,
+            url: "@Url.Action("NewEditTipoFormato", "Administracion")",
+            params: {
+                __RequestVerificationToken: getVToken(),
+                TipoFormatoID: TipoFormatoID
+            },
+            //size: "modal-lg",
+            callback: function () {
+                //goGrid();
+                //$("#CategoriaManualID").change();
+
+            }
+        }
+
+        GetModalContent(opt);
+
+    }
+
+    function _DeleteTipoFormato(TipoFormatoID) {
+
+        var optBtn = {
+            title: "Eliminar",
+            msg1: "@resources.GlobalResources.ConfirmaEliminar",
+            msg2: "@resources.GlobalResources.RegistroEliminado",
+            url: "@Url.Action("DeleteTipoFormato", "Administracion")",
+            params: { __RequestVerificationToken: getVToken(), TipoFormatoID: TipoFormatoID },
+            callback: function () {
+                SelfRedirect();
+            },
+            alert: "alert-danger",
+            txtBtn1: "Sí",
+        }
+
+        xDialogConfirmAction(optBtn);
+    }
+
+    function _NewEditMimeType(TipoFormatoID, FamiliasMimeTypeID)
+    {
+        var title = (FamiliasMimeTypeID > 0) ? "@resources.Administracion.EditarMimeType" : "@resources.Administracion.AgregarMimeType";
+
+        var _TipoFormatoID = parseInt($("#legendMimeTypes").data("tipoformatoID"));
+
+        var opt = {
+            title: title,
+            url: "@Url.Action("NewEditMimeType", "Administracion")",
+            params: {
+                __RequestVerificationToken: getVToken(),
+                TipoFormatoID: _TipoFormatoID,
+                FamiliasMimeTypeID: FamiliasMimeTypeID
+            },
+            size: "modal-lg",
+            callback: function () {
+                //goGrid();
+                //$("#CategoriaManualID").change();
+            }
+        }
+
+        GetModalContent(opt);
+    }
+
+    function _DeleteMimeType(FamiliasMimeTypeID) {
+
+        var _TipoFormatoID = parseInt($("#legendMimeTypes").data("tipoformatoID"));
+
+        var optBtn = {
+            title: "Eliminar",
+            msg1: "@resources.GlobalResources.ConfirmaEliminar",
+            msg2: "@resources.GlobalResources.RegistroEliminado",
+            url: "@Url.Action("DeleteMimeType", "Administracion")",
+            params: { __RequestVerificationToken: getVToken(), FamiliasMimeTypeID: FamiliasMimeTypeID},
+            callback: function () {
+                setCurrentTipoFormato(_TipoFormatoID);
+            },
+            alert: "alert-danger",
+            txtBtn1: "Sí"
+        }
+
+        xDialogConfirmAction(optBtn);
+    }
+
+</script>
+
+<div class="clearfix"></div>
+
+<div class="bodyContent">
+    <div class="cont">
+
+        <fieldset class="">
+            <input type="hidden" id="codigoObjeto" value="0" />
+            <legend class="legendTitle">@PageTitle</legend>
+
+            @Html.Raw(Html.GetInfoVentana(Enums.TipoVentana.MantenedorTipoFormato))
+            @Html.AntiForgeryToken()
+
+            @*<form class="form-horizontal hide" id="frmFiltros">
+
+
+                </form>
+                <div class="linea mt0 hide"></div>
+
+                <div class="al hide">
+                    <button id="btnBuscar" class="g-button x-btn" type="button">@resources.GlobalResources.BtnBuscar</button>
+                </div>
+
+
+                <div class="ma" style="margin-bottom: -10px !important;">
+                    <div class="ar" style="margin-bottom:10px">
+                        <i class="x-icon-loader hide"></i>
+                        <button id="btnAgregar" class="g-button x-btn" style="margin-left: 10px"
+                                onclick="_NewEditTipoFormato(0)">
+                            @resources.GlobalResources.BtnAgregar
+                            <i class="x-icon x-icon-plus rel" style="top: 5px; right: -3px;"></i>
+                        </button>
+                    </div>
+                </div>*@
+
+            <div class="row" style="">
+                <div class="col text-right">
+                    <button id="btnAgregar" type="button" class="btn btn-default"
+                            onclick="_NewEditTipoFormato(0)">
+                        <i class="x-icon x-icon-mas3 icon-in-button"></i> @resources.GlobalResources.BtnAgregar
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-responsivesss">
+                <table class="@Html.GetBaseTableCSS() " id="GridResults">
+                    <thead>
+                        <tr>
+                            <th class="ac" width="5%">@resources.GlobalResources.TH_Number</th>
+                            <th class="al">@resources.Administracion.Descripcion</th>
+                            <th class="al">@resources.Administracion.ExtraCSS</th>
+                            <th class="ac">@resources.Administracion.Vigente</th>
+                            <th class="ac" width="10%">@resources.GlobalResources.TH_Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+
+
+
+            <legend class="legendTitle" id="legendMimeTypes">@resources.Administracion.MimeTypesDe</legend>
+
+
+            <div class="row" style="">
+                <div class="col text-right">
+                    <button id="btnAgregarMimeType" type="button" class="btn btn-default"
+                            onclick="_NewEditMimeType(0,0)">
+                        <i class="x-icon x-icon-mas3 icon-in-button"></i> @resources.GlobalResources.BtnAgregar @resources.Administracion.MimeType
+                    </button>
+                </div>
+            </div>
+
+
+            <table class="@Html.GetBaseTableCSS() hide" id="GridMimeTypes">
+                <thead>
+                    <tr>
+                        <th class="ac" width="5%">@resources.GlobalResources.TH_Number</th>
+                        <th class="al">@resources.Administracion.MimeType</th>
+                        <th class="al">@resources.Administracion.Vigente</th>
+                        <th class="ac" width="10%">@resources.GlobalResources.TH_Acciones</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+
+        </fieldset>
+
+    </div>
+</div>
+<div class="clearfix"></div>
+

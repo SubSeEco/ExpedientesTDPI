@@ -1,0 +1,116 @@
+﻿@model Application.DTO.Models.Expediente
+
+@using Enums = Domain.Infrastructure;
+@using resources = Infrastructure.Resources;
+
+
+@{
+    int count = 1;
+
+    int TipoDocumentoEnum = (int)Enums.TipoDocumento.Expediente;
+}
+<script type="text/javascript">
+
+    ; (function ($) {
+        $(function () {
+
+            callToolTipsGrid("fsAdjuntosExp");
+
+        });
+    })(jQuery);
+
+</script>
+
+<div class="modal-body">
+
+
+    <fieldset class="x-fieldset">
+        <legend></legend>
+        <p class="bold mb0">N° ROL: @Model.Causa.NumeroTicket</p>
+    </fieldset>
+
+    <fieldset class="x-fieldset">
+        <legend class="celeste bold">Evento</legend>
+
+        <div class="form-group row align-items-center">
+            <label for="TipoTramiteID" class="col-md-3 col-form-label" id="">Tipo Trámite </label>
+            <div class="col-md-9">
+                <input type="text" class="form-control"  disabled="disabled" value="@Model.TipoTramite.Descripcion" />
+            </div>
+        </div>
+
+        <div class="form-group row align-items-center">
+            <label for="" class="col-md-3 col-form-label" id="">Fecha </label>
+            <div class="col-md-5">
+                <input type="text" class="form-control" disabled="disabled" value="@Html.DatetimeToString(Model.FechaExpediente, "dd-MM-yyyy HH:mm")" />
+            </div>
+        </div>
+
+    </fieldset>
+
+    <fieldset class="x-fieldset" id="fsAdjuntosExp">
+        <legend class="celeste bold">Documentos adjuntos</legend>
+
+        <div class="table-responsive">
+
+            <table class="@Html.GetBaseTableCSS()" id="">
+                <thead>
+                    <tr>
+                        <th class="ac" style="">#</th>
+                        <th class="ac" style="">Nombre Documento</th>
+                        <th class="ac" style="">Descripción</th>
+                        <th class="ac" style="">Fecha Carga</th>
+                        <th class="ac" style="">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.AsocEscritoDocto.Count > 0)
+                    {
+                        count = 1;
+
+                        foreach (var item in Model.AsocEscritoDocto)
+                        {
+                            var doc = item.AsocCausaDocumento.DocumentoCausa;
+
+                            <tr>
+                                <td class="ac">@count</td>
+                                <td class="">@doc.NombreArchivoFisico</td>
+                                <td style="max-width:200px" class="fixWord">@doc.Descripcion</td>
+                                <td class="ac">@Html.DatetimeToString(doc.Fecha, "dd-MM-yyyy HH:mm")</td>
+                                <td class="ac">
+
+                                    <a style="margin-right:2px" href="javascript:void(0)"
+                                       onclick='getDownloadFile(@doc.DocumentoCausaID, @Model.CausaID, "@doc.Hash.Trim()", @TipoDocumentoEnum)'
+                                       class="x-title-l" title="@resources.GlobalResources.BtnDescargar">
+                                        <i class="x-icon @Html.GetCSS(doc.NombreArchivoFisico)" style="cursor: pointer;"></i>
+                                    </a>
+
+                                </td>
+                            </tr>
+                            count++;
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="" style="padding:5px 10px;">No hay información para desplegar</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+        </div>
+
+
+    </fieldset>
+
+
+
+</div>
+
+<div class="modal-footer">
+    <button class="btn btn-default" data-dismiss="modal" type="button">
+        <i class="x-icon x-icon-cancel2 icon-in-button"></i> @resources.GlobalResources.BtnAceptar
+</button>
+</div>
+

@@ -1,0 +1,476 @@
+﻿@model Application.DTO.FiltrosEscritorio
+
+@using resources = Infrastructure.Resources;
+
+@{
+    string OptionInitial = resources.GlobalResources.OptionInicial;
+
+    int AnioActual = DateTime.Now.Year;
+    int AnioInicio = Domain.Infrastructure.WebConfigValues.AnioInicial;
+    int AnioFin = AnioActual;
+
+    string NamePage = ViewBag.NamePage;
+}
+
+<script type="text/javascript">
+
+	; (function ($) {
+		$(function () {
+
+		    var LSname = "SGDE_@NamePage";
+
+		    $("#btnBuscar, #btnGenerar").on("click", function () {
+		        SaveItemsLS(LSname);
+		    });
+
+		    $(".radioBuscax").on("click", function () {
+		        var valor = parseInt($(this).val());
+
+		        crearForm($(this));
+
+		        if (valor == 1) { //Rol
+
+		            $("#NumeroSolicitud").prop("disabled", true);
+		            $("#NumeroRegistro").prop("disabled", true);
+		            SetStateCampos(true);
+
+		            var code = FindItemInLS("SGDE_@NamePage", "NumeroTicket");
+		            $("#NumeroTicket").prop("disabled", false);
+		            $("#NumeroTicket").val(code);
+		        }
+
+		        if (valor == 2) { //N° Solicitud
+
+
+		            $("#NumeroTicket").prop("disabled", true);
+		            $("#NumeroRegistro").prop("disabled", true);
+		            SetStateCampos(true);
+
+		            var code = FindItemInLS("SGDE_@NamePage", "NumeroSolicitud");
+		            $("#NumeroSolicitud").prop("disabled", false);
+		            $("#NumeroSolicitud").val(code);
+		        }
+
+		        if (valor == 3) { //N° Registro
+
+		            $("#NumeroTicket").prop("disabled", true);
+		            $("#NumeroSolicitud").prop("disabled", true);
+		            SetStateCampos(true);
+
+		            var code = FindItemInLS("SGDE_@NamePage", "NumeroRegistro");
+		            $("#NumeroRegistro").prop("disabled", false);
+		            $("#NumeroRegistro").val(code);
+		        }
+
+		        if (valor == 4) { //Otros
+
+		            $("#NumeroTicket").prop("disabled", true);
+		            $("#NumeroRegistro").prop("disabled", true);
+		            $("#NumeroSolicitud").prop("disabled", true);
+
+		            SetStateCampos(false);
+
+		            FindSetCampo('Anio', true);
+		            FindSetCampo('EstadoCausaID', true);
+		            FindSetCampo('TipoCausaID', true);
+
+		            FindSetCampo('Apelante', false);
+		            FindSetCampo('Apelado', false);
+		            FindSetCampo('FechaIngreso', false);
+		            FindSetCampo('Denominacion', false);   
+		        }
+		    });
+
+		    GetItemsLS(LSname);
+
+		    setTimeout(function () {
+
+		        var actionVolver = GetVolverLS("Registro");
+		        if (actionVolver) {
+
+		            $("#btnBuscar").trigger("click");
+
+		            store.set("volver_Registro", false);
+		            store.set("volver_Expediente_findPage", true);
+		        }
+
+		    }, 400);
+
+		});
+	})(jQuery);
+
+
+    function SetStateCampos(ckeck) {
+
+        $("#Anio").prop('disabled', ckeck);
+        $("#Apelante").attr("readonly", ckeck);
+        $("#Apelado").attr("readonly", ckeck);
+        $("#TipoCausaID").prop("disabled", ckeck);
+        $("#FechaIngreso").prop("disabled", ckeck);
+        $("#Denominacion").attr("readonly", ckeck);
+        $("#EstadoCausaID").attr("disabled", ckeck);
+    }
+
+    function FindSetCampo(campo, is_select) {
+        var code = FindItemInLS("SGDE_@NamePage", campo);
+
+        if (is_select)
+        {
+            if (code == "" || code == null) {
+                $("#" + campo).val( $("#" + campo).attr('data-default') );
+            } else {
+                $("#" + campo).val(code);
+            }
+        }
+        else
+        {
+            $("#" + campo).val(code);
+        }
+    }
+
+
+    function crearForm(obj) {
+        $("#frmFiltrosEscritorio").reset();
+        $(obj).prop("checked", true);
+    }
+
+    function FindItemInLS(Identificador, campo) {
+
+        var valor = "";
+
+        var inLS = store.get(Identificador) || 0;
+
+        if (inLS != 0) {
+
+            try {
+
+                var v = _.findWhere(inLS, { id: campo });
+                valor = v.value;
+
+            } catch (e) {
+
+            }
+        }
+
+        return valor;
+    }
+
+    function SaveItemsLS(Identificador) {
+
+        var items = [];
+
+        $("#frmFiltrosEscritorio .form-control").each(function (index, value) {
+
+            var id = $(this).attr('id');
+
+            var obj = {
+                id: id,
+                value: $(this).val()
+            }
+
+            items.push(obj);
+
+        });
+
+        $("#frmFiltrosEscritorio input:radio, #frmFiltrosEscritorio input:checkbox").each(function () {
+
+            var id = $(this).attr('id');
+            var obj = {
+                id: id,
+                value: $(this).is(":checked")
+            }
+
+            items.push(obj);
+        });
+
+        $("#frmFiltrosEscritorio select:visible:enabled:not([readonly])").each(function () {
+
+            var id = $(this).attr('id');
+
+            var obj = {
+                id: id,
+                value: $(this).val()
+            }
+
+            items.push(obj);
+        });
+
+        store.set(Identificador, items);
+    }
+
+    function GetItemsLS(Identificador) {
+
+        $("#frmFiltrosEscritorio input:text:visible:enabled:not([readonly])").each(function () { //.not(".isCalendar")
+            var campo = $(this).attr("id");
+            var valor = FindItemInLS(Identificador, campo);
+
+            if ($(this).hasClass("IsCalendar")) {
+                if (valor == "") {
+                    valor = $(this).val();
+                }
+            }
+
+            $(this).val(valor);
+        });
+
+        $("#frmFiltrosEscritorio select:visible:enabled:not([readonly])").each(function () {
+
+            var campo = $(this).attr("id");
+            var valor = FindItemInLS(Identificador, campo);
+
+            if (valor == "" || valor == null) {
+                if ($(this).attr('data-default'))
+                {
+                    valor = $(this).data("default");
+                    //console.log(valor, this);
+                }
+            }
+
+            $(this).val(valor);
+        });
+
+
+
+        $("#frmFiltrosEscritorio input:radio:visible:enabled:not([readonly]),#frmFiltrosEscritorio input:checkbox:visible:enabled:not([readonly])").each(function () { //.not(".isCalendar")
+            var campo = $(this).attr("id");
+            var valor = FindItemInLS(Identificador, campo);
+
+            try {
+
+                //console.log(campo, valor);
+
+                if (valor.toString().bool()) {
+
+                    $(this).trigger("click");
+
+                    if (campo == "radio1") {
+                        //var code = FindItemInLS(Identificador, "NumeroTicket");
+                        //$("#NumeroTicket").val(code);
+                    }
+
+                    if (campo == "radio2") {
+                        //var code = FindItemInLS(Identificador, "NumeroSolicitud");
+                        //$("#NumeroSolicitud").val(code);
+                    }
+
+                    if (campo == "radio3") {
+                        //var code = FindItemInLS(Identificador, "NumeroRegistro");
+                        //$("#NumeroRegistro").val(code);
+                    }
+                }
+
+            } catch (e) {
+
+            }
+        });
+
+    }
+
+    function crearForm(obj) {
+        $("#frmFiltrosEscritorio").reset();
+        $(obj).prop("checked", true);
+    }
+
+    function LimpiaForm(from) {
+
+        store.set("SGDE_@NamePage", []);
+
+        if (from == 0) {
+            $("#frmFiltrosEscritorio").reset();
+            $(".radioBuscax:eq(3)").trigger("click");
+        }
+
+        if (from == 1) {
+            SelfRedirect();
+        }
+    }
+
+</script>
+
+
+<fieldset class="x-fieldset">
+    <legend class="bold celeste">Filtros</legend>
+
+    <form class="" method="POST" id="frmFiltrosEscritorio" onsubmit="return false" autocomplete="on">
+        @Html.AntiForgeryToken()
+
+        <div id="tableFiltros" class="">
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group row align-items-center mb0">
+                        <label for="" class="col-sm-2 col-form-label"><i>Buscar por</i></label>
+                        <div class="col-sm-10" style="">
+
+                            <label class="custom-control custom-radio custom-control-inline">
+                                <input type="radio" id="radio1" class="radioBuscax custom-control-input" name="BuscaX" value="1">
+                                <label class="custom-control-label" for="radio1">Rol</label>
+                            </label>
+                            <label class="custom-control custom-radio custom-control-inline">
+                                <input type="radio" id="radio2" class="radioBuscax custom-control-input" name="BuscaX" value="2">
+                                <label class="custom-control-label" for="radio2">N° Solicitud</label>
+                            </label>
+                            <label class="custom-control custom-radio custom-control-inline">
+                                <input type="radio" id="radio3" class="radioBuscax custom-control-input" name="BuscaX" value="3">
+                                <label class="custom-control-label" for="radio3">N° Registro</label>
+                            </label>
+                            <label class="custom-control custom-radio custom-control-inline">
+                                <input type="radio" id="radio4" class="radioBuscax custom-control-input" name="BuscaX" value="4">
+                                <label class="custom-control-label" for="radio4">Otros</label>
+                            </label>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group row">
+                        <label for="NumeroTicket" class="col-sm-4 col-form-label" id="lblNumeroTicket">Rol</label>
+                        <div class="col-sm-8">
+                            @Html.TextBoxFor(x => x.NumeroTicket, new { @class = "form-control", @style = "", @placeholder = "", @maxlength = "20" })
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label for="Anio" class="col-sm-4 col-form-label">Año <span class="span-obligatorio">*</span></label>
+                        <div class="col-sm-8 col-lg-5">
+                            <select style="" name="Anio" id="Anio" class="custom-select" data-default="@AnioActual">
+                                @for (int i = AnioFin; i >= AnioInicio; i--)
+                                {
+                                    string selected = (i == AnioActual) ? "selected='selected'" : "";
+                                    <option value="@i" @selected>@i</option>
+                                }
+                            </select>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label for="NumeroSolicitud" class="col-sm-4 col-form-label" id="">N° Solicitud</label>
+                        <div class="col-sm-8">
+                            @Html.TextBoxFor(x => x.NumeroSolicitud, new { @class = "form-control", @style = "", @placeholder = "", @maxlength = "50" })
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label for="NumeroRegistro" class="col-sm-4 col-form-label" id="lblNumeroRegistro">N° Registro</label>
+                        <div class="col-sm-8">
+                            @Html.TextBoxFor(x => x.NumeroRegistro, new { @class = "form-control", @style = "", @placeholder = "", @maxlength = "50" })
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row ">
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label for="TipoCausaID" class="col-sm-4 col-form-label">Tipo Causa </label>
+                        <div class="col-sm-8">
+                            <select id="TipoCausaID" name="TipoCausaID" class="custom-select" data-default="0">
+                                <option value="0">@OptionInitial</option>
+                                @foreach (var item in Model.TipoCausa)
+                                {
+                                    <option value="@item.TipoCausaID">@item.Descripcion</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label for="FechaIngreso" class="col-sm-4 col-form-label">Fecha de Ingreso</label>
+                        <div class="col-sm-8 col-lg-5">
+                            <div class="input-group">
+                                @Html.TextBoxFor(x => x.FechaIngreso, new
+                               {
+                                   @Value = Model.FechaIngreso,
+                                   @class = "ac IsCalendar form-control",
+                                   @style = "",
+                                   @placeholder = "",
+                                   @maxlength = "10",
+                                   @data_year_range = "-10:+0",
+                                   @data_max_date = "+0d"
+                               })
+                                <div class="input-group-append">
+                                    <span class="input-group-text" id=""><i class="x-icon x-icon-calendar" data-dateinput="FechaIngreso"></i></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>          
+
+            @*<div class="row">
+                                                
+                <div class="col-sm-6 hide">
+                    <div class="form-group row">
+                        <label for="xxxxxx" class="col-sm-4 col-form-label">xxxxxx</label>
+                        <div class="col-sm-8">
+
+                        </div>
+                    </div>
+                </div>
+               
+            </div>*@
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label for="Denominacion" class="col-sm-4 col-form-label" id="lblDenominacion">Individualización @Html.Raw(Html.HelpTitle(resources.Expediente.lblDenominacionHelp))</label>
+                        <div class="col-sm-8">
+                            @Html.TextBoxFor(x => x.Denominacion, new { @class = "form-control", @style = "", @placeholder = "", @maxlength = "1000" })
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label for="EstadoCausaID" class="col-sm-4 col-form-label">Estado</label>
+                        <div class="col-sm-8">
+                            <select id="EstadoCausaID" name="EstadoCausaID" class="custom-select" data-default="0">
+                                <option value="0">@OptionInitial</option>
+                                @foreach (var item in Model.EstadoCausa.OrderBy(x => x.Descripcion))
+                                {
+                                    <option value="@item.EstadoCausaID">@item.Descripcion</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label for="Apelante" class="col-sm-4 col-form-label" id="lblApelante">Apelante / Solicitante / Recurrente</label>
+                        <div class="col-sm-8">
+                            @Html.TextBoxFor(x => x.Apelante, new { @class = "form-control", @style = "", @placeholder = "", @maxlength = "500" })
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label for="Apelado" class="col-sm-4 col-form-label" id="lblApelante">Apelado / Recurrido</label>
+                        <div class="col-sm-8">
+                            @Html.TextBoxFor(x => x.Apelado, new { @class = "form-control", @style = "", @placeholder = "", @maxlength = "500" })
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </form>
+
+</fieldset>

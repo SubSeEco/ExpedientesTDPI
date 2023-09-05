@@ -1,0 +1,490 @@
+﻿@model Application.DTO.Models.Expediente
+
+@using Enums = Domain.Infrastructure;
+@using resources = Infrastructure.Resources;
+
+@{
+
+    int count = 1;
+    bool IsNew = Model.ExpedienteID == 0;
+    int CausaID = Model.CausaID;
+
+    var DataForm = ViewBag.DataForm as Application.DTO.DataForm;
+
+    int TipoDocumentoEnum = (int)Enums.TipoDocumento.Expediente;
+
+    //var AsocTipoTramiteOpciones = Model.TipoTramite.AsocTipoTramiteOpciones.FirstOrDefault();
+
+    //bool IsIngresoPlazoDias = false;
+    //bool IsPermiteFechaAnterior = false;
+    //if (Model.TipoTramite.AsocTipoTramiteOpciones.Count > 0)
+    //{
+    //    if (AsocTipoTramiteOpciones.PlazoDias > 0)
+    //    {
+    //        IsIngresoPlazoDias = true;
+    //    }
+
+    //    IsPermiteFechaAnterior = AsocTipoTramiteOpciones.IsPermiteFechaAnterior;
+    //}
+}
+
+<script type="text/javascript">
+
+    var appFirmas;
+    var firmasList = [];
+
+    @foreach (var item in Model.Firma)
+    {<text>
+    firmasList.push({
+        ExpedienteID: parseInt("@item.ExpedienteID"),
+        FirmaID: parseInt("@item.FirmaID"),
+        UsuarioName: "@Html.Raw(item.Usuario.GetFullName())",
+        UsuarioFirmaID: parseInt("@item.UsuarioID"),
+        IsFirmado: "@item.AsocFirmaDocto",
+        Orden: parseInt("@item.Orden")
+    });
+    </text>
+    }
+
+    var optionSelected = 0;
+
+    @foreach (var item in Model.AsocExpedienteOpcion)
+    {
+        @:optionSelected = parseInt("@item.OpcionesTramiteID");
+    }
+
+
+    ; (function ($) {
+        $(function () {
+
+            ActionComboEvento();
+
+            activateForm("btSaveExpediente", "frmExpediente",
+                function () {
+
+                    let IsExpNew = "@IsNew".bool();
+
+                    if (IsExpNew) {
+                        var fTxt = $("#UploadFileFrm #archivo").val();
+                        if (fTxt != "") {
+                            showBlockUIError("Debe subir el archivo antes de enviar");
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        var fTxt = $("#frmFileExpediente #file").val();
+                        if (fTxt != "") {
+                            showBlockUIError("Debe subir el archivo antes de enviar");
+                            return false;
+                        }
+                    }
+
+
+                    try {
+                        if (appFirmas.lista.length > 0) {
+                            $("#strFirmas").val(JSON.stringify(appFirmas.lista));
+                        }
+
+                    } catch (e) {
+
+                    }
+
+                    @if (IsNew)
+                    {
+                        @:ParseDocsAdjuntos("frmExpediente");
+                    }
+
+                    return true;
+                },
+                function () {
+
+                    showBlockUI(CloseDialog);
+
+                    $("#grilla tr.selected a:last i.x-icon-org").click();
+                    
+                });
+
+            ActionEstadosAplica("frmExpediente");
+            TrimFormByID();
+
+            @if (!IsNew)
+            {
+                @:fixFakePath("file");
+                 @:SetUploadForm();
+           }
+
+            TrimFormByID("#frmExpediente");
+
+        });
+    })(jQuery);
+
+    function SetUploadForm() {
+
+        activateFormUploadFile({
+            formID: "frmFileExpediente",
+            callback: function () {
+
+                CloseDialog();
+
+                showBlockUI(function () {
+                    setTimeout(function () {
+                        var $tr = $("#trEx_@Model.ExpedienteID").find("a.getDialog");
+                        $tr.trigger("click");
+                        console.log($tr);
+                    }, 100);
+                });
+
+                @*setTimeout(function () {
+                    GetExpediente(@Model.ExpedienteID, @Model.CausaID);
+                    console.log("GetExpediente");
+                }, 500);*@
+
+                console.log(@Model.ExpedienteID, @Model.CausaID);
+
+
+            }
+        })
+    }
+
+    function ActionComboEvento() {
+
+        $("#frmExpediente #TipoTramiteID").on("change", function (e) {
+            e.preventDefault();
+            $("#divDetalleEvento").html("");
+            $("#fsFirmasExpediente").hide();
+
+
+            var params = {
+                __RequestVerificationToken: getVToken(),
+                EstadoCausaID: @Model.Causa.EstadoCausaID,
+                TipoTramiteID: parseInt($(this).val()) || 0
+            };
+            var objDestino = "#frmExpediente #OpcionesTramiteID";
+
+            getChildrenForSelect("@Url.Action("GetEstadoAplica", "Expedientes")", $(this),
+                objDestino, params, "OpcionesTramiteID", "Descripcion", function () {
+
+                    if (optionSelected != 0) {
+                        var exi = $(objDestino + ' option[value="'+optionSelected+'"]').length;
+                        console.log("exi: " + exi);
+                        if (exi > 0) {
+                            $(objDestino).val(optionSelected);
+                            $(objDestino).change();
+                        }
+                    }
+
+                }, false);
+        });
+
+        $("#frmExpediente #TipoTramiteID").change();
+    }
+
+    function ActionEstadosAplica() {
+
+        $("#frmExpediente #OpcionesTramiteID").on("change", function (e) {
+
+            var $divDet = $("#divDetalleEvento");
+            $divDet.html("");
+
+            var before = function () { $divDet.html(divLoaderHtml() + "<br><br>"); };
+            var params = {
+                __RequestVerificationToken: getVToken(),
+                ExpedienteID: @Model.ExpedienteID,
+                EstadoCausaID: @Model.Causa.EstadoCausaID,
+                TipoTramiteID: parseInt($("#frmExpediente #TipoTramiteID").val()) || 0,
+                OpcionesTramiteID: parseInt($(this).val()) || 0,
+            };
+
+            xAjaxHtml("@Url.Action("GetDetalleEvento", "Expedientes")", params, before, function ()
+            {
+                $divDet.html(DataHTM);
+            });
+
+        });
+    }
+
+    function SetAppFirmas() {
+
+        appFirmas = new Vue({
+            el: '#firmasApp',
+            data: {
+                lista: firmasList
+            },
+            methods: {
+                create: function () {
+
+                    var UsuarioFirmaID = parseInt($("#UsuarioFirmaID").val()) || 0;
+                    var OrdenFirma = parseInt($("#OrdenFirma").val()) || 0;
+
+                    if (UsuarioFirmaID == 0) {
+                        showBlockUIError("Debe indicar Funcionario");
+                        $("#UsuarioFirmaID").addClass("is-invalid");
+                        return false;
+                    }
+
+                    if (OrdenFirma == 0) {
+                        showBlockUIError("Debe indicar Órden");
+                        $("#OrdenFirma").addClass("is-invalid");
+                        return false;
+                    }
+
+                    this.lista.push({
+                        ExpedienteID: parseInt("@Model.ExpedienteID"),
+                        FirmaID: 0,
+                        UsuarioName: $("#UsuarioFirmaID option:selected").text(),
+                        UsuarioFirmaID: UsuarioFirmaID,
+                        Orden: OrdenFirma
+                    });
+
+                    $("#UsuarioFirmaID option:selected").hide();
+                    $("#UsuarioFirmaID").val("");
+                    $("#OrdenFirma").val("");
+                    $("#OrdenFirma").removeClass("is-invalid");
+                    $("#UsuarioFirmaID").removeClass("is-invalid");
+                },
+                borrar: function (index) {
+
+                    let item = this.lista[index];
+                    $('#UsuarioFirmaID option[value="'+item.UsuarioFirmaID+'"]').show();
+                    $("#UsuarioFirmaID").val("");
+
+                    this.lista.splice(index, 1);
+                }
+            }
+        });
+    }
+</script>
+
+
+<div class="modal-body">
+
+    <form class="form-horizontal " id="frmExpediente" method="post" action="@Url.Action("SaveExpediente", "Expedientes")">
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(x => x.ExpedienteID)
+        @Html.HiddenFor(x => x.CausaID)
+        @Html.HiddenFor(x => x.IsFinalizado)
+
+        @Html.Hidden("strFirmas", "")
+
+        <fieldset class="x-fieldset">
+            <legend></legend>
+            <p class="bold mb0">N° ROL: @Model.Causa.NumeroTicket</p>
+        </fieldset>
+
+        <fieldset class="x-fieldset">
+            <legend class="celeste bold">Evento</legend>
+
+            <div class="form-group row align-items-center">
+                <label for="TipoTramiteID" class="col-md-3 col-form-label" id="">Tipo Trámite <span class="span-obligatorio">*</span></label>
+                <div class="col-md-9">
+                    <select id="TipoTramiteID" name="TipoTramiteID" class="custom-select verificar" data-default="">
+                        <option value="">@resources.GlobalResources.OptionInicial</option>
+                        @foreach (var item in DataForm.TipoTramite)
+                        {
+                            string selected = (item.TipoTramiteID == Model.TipoTramiteID) ? "selected='selected'" : "";
+                            <option value="@item.TipoTramiteID" data-plazo="@item.AsocTipoTramiteOpciones." @selected>@item.Descripcion</option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group row align-items-center">
+                <label for="OpcionesTramiteID" class="col-md-3 col-form-label" id="">Descripción <span class="span-obligatorio">*</span></label>
+                <div class="col-md-9">
+                    <select id="OpcionesTramiteID" name="OpcionesTramiteID" class="custom-select verificar" data-default="">
+                        <option value="">@resources.GlobalResources.OptionInicial</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="divDetalleEvento"></div>
+
+            <div class="form-group row" id="">
+                <label for="Observacion" class="col-sm-3 col-form-label">Observación</label>
+                <div class="col-sm-9">
+                    <textarea class="notFilter form-control " name="Observacion" id="Observacion" cols="2" rows="2" maxlength="300">@Model.Observacion</textarea>
+                </div>
+            </div>
+
+        </fieldset>
+    </form>
+
+
+    @if (IsNew)
+    {
+        @Html.Partial("_UploadFileTemp", new ViewDataDictionary {
+                    { "FormatosPermitidos", DataForm.AsocTipoDocumentoAdjunto },
+                    { "TipoDocumentoEnum", Enums.TipoDocumento.Expediente } })
+    }
+    else
+    {
+        <fieldset class="x-fieldset">
+            <legend class="celeste bold">Documentos adjuntos</legend>
+
+            <div class="alert alert-info" role="alert">
+                Al seleccionar un archivo deberá indicar el contenido del mismo en el campo de texto
+            </div>
+
+            <form class="" id="frmFileExpediente" enctype="multipart/form-data" action="@Url.Action("SubirArchivo", "Uploader")" method="POST">
+                @Html.AntiForgeryToken()
+
+                @Html.Hidden("CausaID", DataForm.CausaID)
+                @Html.Hidden("ExpedienteID", DataForm.ExpedienteID)
+
+                <input type="hidden" id="_TipoDocumentoID" name="TipoDocumentoID" value="@TipoDocumentoEnum" />
+
+                <div class="form-group row" id="divDescArchivo">
+                    <label for="Descripcion" id="" class="col-sm-3 col-form-label">Indique el contenido del archivo</label>
+                    <div class="col-sm-9">
+                        <input type="text" id="Descripcion" name="Descripcion" class="form-control notBlock" value="" />
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <div class="custom-file">
+                        <input type="file" class="custom-file-input notBlock" id="file" name="file">
+                        <label class="custom-file-label" for="file"
+                               data-browse="@resources.UploadFiles.FileInput_changeText"
+                               aria-describedby="inputGroupFileAddon">@resources.UploadFiles.FileInput_inputText</label>
+                        </div>
+                        <div class="input-group-append">
+                            <button class="btn btn-info btn-file" onclick='$("#frmFileExpediente").submit();' type="button" id="inputGroupFileAddon">
+                                <i class="x-icon x-icon-upload2 icon-in-upload"></i> @resources.UploadFiles.lblSubirArchivo
+                            </button>
+                        </div>
+                    </div>
+                    <small id="" class="form-text text-muted ac" style="margin-bottom: 10px;">
+                        @resources.GlobalResources.ExtensionesPermitidas: @Html.Raw(Html.GetExtensionesPermitidas(DataForm.AsocTipoDocumentoAdjunto, IncluyeTamanio: true))
+                    </small>
+
+                </form>
+
+
+                <div class="table-responsive">
+
+                    <table class="@Html.GetBaseTableCSS()" id="">
+                        <thead>
+                            <tr>
+                                <th class="ac" style="">#</th>
+                                <th class="ac" style="">Nombre Documento</th>
+                                <th class="ac" style="">Descripción</th>
+                                <th class="ac" style="">Fecha Carga</th>
+                                <th class="ac" style="">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.AsocEscritoDocto.Count > 0)
+                            {
+                                count = 1;
+
+                                foreach (var item in Model.AsocEscritoDocto)
+                                {
+                                    var doc = item.AsocCausaDocumento.DocumentoCausa;
+
+                                    <tr>
+                                        <td class="ac">@count</td>
+                                        <td class="">@doc.NombreArchivoFisico</td>
+                                        <td style="max-width:200px" class="fixWord">@doc.Descripcion</td>
+                                        <td class="ac">@Html.DatetimeToString(doc.Fecha, "dd-MM-yyyy HH:mm")</td>
+                                        <td class="ac">
+
+                                            <a style="margin-right:2px" href="javascript:void(0)"
+                                               onclick='getDownloadFile(@doc.DocumentoCausaID, @Model.CausaID, "@doc.Hash.Trim()", @TipoDocumentoEnum)'
+                                               class="x-title-t" title="@resources.GlobalResources.BtnDescargar">
+                                                <i class="x-icon @Html.GetCSS(doc.NombreArchivoFisico)" style="cursor: pointer;"></i>
+                                            </a>
+
+                                            @*@if (PuedeAgregarDocumentos)
+                                            {
+                                                <a href="javascript:void(0)"
+                                                   onclick='getDeleteFile(@item.DocumentoCausaID, @TipoDocumentoEnum, @item.VersionEncriptID, "@item.Hash.Trim()", @Model.CausaID)'
+                                                   class="x-title-l" title="@resources.GlobalResources.BtnEliminar">
+                                                    <i class="x-icon x-icon-delete notRemove" style="cursor: pointer;"></i>
+                                                </a>
+                                            }*@
+
+                                        </td>
+                                    </tr>
+                                    count++;
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="5" class="" style="padding:5px 10px;">No hay información para desplegar</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+
+                </div>
+
+            </fieldset>
+    }
+
+    <fieldset class="x-fieldset" id="fsFirmasExpediente" style="display:none">
+        <legend class="celeste bold">Firmas</legend>
+
+        <div id="firmasApp">
+
+            <div class="form-inline">
+                <div class="form-group">
+                    <label for="UsuarioFirmaID" class="">Funcionario</label>
+                    <select id="UsuarioFirmaID" name="UsuarioFirmaID" class="form-control mx-sm-3" data-default="">
+                        <option value="">@resources.GlobalResources.OptionInicial</option>
+                        @foreach (var item in DataForm.Usuario.Where(x=> x.UsuarioID > 0))
+                        {
+                            bool existe = Model.Firma.Any(x => x.UsuarioID == item.UsuarioID);
+                            if (!existe)
+                            {
+                                <option value="@item.UsuarioID">@item.GetFullName()</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="OrdenFirma" class="">Órden</label>
+                    <input type="text" class="form-control mx-sm-2 IsInteger ac" id="OrdenFirma" placeholder="">
+                </div>
+
+                <button v-on:click="create" type="button" class="btn btn-default rel" style="top: -2px;">Agregar Responsable</button>
+            </div>
+
+            
+
+            <table class="table table-striped table-sm table-bordered table-hover x-table allW" id="" style="margin-top:10px">
+                <thead>
+                    <tr>
+                        <th class="ac"style="width:5%">@resources.GlobalResources.TH_Number</th>
+                        <th class="ac" style="text-align: left !important">Nombre</th>
+                        <th class="ac" style="width:20%">Órden</th>
+                        <th class="ac" style="width:10%">@resources.GlobalResources.TH_Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(f, index in lista">
+                        <td class="ac">{{index + 1}}</td>
+                        <td>{{ f.UsuarioName }}</td>
+                        <td class="ac">{{ f.Orden }}</td>
+                        <td class="ac">
+                            <a href='javascript:void(0)' v-on:click="borrar(index)"><i class='x-icon x-icon-delete'></i></a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>
+
+
+    </fieldset>
+
+</div>
+
+<div class="modal-footer">
+
+    <button id="btSaveExpediente" class="btn btn-default" onclick="$('#frmExpediente').submit()" type="button"><i class="x-icon x-icon-save2 icon-in-button"></i> @resources.GlobalResources.BtnGuardar</button>
+    <i class="x-icon-loader hide"></i>
+    <button class="btn btn-default" data-dismiss="modal" type="button"><i class="x-icon x-icon-cancel2 icon-in-button"></i> @resources.GlobalResources.BtnCancelar</button>
+
+</div>

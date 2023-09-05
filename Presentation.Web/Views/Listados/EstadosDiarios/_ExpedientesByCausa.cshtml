@@ -1,0 +1,45 @@
+﻿@model Application.DTO.Models.Causa
+
+@using Enums = Domain.Infrastructure;
+@using resources = Infrastructure.Resources;
+
+@{
+    int count = 1;
+    var EstadoDiario = ViewBag.EstadoDiario as Application.DTO.Models.EstadoDiario;
+}
+
+
+<fieldset class="x-fieldset">
+    <legend class="celeste bold">N° Rol @Model.NumeroTicket</legend>
+
+    <table class="table table-striped table-sm table-bordered table-hover x-table allW " id="grillaExpedientesCausa" style="margin-top:10px;">
+        <thead>
+            <tr>
+                <th class="ac" style="">@resources.GlobalResources.TH_Number</th>
+                <th class="ac " style="">Fecha</th>
+                <th class="ac" style="">Trámite</th>
+                <th class="ac" style="">Descripción</th>
+                <th class="ac" style="">Observación</th>
+                <th class="ac" style="">Usuario</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Expediente)
+            {
+                if (item.IsDisponibleResolucion(EstadoDiario.Fecha))
+                {
+                    <tr id="" class="">
+                        <td class="ac">@count</td>
+                        <td class="ac nw">@Html.DatetimeToString(item.FechaExpediente)</td>
+                        <td>@item.TipoTramite.Descripcion</td>
+                        <td>@Html.Raw(item.GetOpcionesTramite())</td>
+                        <td>@item.Observacion</td>
+                        <td>@item.Usuario.GetFullName()</td>
+                    </tr>
+                    count++;
+                }
+            }
+        </tbody>
+    </table>
+
+</fieldset>

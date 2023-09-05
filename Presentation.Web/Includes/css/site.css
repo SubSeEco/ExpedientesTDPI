@@ -1,0 +1,496 @@
+﻿/******************* 
+    MENU SECCIONES 
+********************/
+ul#menu_secciones {
+    margin: 0;
+    padding: 0;
+    display: block;
+    width: 99%;
+    margin: auto;
+    clear: both;
+    height: 105px;
+    margin-bottom: 15px;
+}
+
+ul#menu_secciones li {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    text-align: center !important;
+    float: left;
+    width: 91px;
+    background: url(images/menu/middle_list_item.png) center center repeat-x !important;
+    height: 105px;
+    transition: all ease-in 0.3s;
+    -webkit-transition: all ease-in 0.3s;
+}
+ul#menu_secciones li:hover,
+ul#menu_secciones li.active {
+    background: url(images/menu/middle_list_item_over.png) center center repeat-x !important;
+}
+
+ul#menu_secciones li:first-child,
+ul#menu_secciones li:first-of-type {
+    background: url(images/menu/first_list_item.png) center center repeat-x !important;
+}
+
+ul#menu_secciones li:first-child:hover,
+ul#menu_secciones li:first-of-type:hover,
+ul#menu_secciones li.active:first-of-type {
+    background: url(images/menu/first_list_item_over.png) center center repeat-x !important;
+}
+
+ul#menu_secciones li:last-child,
+ul#menu_secciones li:last-of-type {
+    background: url(images/menu/last_list_item.png) center center repeat-x !important;
+}
+ul#menu_secciones li:last-child:hover,
+ul#menu_secciones li:last-of-type:hover,
+ul#menu_secciones li.active:last-of-type {
+    background: url(images/menu/last_list_item_over.png) center center repeat-x !important;
+}
+
+ul#menu_secciones li:hover *,
+ul#menu_secciones li.active * {
+    color: #006cb7 !important;
+}
+
+ul#menu_secciones li .title_pasos {
+    font-weight: bold;
+    font-size: 12px;
+    text-transform: uppercase;
+    color: #444;
+    /*font-family: 'helvetica_lt_std_condbold';*/
+    margin-bottom: 8px;
+    margin-top: 15px;
+    text-decoration: none;
+}
+ul#menu_secciones li .imagen_seccion {
+    width: 25px;
+    height: 25px;
+    display: block;
+    margin: auto;
+    margin-bottom: 13px;
+}
+ul#menu_secciones li .seccion_name a {
+    /*font-family: 'helvetica_lt_std_condregular';*/
+    color: #444;
+    font-size: 11px;
+    text-decoration: none;
+    line-height:12px;
+}
+
+
+.bgPasos{
+    background-image:url(images/pasos.png); 
+    background-repeat:no-repeat;
+    width:704px;
+    height: 59px;
+    vertical-align:middle;
+}
+
+.itemPaso{
+    color: white;
+    font-size: 11px;
+    padding-top: 13px;
+    line-height: 14px;
+}
+
+    .panel {
+        margin-bottom: 0;
+    }
+
+@media screen and (max-width: 479px) {
+
+    #btnAgregarConcurso{
+        margin-top: 0;
+        float: left;
+        margin-left: 0 !important;
+        width: 100%;
+    }
+
+    #btnBuscarConcurso{
+        width: 100%;
+    }
+
+    #btnAgregar{
+        margin-top: 0;
+        float: left;
+        margin-left: 0 !important;
+        width: 100%;
+    }
+
+    #btnBuscar, #btnIngresoOIRS, #btnLimpiar{
+        width: 100%;
+    }
+
+    #btnLimpiar{
+        width: 100%;
+        margin-bottom: 10px;
+    }
+}
+
+    .bottom-align-text {
+        position: relative;
+        display: block;
+    }
+
+
+    /*.divTimer{
+        min-height: 45px;
+        vertical-align: bottom;
+    }
+
+
+@media (min-width: 768px ) {
+
+    .bottom-align-text {
+        position: absolute;
+        bottom: -26px;
+        right: 15px;
+    }
+
+    .divTimer{
+        min-height: 80px;
+        vertical-align: bottom;
+    }
+}*/
+
+
+    #footer {
+    width: 94%;
+    margin: 0 auto;
+    margin-top:15px;
+    color: #666 ;
+    background-color: white;
+    padding: 25px 35px;
+    border: 1px solid #D7D7D7;
+    border-top: none;
+    -webkit-border-radius: 0 0 6px 6px;
+    -moz-border-radius: 0 0 6px 6px;
+    border-radius: 0 0 6px 6px;
+    -webkit-box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    -moz-box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+#footer p, #footer p a, #footer span {
+    color: #B7B7B7;
+    text-decoration: none;
+}
+
+
+/*!
+ * StyleSheet for JQuery splitter Plugin
+ * Copyright (C) 2010 Jakub Jankiewicz <http://jcubic.pl>
+ */
+.splitter_panel {
+  position: relative;
+}
+.splitter_panel .vsplitter {
+    background-color: #c1c1c1;
+    cursor: col-resize;
+    z-index:900;
+    width: 7px;
+}
+
+.splitter_panel .hsplitter {
+    background-color: #c1c1c1;
+    cursor: row-resize;
+    z-index: 800;
+    height: 7px;
+}
+.splitter_panel .vsplitter.splitter-invisible,
+.splitter_panel .hsplitter.splitter-invisible {
+    background: none;
+}
+.splitter_panel .vsplitter, .splitter_panel .left_panel, .splitter_panel .right_panel,
+.splitter_panel .hsplitter, .splitter_panel .top_panel, .splitter_panel .bottom_panel {
+    position: absolute;
+    /*overflow: auto;*/
+    /*overflow-y:auto;*/
+    overflow-y: hidden;
+}
+.splitter_panel .vsplitter, .splitter_panel .left_panel, .splitter_panel .right_panel {
+  height: 100%;
+}
+.splitter_panel .hsplitter, .splitter_panel .top_panel, .splitter_panel .bottom_panel {
+  width: 100%;
+}
+.splitter_panel .top_panel, .splitter_panel .left_panel, .splitter_panel .vsplitter {
+   top: 0;
+}
+.splitter_panel .top_panel, .splitter_panel .bottom_panel, .splitter_panel .left_panel, .splitter_panel .hsplitter {
+   left: 0;
+}
+.splitter_panel .bottom_panel {
+   bottom: 0;
+}
+.splitter_panel .right_panel {
+   right: 0;
+}
+.splitterMask {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+}
+
+
+.ventanaHelp{
+    overflow: auto;
+    height: 100px;
+}
+
+
+    .titleMes{
+        font-weight: bold;
+        font-size: 14px;
+        padding-top: 10px;
+    }
+
+
+        a.fecha
+    {
+        width: 60px;
+        height: 20px;
+        display: inline-block;
+    }
+
+    a.fecha.disponible{
+        background-color: #268625;
+        cursor: pointer !important;
+    }
+
+    a.fecha.disponible span{
+        font-weight: bold;
+        color: white;
+    }
+
+    a.fecha.disabled{
+        background-color: #ececec;
+        cursor: not-allowed !important;
+    }
+
+    a.fecha.disponible.active{
+        border: 1px solid gray;
+    }
+
+    a.fecha.ocupado{
+        background-color: red;
+        cursor: default !important;
+    }
+
+    a.fecha.reservaEspecial{
+        background-color: blue;
+        cursor: default !important;
+    }
+
+    a.fecha.ylw{
+        background-color: #fff35c;
+        /*cursor: default !important;*/
+    }
+
+    a.fecha.blue{
+        background-color: blue;
+        cursor: default !important;
+    }
+
+    a.fecha.bloqueo{
+        background-color: blue;
+        cursor: pointer !important;
+    }
+
+        td.tdm{
+        width: 70px;
+        text-align: center;
+    }
+
+.tablaCal th, .tablaCal td {
+ 
+    line-height: 20px;
+    padding: 7px;
+    text-align: left;
+    vertical-align: top;
+}
+
+.tablaCal input{
+    margin-bottom: 0px;
+}
+
+
+.alert {
+    margin-bottom: 10px;
+}
+
+
+.captcha{
+    border:1px solid rgb(207, 199, 199)
+}
+
+.captchaReload{
+
+    height:70px;
+    border-left:1px solid rgb(207, 199, 199);
+}
+
+.captchaReload img{
+    margin-top:18px;
+    position: relative;
+}
+
+.captchaReload img:active{
+    top:1px;
+}
+
+
+.modal-backdrop, .modal-backdrop.fade.in {
+  opacity: 0.3;
+}
+
+.modal-header .close {
+  right: -4px;
+}
+
+
+.noselect
+{
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+#listaFuncionarios,
+#listaAdministradores,
+#listaAuditores,
+#listaCoordinadores { list-style-type: none; margin: 0; padding: 0; }
+
+#listaFuncionarios li,
+#listaAdministradores li,
+#listaAuditores li,
+#listaCoordinadores li
+{
+	display: inline-block;
+	vertical-align: top;
+	/*height: 19px;*/
+	width: 340px !important;
+	margin: 2px 0;
+	padding: 4px 0px;
+	text-indent: 10px;
+}
+
+li.divDrag
+{
+	text-align: center;
+	display: block;
+	width: 300px;    
+	padding: 5px 0;
+	margin: 2px auto;
+	cursor: pointer;
+	border: 1px solid #C6C6C6;
+}
+
+
+.divDrag:hover
+{
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+	transition: all 0s ease 0s;
+}
+
+
+.divDrag.disabled
+{
+	background: none repeat scroll 0 0 #FFFFFF;
+	border: 1px solid #DCDCDC;
+	color: #D7D7D7;
+	cursor: crosshair;
+}
+
+
+label {
+  font-weight: normal;
+}
+
+.x-icon-checkOff:active, .x-icon-checkOn:active{ top: auto; position:relative; }
+
+.ib2
+{
+    display: inline-block;
+    }
+    
+    
+.x-alerta-red
+{
+  width: 16px; height: 16px;
+  vertical-align: middle;
+  background-image: url('images/alertaReloj.gif');
+  background-repeat: no-repeat;
+  display: inline-block; 
+}
+
+.x-alerta-yellow
+{
+  width: 16px; height: 16px;
+  vertical-align: middle;
+  background-image: url('images/alertaReloj2.gif');
+  background-repeat: no-repeat;
+  display: inline-block; 
+}
+
+.x-alerta-green
+{
+  width: 16px; height: 16px;
+  vertical-align: middle;
+  background-image: url('images/alertaReloj3.gif');
+  background-repeat: no-repeat;
+  display: inline-block; 
+}
+
+.x-group-frm
+{
+
+          
+    background-color: white;
+    padding: 15px 5px;
+    border: 1px solid #F4F4F4;    
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+   
+     
+}
+
+.x-group-frm .form-group
+{
+    margin-left: 25px;
+    margin-right: 25px;
+}    
+
+h3.subtitle
+{
+    font-size: 17px;
+}
+
+
+
+.chosen-single.error
+{
+   border: 1px solid #B94A48 !important; 
+}
+
+p.seccionTitle, label.seccionTitle
+{
+    font-size: 16px; margin:7px 9px; color: #BE3019;
+}
+
+.alert-info p{
+    /*display:inline-block !important;*/
+}
+
+.alert-info .x-icon-info{
+    float: left;
+    margin-right: 5px;
+}

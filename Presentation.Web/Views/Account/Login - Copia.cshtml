@@ -1,0 +1,210 @@
+﻿@model Application.DTO.Login
+
+@using Enums = Domain.Infrastructure;
+@using resources = Infrastructure.Resources;
+
+@{
+    Layout = null;
+
+    //string url = Request.Url.AbsoluteUri.Replace(Request.Url.PathAndQuery, string.Empty);
+}
+
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>@resources.GlobalResources.SystemTitle</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width">
+
+        <link rel="stylesheet" href="~/Includes/css/normalize.min.css">
+        <link rel="stylesheet" href="~/Includes/css/login.css">
+        <link rel="stylesheet" href="~/Includes/css/sgde.css">
+
+        @*<script src="~/Scripts/vendor/modernizr-2.6.2.js"></script>*@
+
+        <script src="~/Includes/js/vendor/jquery-1.8.3.min.js"></script>
+        <script src="~/Includes/js/vendor/jquery-ui-1.9.2.custom.min.js"></script>
+        <script src="~/Includes/js/vendor/jquery-more-plugins.js"></script>
+        <link rel="shortcut icon" href="~/favicon.ico" />
+        <script src="~/Includes/js/vendor/datatables.js"></script>        
+        <script src="~/Includes/js/vendor/store.json2.min.js"></script>
+
+
+        <script type="text/javascript">
+
+            ; (function ($) {
+                $(function () {
+
+                    $("#Username").val("");
+                    $("#Password").val("");
+
+                    $("#btnIngresar").on("click", function () { $("#frm").submit(); });
+
+                    $('#Username').bind("enterKey", function (e) { $("#Password").focus(); });
+                    $('#Username').keyup(function (e) {
+                        if (e.keyCode == 13) { $(this).trigger("enterKey"); }
+                    });
+
+                    $('#Password').bind("submitFrm", function (e) { $("#frm").submit(); });
+                    $('#Password').keyup(function (e) {
+                        if (e.keyCode == 13) { $(this).trigger("submitFrm"); }
+                    });
+
+                    @if (!Domain.Infrastructure.WebConfigValues.LoginAD)
+                    {<text>
+                    //$("#UsuarioID").val("23");
+                    //if (confirm("submit?")) {
+                    //    $("#frm").submit();
+                    //}
+                    </text>}
+
+                    var sum = $(".summary").text();
+                    if (sum != "") {
+                        errorLogin(sum);
+                        $(".summary").html("");
+                    }
+
+                     @if (Domain.Infrastructure.WebConfigValues.IsDesarrollo)
+                    {
+                        @:$('#Username').attr("disabled", "disabled");
+                        @:$('#Password').attr("disabled", "disabled");
+                    }
+
+
+
+                });
+            })(jQuery);
+
+            function fkey(e) {
+                e = e || window.event;
+                if (e.keyCode == 116) {
+                    e.preventDefault();
+                    swal({
+                        title: 'Recargar la página',
+                        text: "Presione aceptar para continuar",
+                        type: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#3085d6',
+                        confirmButtonText: 'Aceptar',
+                        closeOnConfirm: true
+                    },
+
+                    function () {
+                        var href = $(location).attr('href');
+                        window.location.href = href;
+                    });
+                }
+            }
+
+
+            function errorLogin(txt) {
+                swal({
+                    title: 'Error en Login',
+                    text: txt,
+                    type: 'error',
+                    showCancelButton: false,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Aceptar',
+                    closeOnConfirm: true
+                },
+
+                function () {
+                    var href = $(location).attr('href');
+                    window.location.href = href;
+                });
+            }
+
+        </script>       
+
+    </head>
+    <body>
+        <!--[if lt IE 7]>
+        <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+    <![endif]-->
+
+        @*@{
+            Application.Services.ICommonAppServices app = new Application.Services.CommonAppServices();
+            IList<Application.DTO.IA_USUARIO> Usuarios = app.getUsuarios();
+        }*@
+
+        <style>
+            .alerta {
+                border: 2px solid #f18080;
+                background-color: #ffd1d1;
+                margin: 0 auto 0 auto;
+                width: 400px;
+                padding: 5px 0px 5px 0px;
+                color: #b95555;
+                border-radius: 5px;
+            }
+        </style>
+
+        <form name="frm" id="frm" action="/ES/Account/Login" method="post">
+            @Html.AntiForgeryToken()
+            <div class="mainFrm">
+                <div class="summary">@Html.ValidationSummary(true)</div>
+                <div class="inputs">
+                    @Html.TextBoxFor(m => m.Username, new { @class = "", @placeholder = "Usuario" })
+                    @Html.PasswordFor(m => m.Password, new { @class = "", @placeholder = "Password" })
+                </div>
+                @*@if (!Domain.Infrastructure.WebConfigValues.LoginAD)
+                {
+                    <select name="UsuarioID" id="UsuarioID" style="width:220px;top: 167px;position:relative">
+                        @foreach (var item in Usuarios)
+                        {
+                            <option value="@item.UsuarioID">@item.Nombre.Trim()</option>
+                        }
+                    </select>
+                }*@
+
+                @if (Domain.Infrastructure.WebConfigValues.IsDesarrollo)
+                {
+                    var app = new Application.Services.CommonAppServices();
+                    IList<Application.DTO.Models.Usuario> Usuarios = app.GetUsuarios().Where(x => x.UsuarioID > -1).ToList();
+
+                    <select name="UsuarioID" id="UsuarioID" style="width:220px;top: 167px;position:relative">
+                        @foreach (var item in Usuarios.Where(x => x.AsocUsuarioPerfil != null).OrderBy(x => x.Nombre))
+                        {
+                            <option value="@item.UsuarioID">@item.Nombre.Trim()</option>
+                        }
+                    </select>
+                }
+
+                <div class="btnFrm">
+
+                    <a href="javascript:void(0)" id="btnIngresar" class="btnIngresar"></a>
+                </div>
+
+
+            </div>
+
+            @*@if (Domain.Infrastructure.WebConfigValues.IsDebug)
+            {
+
+            <p class="alerta">
+                @Domain.Infrastructure.WebConfigValues.IsDebugMessage
+            </p>
+            }*@
+
+        </form>
+
+        @if (Domain.Infrastructure.WebConfigValues.IsAmbienteTest)
+        {
+            <div class="alert alert-danger" role="alert" style="margin-top: 10px;color:red">
+                <b>@Domain.Infrastructure.WebConfigValues.AmbienteTestInfo</b>
+            </div>
+        }
+
+        <div class="abs" style="position: absolute;top: 7px; left: 7px;font-size:13px;color: #787676;">
+            <img src="~/Includes/css/images/gear.png" alt="gear" /> Tribunal de Propiedad Insustrial - SGDE
+        </div>
+    </body>
+</html>
+

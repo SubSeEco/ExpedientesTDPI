@@ -1,0 +1,144 @@
+﻿@using Enums = Domain.Infrastructure;
+@using resources = Infrastructure.Resources;
+
+@{
+    string PageTitle = resources.Administracion.MantenedorAyudas;
+    ViewBag.Title = PageTitle;
+
+    IList<Application.DTO.Models.TipoVentana> tipoV = ViewBag.TipoVentana;
+}
+<script type="text/javascript" src="~/Includes/ckeditor/ckeditor.js"></script>
+
+<script type="text/javascript">
+
+    ; (function ($) {
+        $(function () {
+
+            CKEDITOR.replace('IntroduccionEspanol', { height: 180 });
+
+            var btnSave = $("#btnSaveAll");
+            var options = {
+                type: 'post',
+                iframe: iFrameGlobal,
+                success: function (data) {
+                    BtnInAction(btnSave, true, true);
+                    showBlockUI();
+
+                    if (data.Redirect == 1) SelfRedirect();
+
+                },
+                beforeSubmit: function (arr, $form, options) {
+                    BtnInAction(btnSave, false, true);
+                },
+                beforeSerialize: function ($form, options) {
+
+                    CKEDITOR.instances['IntroduccionEspanol'].updateElement();
+
+                    return true;
+                }
+            };
+
+            $("#frmHelp").ajaxForm(options);
+
+        });
+    })(jQuery);
+
+    function getDetalle(obj, valor) {
+
+        if (valor == "" || valor == "0") {
+
+            $("#VentanaID").val("0");
+            $("#IntroduccionEspanol").val("");
+            CKEDITOR.instances['IntroduccionEspanol'].setData("");
+            return false;
+        }
+
+        BtnInAction(obj, false, true);
+
+        $.ajax({
+            type: "POST", cache: false, url: "@Url.Action("GetDetalleVentana", "Administracion")",
+            data: { __RequestVerificationToken: getVToken(), TipoVentanaID: valor },
+        success: function (data) {
+            BtnInAction(obj, true, true);
+
+            CKEDITOR.instances['IntroduccionEspanol'].setData(data.IntroduccionEspanol);
+
+            $("#VentanaID").val(data.VentanaID);
+
+        },
+        error: function (error) {
+
+            if (error.status == 403) {
+                window.location.href = HomeSistemas;
+                return false;
+            } else {
+                    xAlert({
+                        title: "Error",
+                        alert: "alert-error",
+                        html:"@resources.GlobalResources.HaOcurridoError: " + error.statusText,
+                        callback: function () {
+
+                        }
+                    });
+            }
+
+        }
+    });
+    }
+
+
+
+
+</script>
+
+<div class="bodyContent">
+    <div class="cont">
+
+        <fieldset>
+            <legend class="legendTitle">@PageTitle</legend>
+
+            @Html.Raw(Html.GetInfoVentana(Domain.Infrastructure.TipoVentana.MantenedorAyudas))
+
+            <form id="frmHelp" class="form-horizontal" action="@Url.Action("SaveVentana", "Administracion")" method="post">
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" name="VentanaID" id="VentanaID" value="0" />
+
+                <div class="form-group row">
+                    <label for="TipoVentanaID" class="col-sm-3 col-form-label">@resources.Administracion.TipoVentana <span class="span-obligatorio">*</span></label>
+                    <div class="col-sm-9">
+                        <select style="" name="TipoVentanaID" id="TipoVentanaID" class="custom-select verificar" onchange="getDetalle(this, this.value)">
+                            <option value="">@resources.GlobalResources.OptionInicial</option>
+                            @foreach (var item in tipoV)
+                            {
+                                <option value="@item.TipoVentanaID">@item.Descripcion.Trim()</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+
+                <fieldset class="x-fieldset">
+                    <legend class="">Descripción</legend>
+
+                    <textarea name="__IntroduccionEspanol" class="form-control" maxlength="1500" id="IntroduccionEspanol"
+                              style="" cols="3" rows="4"></textarea>
+
+                    <textarea name="__IntroduccionIngles" style="display:none" class="form-control" maxlength="1500" id="IntroduccionIngles"
+                              cols="3" rows="4"></textarea>
+
+                </fieldset>
+
+            </form>
+
+
+            <div class="form-actions ac">
+
+                <button class="btn btn-default" onclick="$('#frmHelp').submit()" id="btnSaveAll" type="button"><i class="x-icon x-icon-save2 icon-in-button"></i> @resources.GlobalResources.BtnGuardar</button>
+                <i class="x-icon-loader hide"></i>
+            </div>
+
+        </fieldset>
+
+    </div>
+</div>

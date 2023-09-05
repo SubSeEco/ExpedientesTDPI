@@ -1,0 +1,183 @@
+﻿@model Application.DTO.Login
+
+@using Enums = Domain.Infrastructure;
+@using resources = Infrastructure.Resources;
+
+@{
+    Layout = null;
+
+    bool ShowLoginDev = !Domain.Infrastructure.WebConfigValues.LoginAD && Domain.Infrastructure.WebConfigValues.IsDesarrollo;
+}
+
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js">
+<!--<![endif]-->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>@resources.GlobalResources.SystemTitle</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width">
+
+    <link rel="shortcut icon" href="~/favicon.ico" />
+    <script src="~/Includes/js/jquery-3.4.1.min.js"></script>
+
+    <link rel="stylesheet" href="~/Includes/css/fontawesome-5.9.0/css/all.min.css">
+    <link rel="stylesheet" href="~/Includes/css/login.internal.min.css">
+
+    <script type="text/javascript">
+
+        var working = false;
+
+        ; (function ($) {
+            $(function () {
+
+                @if (!ShowLoginDev)
+                {
+                    @:$("#Usuario").prop('required', true);
+                    @:$("#Password").prop('required', true);
+                }
+                else
+                {
+                    @:$("#Usuario").blur();
+                }
+
+                //$("#UsuarioID").val("2");
+                //if (confirm("submit?")) {
+                //    $("#frm").submit();
+                //}
+
+
+                $("#Usuario").val("");
+                $("#Password").val("");
+
+                $("#btnIngresar").on("click", function () {
+                    //console.log("ok");
+                    $("#frm").submit();
+                });
+
+                $('#Usuario').keyup(function (e) {
+                    if (e.keyCode == 13) {
+                        $("#Password").focus();
+                    }
+                });
+
+                $('#Password').keyup(function (e) {
+                    if (e.keyCode == 13) {
+                        $("#btnIngresar").click();
+                    }
+                });
+
+                $("#frm").on("submit", function (e) {
+
+                    e.preventDefault();
+
+                    var IsVisibleCbx = $("#UsuarioID").is(":visible");
+
+                    if (($.trim($("#Usuario").val()) == "" || $.trim($("#Password").val()) == "") && !IsVisibleCbx) {
+                        event.preventDefault();
+                        console.log("return");
+                        return false;
+                    }
+
+                    if (working)
+                    {
+                        //console.log("working true");
+                        return false;
+                    }
+                    else
+                    {
+                        //console.log("working false");
+
+                        var $this = $("#frm");
+                        var $state = $this.find('button > .state');
+                        $this.addClass('loading');
+                        $state.html('Autenticando');
+
+                        working = true;
+
+                        setTimeout(function () {
+                            document.getElementById('frm').submit();
+                        }, 1500);
+                    }
+
+
+
+                });
+            });
+        })(jQuery);
+    </script>
+
+
+    <style>
+        .bgMain {
+            background-image: url(../../Includes/css/images/bgt-clear-b.png);
+        }
+    </style>
+
+</head>
+
+@{
+    string path = Url.Content("~/Includes/css/images/bgt-clear-b.png");
+}
+
+<body style="background-image: url(@path);">
+
+    <div class="wrapper">
+        @using (Html.BeginForm("Login", "Account",
+                                        new { ReturnUrl = ViewBag.ReturnUrl },
+                                        FormMethod.Post, new
+                                        { @class = "login", role = "form", @autocomplete = "off", @id = "frm" }))
+        {
+            @Html.AntiForgeryToken()
+
+            <div class="" style="margin:15px 0 20px 0">
+                <img src="~/Includes/css/images/logos/principal.png" class="img-fluid" loading="lazy">
+            </div>
+
+            @*<p class="title">Log in</p>*@
+            <div class="summary summaryLogin">@Html.ValidationSummary(true)</div>
+
+            <input type="text" id="Usuario" name="Usuario" placeholder="Usuario" autocomplete="off" autofocus />
+            <i class="fa fa-user"></i>
+            <input type="password" id="Password" name="Password" autocomplete="off" placeholder="Contraseña" />
+            <i class="fa fa-key"></i>
+
+            if (!Domain.Infrastructure.WebConfigValues.LoginAD)
+            {
+                var app = new Application.Services.CommonAppServices();
+                IList<Application.DTO.Models.Usuario> Usuarios = app.GetUsuarios();
+                <div class="ar" style="width:100%">
+                    <select name="UsuarioID" id="UsuarioID" style="" class="">
+                        @foreach (var item in Usuarios.Where(x => x.UsuarioID > 0).OrderBy(x => x.Nombres))
+                        {
+                            <option value="@item.UsuarioID">@item.GetFullName()</option>
+                        }
+                    </select>
+                </div>
+
+            }
+
+            <button id="btnIngresar">
+                <i class="spinner"></i>
+                <span class="state db" style="">Ingresar</span>
+            </button>
+        }
+
+        <footer>
+            @Html.Raw(Html.GetAbenis())
+        </footer>
+    </div>
+
+
+    <div class="abs" style="position: absolute;top: 7px; left: 7px;font-size:13px;color: #616161;">
+        <span style="font-size:11px;color: #616161">@resources.GlobalResources.SystemTitle @Html.GetVersion()</span>
+    </div>
+
+</body>
+
+</html>

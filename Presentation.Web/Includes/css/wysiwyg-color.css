@@ -1,0 +1,85 @@
+.wysiwyg-color-black {
+  color: black;
+}
+
+.wysiwyg-color-silver {
+  color: silver;
+}
+
+.wysiwyg-color-gray {
+  color: gray;
+}
+
+.wysiwyg-color-white {
+  color: white;
+}
+
+.wysiwyg-color-maroon {
+  color: maroon;
+}
+
+.wysiwyg-color-red {
+  color: red;
+}
+
+.wysiwyg-color-purple {
+  color: purple;
+}
+
+.wysiwyg-color-fuchsia {
+  color: fuchsia;
+}
+
+.wysiwyg-color-green {
+  color: green;
+}
+
+.wysiwyg-color-lime {
+  color: lime;
+}
+
+.wysiwyg-color-olive {
+  color: olive;
+}
+
+.wysiwyg-color-yellow {
+  color: yellow;
+}
+
+.wysiwyg-color-navy {
+  color: navy;
+}
+
+.wysiwyg-color-blue {
+  color: blue;
+}
+
+.wysiwyg-color-teal {
+  color: teal;
+}
+
+.wysiwyg-color-aqua {
+  color: aqua;
+}
+
+.wysiwyg-color-orange {
+  color: orange;
+}
+
+.x-icon {
+  width: 16px; height: 16px;
+  background-image: url('images/icons16x16.png');
+  vertical-align: top;
+  background-repeat: no-repeat;
+  background-position: -80px -64px;
+  display: inline-block;
+  position: relative;
+  top: 2px;
+}
+
+.x-icon-help3   { background-position: -176px -240px;     }
+.x-icon-delete  { background-position: -80px 4px; top: 0px;        }
+.x-icon-edit    { background-position: -64px -224px;      }
+.x-icon-plus         { background-position: -192px -176px;}
+.x-icon-org    { background-position: -96px -224px;}
+.x-icon-califica      { background-position: -32px -80px}
