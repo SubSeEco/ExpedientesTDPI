@@ -36,6 +36,11 @@ namespace Presentation.Web.Controllers
         /// </summary>
         public ActionResult Index()
         {
+            if (!WebConfigValues.IsAccesoPublico)
+            {
+                return Redirect(WebConfigValues.Url_MenuSistemas);
+            }
+
             return View();
         }
 
@@ -64,7 +69,7 @@ namespace Presentation.Web.Controllers
                     {
                         int UserID = Convert.ToInt32(Request.Form["UsuarioID"].ToString());
                         var user = Usuarios.FirstOrDefault(x => x.UsuarioID == UserID);
-
+                        
                         CreateSessionUser(user, false);
 
                         status = StatusLoginEnum.Success;
@@ -79,6 +84,19 @@ namespace Presentation.Web.Controllers
 
                     if (status == StatusLoginEnum.Success)
                     {
+                        var perfiles = appCommon.PerfilesFuncionario(Convert.ToInt32(Request.Form["UsuarioID"].ToString()));
+
+                        if (perfiles.Count == 0)
+                        {
+                            ModelState.AddModelError("", errorMsg4);
+                            return View("Login", model);
+                        }
+
+                        if (perfiles.Count == 1 && perfiles.Any(x => x.PerfilID == (int)Enums.Perfil.Administrador))
+                        {
+                            return RedirectToRoute("ActionInitialAdmin");
+                        }
+
                         return RedirectToRoute("ActionInitialSystem");
                     }
                     else if (status == StatusLoginEnum.Fail)
@@ -111,6 +129,11 @@ namespace Presentation.Web.Controllers
                         {
                             ModelState.AddModelError("", errorMsg4);
                             return View("Login", model);
+                        }
+
+                        if (perfiles.Count == 1 && perfiles.Any(x=> x.PerfilID == (int)Enums.Perfil.Administrador))
+                        {
+                            return RedirectToRoute("ActionInitialAdmin");
                         }
 
                         return RedirectToRoute("ActionInitialSystem");
@@ -173,11 +196,30 @@ namespace Presentation.Web.Controllers
         /// <returns></returns>
         public ActionResult Salir()
         {
+            bool IsUsuarioCU = false;
+            bool IsInvitado = false;
+
+            if (active.IsExistSessionVar("IsUsuarioCU"))
+            {
+                IsUsuarioCU = (bool)Session["IsUsuarioCU"];
+            }
+
+            if (active.IsExistSessionVar("IsInvitado"))
+            {
+                IsInvitado = (bool)Session["IsInvitado"];
+            }
+
             Session.Abandon();
             Session.Clear();
             Response.Cookies.Clear();
 
-            return RedirectToRoute("ActionInitialSystem");
+            if (IsUsuarioCU)
+                return RedirectToRoute("VistaPublicaAcceso");
+
+            if (IsInvitado)
+                return Redirect("http://www.tdpi.cl/");
+
+            return RedirectToRoute("LoginAnonymous");
         }
 
         #region ClaveUnica
@@ -312,7 +354,9 @@ namespace Presentation.Web.Controllers
                         u.AdID = string.Empty;
                         u.Rut = Persona.RolUnico.numero;                        
                         u.Mail = string.Empty;
+                        u.Telefono = string.Empty;
                         u.TipoGeneroID = (int)Enums.TipoGenero.Otro;
+                        u.Signer = string.Empty;
 
                         u.UsuarioID = appCommon.SaveUser(u);
                         
@@ -354,16 +398,16 @@ namespace Presentation.Web.Controllers
         /// Acceso Público General
         /// </summary>
         /// <returns></returns>
-        [HttpPost, ValidateAntiForgeryToken]
+        [HttpGet, AllowAnonymous]
         public ActionResult LoginAnonymous()
         {
             DBLogger dbLog = new DBLogger();
 
             try
             {
-                string login_token = Request.Cookies.Get("__RequestVerificationToken").Value;
-                if (login_token == null)
-                    return Redirect(WebConfigValues.LogOffAuthenticationSystem);
+                //string login_token = Request.Cookies.Get("__RequestVerificationToken").Value;
+                //if (login_token == null)
+                //    return Redirect(WebConfigValues.LogOffAuthenticationSystem);
 
                 DTO.Models.Usuario u = new Application.DTO.Models.Usuario();
                 u.UsuarioID = (int)Enums.GenericJson.UserInvitado;
@@ -376,7 +420,7 @@ namespace Presentation.Web.Controllers
                 dbLog.UsuarioID = u.UsuarioID;
                 dbLog.Save();
 
-                return RedirectToRoute("VistaPublicaDashboard");
+                return RedirectToRoute("EscritorioCausas");
             }
             catch (Exception ex)
             {

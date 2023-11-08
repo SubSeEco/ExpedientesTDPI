@@ -393,38 +393,6 @@ namespace Application.Services
             return users;
         }
 
-        private string getRut(string userName = "almarza", string attributeName = "aldotest")
-        {
-       
-
-            Credential credencial = getCredential();
-            DirectoryEntry objADAM = default(DirectoryEntry);
-
-            string ldapConn = string.Format("LDAP://{0}", credencial.DC_Server);
-
-            objADAM = new DirectoryEntry(ldapConn, credencial.DC_User, credencial.DC_Pass);
-            objADAM.RefreshCache();
-
-            Object obj = objADAM.NativeObject;
-            DirectorySearcher search = new DirectorySearcher(objADAM);
-
-            //search.Filter = "(&(objectClass=user)(|(cn=" + userName + ")(sAMAccountName=" + userName + ")))";
-            search.Filter = "(&(objectClass=User))";
-            //SearchResult result = search.FindOne();
-            SearchResultCollection RetObjects = search.FindAll();
-
-            foreach (SearchResult User in RetObjects)
-            {
-                var d = User.Properties["SamAccountName"][0].ToString();
-
-                string valorPropiedad = (String)User.Properties[attributeName][0];
-            }
-
-            //string valorPropiedad = (String)result.Properties[attributeName][0];
-
-            return "";
-
-        }
 
         internal static SearchResultCollection GetAllUsers(string ldapConn, string user, string pass, string[] Properties)
         {

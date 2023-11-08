@@ -1,0 +1,106 @@
+﻿@model Application.DTO.Models.DetalleTabla  
+
+@using Enums = Domain.Infrastructure;
+@using resources = Infrastructure.Resources;
+
+@{ 
+
+    var Causa = ViewBag.Causa as Application.DTO.Models.Causa;
+    var Tabla = ViewBag.Tabla as Application.DTO.Models.Tabla;
+
+    Tabla.DetalleTabla.Remove(Model);
+    Tabla.DetalleTabla = Tabla.DetalleTabla.Where(x => x.Vigente).ToList();
+
+}
+
+<script type="text/javascript">
+    
+    var OrdenList = [];
+    var OrdenActual = parseInt("@Model.Orden");
+
+    @foreach (var item in Tabla.DetalleTabla)
+    {
+        <text>
+        OrdenList.push(parseInt("@item.Orden"));
+        </text>
+    }
+
+
+    ; (function ($) {
+        $(function () {
+
+            activateForm("btSaveDetalleTabla", "frmDetalleTabla",
+                function () {
+
+                    var NuevoOrden = parseInt($("#Orden").val());
+
+                    if (NuevoOrden != OrdenActual && OrdenList.includes(NuevoOrden)) {
+                        showBlockUIError("El orden ingresado ya esta en uso por otra Causa");
+                        $("#Orden").addError();
+                        return false;
+                    }
+
+                    return true;
+                },
+                 function () {
+
+                     if (xResultJsonData.result == ReturnJson.ActionSuccess) {
+
+                         CloseDialog();
+                         showBlockUI();
+
+                         $("#btnBuscar").click();
+
+                         setTimeout(function () {
+                             GetDetalleCausasTabla(parseInt("@Tabla.TablaID"));
+                         }, 1000);
+                     }
+                 });
+
+
+
+        });
+    })(jQuery);
+
+
+</script>
+
+<div class="modal-body ">
+
+    <fieldset class="x-fieldset">
+        <legend></legend>
+        <p class="bold mb0">N° ROL: @Causa.NumeroTicket</p>
+    </fieldset>
+
+
+    <form class="form-horizontal " id="frmDetalleTabla" method="post" action="@Url.Action("ActionExpediente", "Expedientes")">
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(x=> x.CausaID)
+        @Html.HiddenFor(x => x.TablaID)
+        @Html.HiddenFor(x => x.DetalleTablaID)        
+        @Html.Hidden("action", Enums.ActionSystem.EditarCausaTabla)
+        @Html.Hidden("Identidad", Model.CausaID)
+        
+
+        <div class="form-group row">
+            <label for="Orden" class="col-sm-3 col-form-label">Orden <span class="span-obligatorio">*</span></label>
+            <div class="col-sm-9">
+                @Html.TextBoxFor(x => x.Orden, new { @class = "form-control IsInteger verificar", @maxlength = "3", @placeholder = "", @style = "" })
+            </div>
+        </div>
+    </form>
+   
+
+</div>
+
+<div class="modal-footer">
+    
+    <button id="btSaveDetalleTabla" class="btn btn-default" onclick="$('#frmDetalleTabla').submit()" type="button"><i class="x-icon x-icon-save2 icon-in-button"></i> @resources.GlobalResources.BtnGuardar</button>
+    <i class="x-icon-loader hide"></i>
+
+    <button class="btn btn-default" data-dismiss="modal" type="button">
+        <i class="x-icon x-icon-cancel2 icon-in-button"></i> @resources.GlobalResources.BtnVolver
+    </button>
+
+</div>
+

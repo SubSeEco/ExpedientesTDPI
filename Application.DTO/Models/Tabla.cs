@@ -12,6 +12,7 @@ namespace Application.DTO.Models
         {
             this.DetalleTabla = new HashSet<DetalleTabla>();
             this.AsocDocumentoSistemaTabla = new HashSet<AsocDocumentoSistemaTabla>();
+            this.Expediente = new HashSet<Expediente>();
 
             //Custom
             this.DocumentoSistemaTabla = new HashSet<DocumentoSistema>();
@@ -30,6 +31,7 @@ namespace Application.DTO.Models
         public virtual Sala Sala { get; set; }
         public virtual TipoTabla TipoTabla { get; set; }
         public virtual ICollection<AsocDocumentoSistemaTabla> AsocDocumentoSistemaTabla { get; set; }
+        public virtual ICollection<Expediente> Expediente { get; set; }
 
         //Custom
         public virtual ICollection<DocumentoSistema> DocumentoSistemaTabla { get; set; }
@@ -54,6 +56,38 @@ namespace Application.DTO.Models
         {
             return EstadoTablaID == (int)Domain.Infrastructure.EstadoTabla.Eliminado;
         }
+
+
+        public string GetFirmas()
+        {
+            if (DocumentoSistemaTabla != null && DocumentoSistemaTabla.Count > 0 && IsPublicado())
+            {
+                int total = 0;
+                int ok = 0;
+
+                foreach (var item in DocumentoSistemaTabla)
+                {
+                    if (item.AsocDocSistemaFirma != null && item.AsocDocSistemaFirma.Count > 0)
+                    {
+                        foreach (var asocFirma in item.AsocDocSistemaFirma)
+                        {
+                            total++;
+                            if (asocFirma.IsFirmado)
+                            {
+                                ok++;
+                            }
+                        }
+                    }                 
+                }
+
+                return (total == 0) ? "N/A" : $"{ok} de {total}";
+            }
+            else
+            {
+                return "N/A";
+            }
+        }
+
     }
 }
 

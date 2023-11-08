@@ -55,6 +55,18 @@
                             $("#IsDiasHabiles").val("false");
                             $("#IsInformaAtraso").val("false");
                     }
+                    
+                    @if (IsResolucion)
+                    {
+                        <text>
+                        var cantidadFirmas = parseInt($("#NumeroFirmas").val())
+                        if (cantidadFirmas > 6) {
+                            showBlockUIError("El valor ingresado supera el máximo de 6 firmas permitidas");
+                            $("#NumeroFirmas").addError();
+                            return false;
+                        }
+                        </text>
+                    }
 
                     return true;
                 },
@@ -73,7 +85,7 @@
             $("#TablaEstadosAplica .xCheckbox").bootstrapSwitch({
                 onSwitchChange: function (event, state) {
                     event.preventDefault();
-                    blockPageUI()
+                    blockPageUI();
 
                     var _ObjID = $(this).attr("id");
                     var _EstadoAplicaID = $(this).data("obj-id");

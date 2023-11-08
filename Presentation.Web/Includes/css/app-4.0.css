@@ -809,6 +809,10 @@ header .contenedor, .contenedor_transparent
     color:#006a9e !important; /* #0600ff*/
 }
 
+.rojo {
+    color: rgb(255,0,0) !important;
+}
+
 
     #footer {
     width: 94%;

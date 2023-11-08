@@ -14,6 +14,7 @@ using DTO = Application.DTO;
 using Enums = Domain.Infrastructure;
 using WebConfig = Domain.Infrastructure.WebConfigValues;
 
+
 namespace Presentation.Web.Controllers
 {
     /// <summary>
@@ -38,28 +39,32 @@ namespace Presentation.Web.Controllers
             SsoActionResult sso = new SsoActionResult();
             sso.ExecuteResult(ControllerContext);
 
+            bool IsInvitado = sso.IsInvitado();
+            bool IsINAPI = sso.IsINAPI();
+            bool IsSAG = sso.IsSAG();
+            bool IsTDPI = sso.IsTDPI();
+            bool IsAbogado = sso.IsAbogado();
+
+            bool acceso = (IsInvitado || IsINAPI || IsSAG || IsTDPI || IsAbogado);
+            if (!acceso) return RedirectToRoute("ActionInitialSystem");
+
+            var TipoCausa = appCommon.GetTipoCausa(true);
+
+            IList<DTO.Models.TipoCausa> TipoCausaFilter = active.GetTipoCausaByUserActive(TipoCausa, sso);
+            ViewBag.TipoCausaFilter = TipoCausaFilter;
+
+            ViewBag.PuedeIngresarCausa = active.IsPuedeIngresarCausa(sso);
+
             DTO.FiltrosEscritorio filtros = new DTO.FiltrosEscritorio();
             filtros.TipoCausa = appCommon.GetTipoCausa(true);
             filtros.EstadoCausa = appCommon.GetEstadoCausa(true);
 
             ViewBag.FiltrosEscritorio = filtros;
 
-            #region DataForm
-
-            DTO.DataForm DataForm = new DTO.DataForm();
-            DataForm.UserActive = sso.UserActive;
-            DataForm.PerfilActive.IsTDPI = sso.IsTDPI();
-            DataForm.PerfilActive.IsINAPI = sso.IsINAPI();
-            DataForm.PerfilActive.IsAdministrador = sso.IsAdministrador();
-            DataForm.PerfilActive.IsSAG = sso.IsSAG();
-            DataForm.PerfilActive.IsInvitado = sso.IsInvitado();
-
-            ViewBag.DataForm = DataForm;
-
-            #endregion
-
             return View();
         }
+
+
 
 
         /// <summary>
@@ -74,9 +79,6 @@ namespace Presentation.Web.Controllers
             SsoActionResult sso = new SsoActionResult();
             sso.ExecuteResult(ControllerContext);
 
-            bool acceso = (sso.IsTDPI() || sso.IsSAG() || sso.IsINAPI() || sso.IsAdministrador());
-            if (!acceso) return RedirectToRoute("ActionInitialSystem");
-
             int CausaID = id;
             int TipoCausaID = id2;
 
@@ -86,6 +88,19 @@ namespace Presentation.Web.Controllers
             if (TipoCausaID == 0 && IsNew)
             {
                 return Redirect(WebConfig.Url_MenuSistemas);
+            }
+
+            var TipoCausa = appCommon.GetTipoCausa(true);
+            bool PuedeIngresar = active.IsPuedeIngresarCausa(sso);
+            if (!PuedeIngresar) return RedirectToRoute("ActionInitialSystem");
+
+            if (IsNew)
+            {
+                var TiposPermitidos = active.GetTipoCausaByUserActive(TipoCausa, sso);
+                if (!TiposPermitidos.Any(x => x.TipoCausaID == TipoCausaID))
+                {
+                    return RedirectToRoute("ActionInitialSystem");
+                }
             }
 
             DTO.Models.Causa model = new DTO.Models.Causa();
@@ -110,7 +125,6 @@ namespace Presentation.Web.Controllers
                 }
             }
 
-            var TipoCausa = appCommon.GetTipoCausa(true);
             var tc = TipoCausa.FirstOrDefault(x => x.TipoCausaID == TipoCausaID);
             if (tc == null)
             {
@@ -130,6 +144,7 @@ namespace Presentation.Web.Controllers
             #region DataForm
 
             DTO.DataForm DataForm = new DTO.DataForm();
+            DataForm.UserActive = sso.UserActive;
             DataForm.IsNew = IsNew;
             DataForm.IsView = IsView;
             DataForm.Pais = appCommon.GetPais();
@@ -167,6 +182,17 @@ namespace Presentation.Web.Controllers
                 parte.TipoParteID = TipoParteID;
                 parte.TipoParte = appCommon.GetTipoParte().FirstOrDefault(x => x.TipoParteID == TipoParteID);
 
+                List<int> CausasSinConsignacion = new List<int>();
+                CausasSinConsignacion.Add((int)Enums.TipoCausa.VariedadVegetal);
+                CausasSinConsignacion.Add((int)Enums.TipoCausa.ProteccionSuplementaria);
+                CausasSinConsignacion.Add((int)Enums.TipoCausa.RecursoHechoMarca);
+                CausasSinConsignacion.Add((int)Enums.TipoCausa.RecursoHechoPatente);
+
+                List<int> PartesSinConsignacion = new List<int>();
+                PartesSinConsignacion.Add((int)Enums.TipoParte.Recurrido);
+                PartesSinConsignacion.Add((int)Enums.TipoParte.Apelado);
+                PartesSinConsignacion.Add((int)Enums.TipoParte.Solicitante);
+
                 if (ParteID > 0)
                 {
                     parte = appExpediente.GetParte(ParteID);
@@ -174,22 +200,45 @@ namespace Presentation.Web.Controllers
 
                 if (ParteID == (int)Enums.GenericJson.TempData)
                 {
-                    string objTemp = active.GetStringValueForm(Request.Form["objTemp"]);
-                    DTO.ParteVue parteVue = JsonConvert.DeserializeObject<DTO.ParteVue>(objTemp);
+                    if (PartesSinConsignacion.Contains(TipoParteID) || CausasSinConsignacion.Contains(TipoCausaID))
+                    {
+                        string objTemp = active.GetStringValueForm(Request.Form["objTemp"]);
+                        DTO.ParteVueSinConsignacion parteVue = JsonConvert.DeserializeObject<DTO.ParteVueSinConsignacion>(objTemp);
 
-                    parte.PaisID = parteVue.PaisID;
-                    parte.Rut = parteVue.Rut;
-                    parte.Nombre = parteVue.Nombre;
-                    parte.RutRepresentante = parteVue.RutRepresentante;
-                    parte.NombreRepresentante = parteVue.NombreRepresentante;
-                    parte.NombreAbogado = parteVue.NombreAbogado;
-                    parte.EmailAbogado = parteVue.EmailAbogado;
-                    parte.NombreEstudioJuridico = parteVue.NombreEstudioJuridico;
-                    parte.FolioConsignacion = parteVue.FolioConsignacion;
-                    parte.FechaConsignacion = active.GetDateTimeValueOrNull(parteVue.FechaConsignacion);
-                    parte.RutConsignacion = parteVue.RutConsignacion;
-                    parte.NombreConsignacion = parteVue.NombreConsignacion;
-                    parte.ParteID = ParteID;
+                        parte.PaisID = parteVue.PaisID;
+                        parte.Rut = parteVue.Rut;
+                        parte.Nombre = parteVue.Nombre;
+                        parte.RutRepresentante = parteVue.RutRepresentante;
+                        parte.NombreRepresentante = parteVue.NombreRepresentante;
+                        parte.NombreAbogado = parteVue.NombreAbogado;
+                        parte.EmailAbogado = parteVue.EmailAbogado;
+                        parte.NombreEstudioJuridico = parteVue.NombreEstudioJuridico;
+                        parte.FolioConsignacion = string.Empty;
+                        parte.FechaConsignacion = null;
+                        parte.RutConsignacion = 0;
+                        parte.NombreConsignacion = string.Empty;
+                        parte.ParteID = ParteID;
+                    }
+                    else
+                    {
+                        string objTemp = active.GetStringValueForm(Request.Form["objTemp"]);
+                        DTO.ParteVue parteVue = JsonConvert.DeserializeObject<DTO.ParteVue>(objTemp);
+
+                        parte.PaisID = parteVue.PaisID;
+                        parte.Rut = parteVue.Rut;
+                        parte.Nombre = parteVue.Nombre;
+                        parte.RutRepresentante = parteVue.RutRepresentante;
+                        parte.NombreRepresentante = parteVue.NombreRepresentante;
+                        parte.NombreAbogado = parteVue.NombreAbogado;
+                        parte.EmailAbogado = parteVue.EmailAbogado;
+                        parte.NombreEstudioJuridico = parteVue.NombreEstudioJuridico;
+                        parte.FolioConsignacion = parteVue.FolioConsignacion;
+                        parte.FechaConsignacion = active.GetDateTimeValueOrNull(parteVue.FechaConsignacion);
+                        parte.RutConsignacion = parteVue.RutConsignacion;
+                        parte.NombreConsignacion = parteVue.NombreConsignacion;
+                        parte.ParteID = ParteID;
+                    }
+
                 }
 
                 DTO.DataForm DataForm = new DTO.DataForm();
@@ -262,8 +311,8 @@ namespace Presentation.Web.Controllers
             var sso = new SsoActionResult();
             if (!sso.AsyncAuthenticate(ControllerContext)) return Response403();
 
-            bool IsInvitado = sso.IsInvitado();
-            if (IsInvitado) return Response403();
+            bool PuedeIngresarCausa = active.IsPuedeIngresarCausa(sso);
+            if (!PuedeIngresarCausa) return Response403();
 
             int UserActive = sso.GetUsuarioActivoID();
 
@@ -284,19 +333,24 @@ namespace Presentation.Web.Controllers
 
                 causa.Anio = config.IsAnio ? causa.Anio : 0;
                 causa.Observacion = config.IsObservacion ? active.GetStringValueForm(Request.Form["Observacion"]) : "";
+                causa.Numero = config.IsNumeroSolicitud ? active.GetStringValueForm(Request.Form["Numero"]) : "";
+                causa.NumeroRegistro = config.IsNumeroRegistro ? active.GetStringValueForm(Request.Form["NumeroRegistro"]) : "";
 
                 if (config.IsContencioso)
                 {
                     causa.TipoContenciosoID = causa.IsContencioso ? causa.TipoContenciosoID : (int)Enums.TipoContencioso.NA;
+
+                    if (causa.TipoContenciosoID != (int)Enums.TipoContencioso.Nulidad)
+                    {
+                        causa.NumeroRegistro = string.Empty;
+                    }
                 }
                 else
                 {
                     causa.IsContencioso = false;
                     causa.TipoContenciosoID = (int)Enums.TipoContencioso.NA;
+                    causa.NumeroRegistro = string.Empty;
                 }
-
-                causa.Numero = config.IsNumeroSolicitud ? active.GetStringValueForm(Request.Form["Numero"]) : "";
-                causa.NumeroRegistro = config.IsNumeroRegistro ? active.GetStringValueForm(Request.Form["NumeroRegistro"]) : "";
 
                 
                 if (IsNew)
@@ -315,12 +369,40 @@ namespace Presentation.Web.Controllers
 
                     #region Partes
 
+                    List<int> CausasSinConsignacion = new List<int>();
+                    CausasSinConsignacion.Add((int)Enums.TipoCausa.VariedadVegetal);
+                    CausasSinConsignacion.Add((int)Enums.TipoCausa.ProteccionSuplementaria);
+                    CausasSinConsignacion.Add((int)Enums.TipoCausa.RecursoHechoMarca);
+                    CausasSinConsignacion.Add((int)Enums.TipoCausa.RecursoHechoPatente);
+
                     if (active.IsInputValue(Request.Form["strPartes"]))
                     {
                         try
                         {
                             string strPartes = active.GetStringValueForm(Request.Form["strPartes"]);
-                            List<DTO.ParteVue> listaPartes = JsonConvert.DeserializeObject<List<DTO.ParteVue>>(strPartes);
+                            string strPartes2 = active.GetStringValueForm(Request.Form["strPartes2"]);
+                            List<DTO.ParteVue> listaPartes = new List<DTO.ParteVue>();
+                            List<DTO.ParteVueSinConsignacion> listaPartesSinConsignacion = new List<DTO.ParteVueSinConsignacion>();
+
+                            if (CausasSinConsignacion.Contains(causa.TipoCausaID))
+                            {
+                                string strParte1 = strPartes.Replace("[", "").Replace("]", "");
+                                string strParte2 = strPartes2.Replace("[","").Replace("]","");
+                                string strTotal = $"[{strParte1},{strParte2}]";
+                                listaPartesSinConsignacion = JsonConvert.DeserializeObject<List<DTO.ParteVueSinConsignacion>>(strTotal);
+                            }
+                            else
+                            {
+                                if (!causa.IsContencioso)
+                                {
+                                    listaPartes = JsonConvert.DeserializeObject<List<DTO.ParteVue>>(strPartes);
+                                }
+                                else
+                                {                                    
+                                    listaPartes = JsonConvert.DeserializeObject<List<DTO.ParteVue>>(strPartes);
+                                    listaPartesSinConsignacion = JsonConvert.DeserializeObject<List<DTO.ParteVueSinConsignacion>>(strPartes2);
+                                }
+                            }
                             foreach (var item in listaPartes)
                             {
                                 DTO.Models.Parte p = new Application.DTO.Models.Parte();
@@ -339,6 +421,29 @@ namespace Presentation.Web.Controllers
                                 p.FechaConsignacion = active.GetDateTimeValueOrNull(item.FechaConsignacion);
                                 p.RutConsignacion = item.RutConsignacion;
                                 p.NombreConsignacion = active.GetStringValueForm(item.NombreConsignacion);
+
+                                p.ParteID = appExpediente.SaveParte(p);
+                            }
+
+
+                            foreach (var item in listaPartesSinConsignacion)
+                            {
+                                DTO.Models.Parte p = new Application.DTO.Models.Parte();
+                                p.ParteID = item.ParteID;
+                                p.PaisID = item.PaisID;
+                                p.CausaID = causa.CausaID;
+                                p.TipoParteID = item.TipoParteID;
+                                p.Rut = item.Rut;
+                                p.Nombre = active.GetStringValueForm(item.Nombre);
+                                p.RutRepresentante = item.RutRepresentante;
+                                p.NombreRepresentante = active.GetStringValueForm(item.NombreRepresentante);
+                                p.NombreAbogado = active.GetStringValueForm(item.NombreAbogado);
+                                p.EmailAbogado = active.GetStringValueForm(item.EmailAbogado);
+                                p.NombreEstudioJuridico = active.GetStringValueForm(item.NombreEstudioJuridico);
+                                p.FolioConsignacion = string.Empty;
+                                p.FechaConsignacion = null;
+                                p.RutConsignacion = 0;
+                                p.NombreConsignacion = string.Empty;
 
                                 p.ParteID = appExpediente.SaveParte(p);
                             }
@@ -566,7 +671,7 @@ namespace Presentation.Web.Controllers
                     #region bt2: Ver
                     a.title = "Ver";
                     a.xicon = "x-icon-zoom1";
-                    a.style = "margin-left:3px";
+                    a.style = "margin-right:5px";
                     a.href = Url.Action("Registro", "Expedientes", new { id = item.CausaID, id2 = item.TipoCausaID });
                     a.click = "javascript:void(0);";
                     string bt2 = a.Generate(true);
@@ -575,7 +680,6 @@ namespace Presentation.Web.Controllers
                     #region bt3: Editar
                     a.title = "Editar";
                     a.xicon = "x-icon-edit";
-                    a.style = "margin-left:3px";
                     a.href = Url.Action("Registro", "Expedientes", new { id = item.CausaID, id2 = item.TipoCausaID });
                     a.click = "javascript:void(0);";
                     string bt3 = a.Generate(true);
@@ -585,7 +689,7 @@ namespace Presentation.Web.Controllers
                     a.title = "Eliminar";
                     a.xicon = "x-icon x-icon-delete";
                     a.href = "javascript:;";
-                    a.click = "";
+                    a.click = "GetDeshabilitarExpediente(" + item.CausaID + ")";
                     string bt4 = a.Generate(true);
                     #endregion
 
@@ -603,7 +707,6 @@ namespace Presentation.Web.Controllers
                     a.title = "Revisar escrito";
                     a.xicon = "x-icon x-icon-txt";
                     a.href = "javascript:;";
-                    a.style = "margin-left:3px";
                     a.click = "";
                     string bt6 = a.Generate(true);
                     #endregion
@@ -686,27 +789,35 @@ namespace Presentation.Web.Controllers
 
             try
             {
+                bool IsSAG = sso.IsSAG();
+                
                 DTO.Models.Causa causa = appExpediente.GetCausa(CausaID);
                 causa.Parte = appExpediente.GetParteByCausa(CausaID);
                 causa.DocumentoCausa = appExpediente.GetDocumentoCausa(CausaID, Enums.TipoDocumento.Causa);
 
                 if (WebConfig.IsAccesoPublico)
                 {
-                    causa.Expediente = appExpediente.GetExpedienteByCausa(CausaID).Where(x => x.IsFinalizado).ToList();
+                    causa.Expediente = appExpediente.GetExpedienteByCausa(CausaID).Where(x => x.IsFinalizado && x.IsAdmisible).ToList();
                 }
                 else
                 {
                     causa.Expediente = appExpediente.GetExpedienteByCausa(CausaID);
                 }
 
-                foreach (var exp in causa.Expediente)
-                {
-                    //exp.Firma = appExpediente.GetFirmaByExpedienteID(exp.ExpedienteID);
-                }
-
                 DTO.DataForm DataForm = new DTO.DataForm();
                 DataForm.PerfilActive.IsInvitado = sso.IsInvitado();
+                DataForm.Usuario = appCommon.GetUsuarios();
+                DataForm.UserActive = sso.UserActive;
                 ViewBag.DataForm = DataForm;
+
+                foreach (var exp in causa.Expediente)
+                {
+                    exp.AsocExpeFirma = appExpediente.GetAsocExpeFirmaByExpedienteID(exp.ExpedienteID);
+                    exp.UsuarioResponsableName = DataForm.Usuario.FirstOrDefault(x => x.UsuarioID == exp.UsuarioResponsableID).GetFullName();
+                }
+
+                bool IsPuedeExpediente = ( (IsSAG && causa.TipoCausaID == (int)Enums.TipoCausa.VariedadVegetal) || active.IsPuedeExpediente(sso) );
+                ViewBag.IsPuedeExpediente = IsPuedeExpediente;
 
                 return PartialView("_EventosExpediente", causa);
             }
@@ -809,33 +920,50 @@ namespace Presentation.Web.Controllers
                 if (!IsNew)
                 {
                     model = appExpediente.GetExpediente(model.ExpedienteID);
-                    //model.Firma = appExpediente.GetFirmaByExpedienteID(model.ExpedienteID);
+                    model.AsocExpeFirma = appExpediente.GetAsocExpeFirmaByExpedienteID(model.ExpedienteID);
+                    model.AsocEscritoDocto = appExpediente.GetAsocEscritoDocto(model.ExpedienteID);
                 }
 
                 model.Causa = appExpediente.GetCausa(CausaID);
+                model.Causa.DetalleTabla = appExpediente.GetDetalleTablaByCausa(CausaID);
                 model.AsocEscritoDocto = appExpediente.GetAsocEscritoDocto(model.ExpedienteID);
 
-                #region Tipo Tramite
                 var TipoTramite = appCommon.GetTipoTramite(true);
-                List<int> filterTipoTramite = new List<int>();
-
-                if (WebConfig.IsAccesoPublico)
-                {
-                    filterTipoTramite.Add((int)Enums.TipoTramite.Escrito);
-                    filterTipoTramite.Add((int)Enums.TipoTramite.Oficio);
-                }
-                else
-                {
-                    filterTipoTramite.Add((int)Enums.TipoTramite.Actuacion);
-                    filterTipoTramite.Add((int)Enums.TipoTramite.Resolucion);
-                }
-                #endregion
+                List<DTO.Models.TipoTramite> filterTipoTramite = active.GetTipoTramiteByUserActive(TipoTramite, sso);
 
                 DTO.DataForm DataForm = new DTO.DataForm();
-                DataForm.TipoTramite = TipoTramite.Where(x => filterTipoTramite.Contains(x.TipoTramiteID)).ToList();
+                DataForm.TipoTramite = filterTipoTramite;
                 DataForm.Usuario = appCommon.GetUsuarios().Where(x => x.IsTDPI()).ToList();
                 DataForm.AsocTipoDocumentoAdjunto = appCommon.GetTipoDocumentoAdjuntoByID((int)Enums.TipoDocumento.Expediente);
                 ViewBag.DataForm = DataForm;
+
+                IList<DTO.Models.Tabla> RolEnTabla = new List<Application.DTO.Models.Tabla>();
+                IList<DTO.Models.Usuario> Usuarios = appCommon.GetUsuarios();
+
+                foreach (var item in model.Causa.DetalleTabla)
+                {
+                    if (item.Vigente)
+                    {
+                        bool existe = RolEnTabla.Any(x => x.TablaID == item.TablaID);
+                        if (!existe)
+                        {
+                            var tabla = appExpediente.GetTablaByID(item.TablaID);
+                            if (tabla.IsPublicado() || tabla.TablaID > 0) //Borrar
+                            {
+                                var user = Usuarios.FirstOrDefault(x => x.UsuarioID == tabla.UsuarioRelatorID);
+                                tabla.NombreRelator = user.GetFullName();
+
+                                RolEnTabla.Add(tabla);
+                            }
+                            
+                        }
+                    }
+                }
+
+                bool IsFirmado = model.AsocExpeFirma.Any(x => x.Firma.AsocFirmaDocto.Any(z => z.IsFirmado));
+                ViewBag.IsView = IsFirmado;
+
+                ViewBag.RolEnTabla = RolEnTabla;
 
                 return PartialView("_Expediente", model);
             }
@@ -869,22 +997,81 @@ namespace Presentation.Web.Controllers
                 Enums.ReturnJson retorno = Enums.ReturnJson.SinAccion;
                 bool IsNew = dto.ExpedienteID == 0;
 
+                bool IsClaveUnica = sso.IsClaveUnica();
+
+                dto.TipoCanalID = (IsClaveUnica) ? (int)Enums.TipoCanal.PaginaWeb : (int)Enums.TipoCanal.Presencial;
+                dto.IsTabla = (dto.IsEscrito()) ? dto.IsTabla : false;
+
                 DTO.Models.Causa causa = appExpediente.GetCausa(dto.CausaID);
 
                 dto.Observacion = active.GetStringValueForm(Request.Form["Observacion"]);
-                dto.Comentario = active.GetStringValueForm(Request.Form["Comentario"]);
                 dto.NumeroOficio = active.GetStringValueForm(Request.Form["NumeroOficio"]);
 
-                dto.FechaExpediente = dto.FechaExpediente.Value
-                    .Date.AddHours(ahora.Hour)
-                    .AddMinutes(ahora.Minute)
-                    .AddSeconds(ahora.Second);
+                if (dto.IsOficio() || dto.IsEscrito())
+                {
+                    dto.Comentario = active.GetStringValueForm(Request.Form["Comentario"]);
+                }
+                else
+                {
+                    dto.Comentario = string.Empty;
+                }
+
+                dto.FechaExpediente = dto.FechaExpediente.Date.AddHours(ahora.Hour).AddMinutes(ahora.Minute).AddSeconds(ahora.Second);
+
+                if (dto.IsOficio())
+                {
+                    //Req: ma. 15/12/2020 19:56
+                    dto.PlazoDias = 2;
+                    dto.IsHabil = true;
+                }
+
+                var TipoTramite = appCommon.GetTipoTramite();
+                var TT = TipoTramite.FirstOrDefault(x => x.TipoTramiteID == dto.TipoTramiteID);
+
+                if (IsNew)
+                {
+                    dto.UsuarioID = UsuarioActive;
+                    dto.UsuarioResponsableID = UsuarioActive;
+                    
+                    if (WebConfig.IsAccesoPublico)
+                    {
+                        dto.UsuarioResponsableID = 0;
+                    }
+
+                    dto.IsAdmisible = true;
+                }
+
+                int OpcionesTramiteID = active.GetIntValueForm(Request.Form["OpcionesTramiteID"]);
+                if (OpcionesTramiteID > 0 && IsNew && !dto.IsOficio())
+                {
+                    var asoc = appCommon.GetAsocTipoTramiteOpciones(TT.TipoTramiteID).FirstOrDefault(x => x.OpcionesTramiteID == OpcionesTramiteID && x.IsTabla == dto.IsTabla);
+                    if (asoc != null)
+                    {
+                        if (WebConfig.IsAccesoPublico)
+                        {
+                            dto.PlazoDias = asoc.PlazoDias;
+                            dto.IsHabil = asoc.IsDiasHabiles;
+                            //dto.IsTabla = asoc.IsTabla;
+                        }
+                        else
+                        {
+                            dto.IsHabil = asoc.IsDiasHabiles;
+                        }
+                    }
+                }
+
+                if (IsNew && dto.IsEscrito())
+                {
+                    DTO.Models.Folio folio = appExpediente.GetFolio(0);
+                    dto.NumeroTicket = string.Format("C/{0}/{1:000000}", ahora.Year, folio.Correlativo);
+                }
+                else
+                {
+                    dto.NumeroTicket = string.Empty;
+                }
 
                 dto.ExpedienteID = appExpediente.SaveExpediente(dto);
-
                 dbLog.ExpedienteID = dto.ExpedienteID;
-
-                bool IsResolucion = dto.TipoTramiteID == (int)Enums.TipoTramite.Resolucion;
 
                 if (IsNew)
                 {
@@ -998,7 +1185,7 @@ namespace Presentation.Web.Controllers
                     #endregion
                 }
 
-                int OpcionesTramiteID = active.GetIntValueForm(Request.Form["OpcionesTramiteID"]);
+                
                 if (OpcionesTramiteID > 0)
                 {
                     DTO.Models.AsocExpedienteOpcion opt = new DTO.Models.AsocExpedienteOpcion();
@@ -1009,14 +1196,21 @@ namespace Presentation.Web.Controllers
                     opt.AsocExpedienteOpcionID = appExpediente.SaveAsocExpedienteOpcion(opt);
                 }
 
-                if (IsResolucion)
+                if (dto.IsResolucion())
                 {
                     #region Firmas
 
-                    if (!IsNew)
-                        appExpediente.BorrarFirmasExpediente(dto.ExpedienteID);
+                    List<int> UserFirma = new List<int>();
+                    IList<DTO.Models.Firma> listaFirmasExpediente = appExpediente.GetFirmaByExpedienteID(dto.ExpedienteID);
 
-                    
+                    if (!IsNew)
+                    {
+                        foreach (var item in listaFirmasExpediente)
+                        {
+                            UserFirma.Add(item.UsuarioID);
+                        }
+                    }
+
                     if (active.IsInputValue(Request.Form["strFirmas"]))
                     {
                         try
@@ -1026,22 +1220,55 @@ namespace Presentation.Web.Controllers
                             IList<DTO.Models.AsocEscritoDocto> asocEscrito = appExpediente.GetAsocEscritoDocto(dto.ExpedienteID);
                             foreach (var item in listaFirmas)
                             {
-                                //DTO.Models.Firma f = new Application.DTO.Models.Firma();
-                                //f.FirmaID = 0;
-                                //f.UsuarioID = item.UsuarioFirmaID;
-                                //f.ExpedienteID = dto.ExpedienteID;
-                                //f.Orden = item.Orden;
-                                //f.FirmaID = appExpediente.SaveFirma(f);
+                                bool existe = UserFirma.Contains(item.UsuarioFirmaID);
+                                if (!existe)
+                                {
+                                    DTO.Models.Firma f = new Application.DTO.Models.Firma();
+                                    f.FirmaID = 0;
+                                    f.UsuarioID = item.UsuarioFirmaID;
+                                    f.Orden = item.Orden;
+                                    f.FirmaID = appExpediente.SaveFirma(f);
 
-                                //foreach (var asEsc in asocEscrito)
-                                //{
-                                //    DTO.Models.AsocFirmaDocto asoc = new DTO.Models.AsocFirmaDocto();
-                                //    asoc.AsocFirmaDoctoID = 0;
-                                //    asoc.AsocEscritoDoctoID = asEsc.AsocEscritoDoctoID;
-                                //    asoc.FirmaID = f.FirmaID;
-                                //    asoc.AsocFirmaDoctoID = appExpediente.SaveAsocFirmaDocto(asoc);
-                                //}
-                                
+                                    foreach (var asEsc in asocEscrito)
+                                    {
+                                        DTO.Models.AsocFirmaDocto asoc = new DTO.Models.AsocFirmaDocto();
+                                        asoc.AsocFirmaDoctoID = 0;
+                                        asoc.AsocEscritoDoctoID = asEsc.AsocEscritoDoctoID;
+                                        asoc.FirmaID = f.FirmaID;
+                                        asoc.AsocFirmaDoctoID = appExpediente.SaveAsocFirmaDocto(asoc);
+                                    }
+
+                                    DTO.Models.AsocExpeFirma exp = new DTO.Models.AsocExpeFirma();
+                                    exp.AsocExpeFirmaID = 0;
+                                    exp.FirmaID = f.FirmaID;
+                                    exp.ExpedienteID = dto.ExpedienteID;
+                                    exp.AsocExpeFirmaID = appExpediente.SaveAsocExpeFirma(exp);
+                                }
+                                else
+                                {
+                                    DTO.Models.Firma firma = listaFirmasExpediente.FirstOrDefault(x => x.UsuarioID == item.UsuarioFirmaID);
+
+                                    foreach (var asEsc in asocEscrito)
+                                    {
+                                        bool IsTieneDocumento = false;
+
+                                        if (firma.AsocFirmaDocto != null && firma.AsocFirmaDocto.Count > 0)
+                                        {
+                                            IsTieneDocumento = firma.AsocFirmaDocto.Any(x => x.AsocEscritoDoctoID == asEsc.AsocEscritoDoctoID);
+                                        }                                        
+
+                                        if (!IsTieneDocumento)
+                                        {
+                                            DTO.Models.AsocFirmaDocto asoc = new DTO.Models.AsocFirmaDocto();
+                                            asoc.AsocFirmaDoctoID = 0;
+                                            asoc.AsocEscritoDoctoID = asEsc.AsocEscritoDoctoID;
+                                            asoc.FirmaID = firma.FirmaID;
+                                            asoc.AsocFirmaDoctoID = appExpediente.SaveAsocFirmaDocto(asoc);
+                                        }
+                                    }
+
+                                }
+                                UserFirma.Remove(item.UsuarioFirmaID);
                             }
                         }
                         catch (Exception ex2)
@@ -1049,15 +1276,43 @@ namespace Presentation.Web.Controllers
                             Logger.Execute().Error(ex2);
                         }
                     }
+                    else if (!IsNew)
+                    {
+                        appExpediente.BorrarFirmasExpediente(dto.ExpedienteID);
+                    }
+
+                    foreach (var firma in UserFirma)
+                    {
+                        int _FirmaID = listaFirmasExpediente.FirstOrDefault(x => x.UsuarioID == firma).FirmaID;
+                        appExpediente.BorrarFirmaByFirmaID(_FirmaID);
+                    }
 
                     #endregion
                 }
 
                 retorno = Enums.ReturnJson.ActionSuccess;
 
+                #region Log Causa
+                LogCausa _logC = new LogCausa();
+                _logC.Fecha = ahora;
+                _logC.CausaID = causa.CausaID;
+                _logC.UsuarioID = UsuarioActive;
+                _logC.EstadoCausa = (Enums.EstadoCausa)causa.EstadoCausaID;
+                _logC.Observaciones = $"Trámite: { TT.Descripcion.Trim()}";
+                _logC.TipoLog = IsNew ? Enums.TipoLog.AgregarExpediente : Enums.TipoLog.ModificarExpediente;
+                _logC.Save();
+                #endregion
+
                 #region LogSistema
                 dbLog.TipoLog = Enums.TipoLog.SaveExpediente;
                 dbLog.Save();
+                #endregion
+
+                #region Notificacion
+                if (IsNew && IsClaveUnica)
+                {
+                    appMail.IngresoExpediente(dto.CausaID, UsuarioActive, TT.Descripcion.Trim());
+                }
                 #endregion
 
                 return Json(new { result = (int)retorno, ParteID = dto.ExpedienteID, IsNew = IsNew });
@@ -1076,9 +1331,10 @@ namespace Presentation.Web.Controllers
         /// </summary>
         /// <param name="TipoTramiteID"></param>
         /// <param name="EstadoCausaID"></param>
+        /// <param name="IsTabla"></param>
         /// <returns></returns>
         [HttpPost, ValidateAntiForgeryToken]
-        public ActionResult GetEstadoAplica(int TipoTramiteID, int EstadoCausaID)
+        public ActionResult GetEstadoAplica(int TipoTramiteID, int EstadoCausaID, bool IsTabla)
         {
             var sso = new SsoActionResult();
             if (!sso.AsyncAuthenticate(ControllerContext)) return Response403();
@@ -1091,13 +1347,18 @@ namespace Presentation.Web.Controllers
 
                 foreach (var item in EstadosAplica)
                 {
-                    lista.Add(new DTO.Models.OpcionesTramite() {
-                        OpcionesTramiteID = item.AsocTipoTramiteOpciones.OpcionesTramite.OpcionesTramiteID,
-                        Descripcion = item.AsocTipoTramiteOpciones.OpcionesTramite.Descripcion.Trim()
-                    });
+                    if (item.AsocTipoTramiteOpciones.IsTabla == IsTabla)
+                    {
+                        lista.Add(new DTO.Models.OpcionesTramite()
+                        {
+                            OpcionesTramiteID = item.AsocTipoTramiteOpciones.OpcionesTramite.OpcionesTramiteID,
+                            Descripcion = item.AsocTipoTramiteOpciones.OpcionesTramite.Descripcion.Trim()
+                        });
+                    }
+
                 }
 
-                return Json(lista);
+                return Json(lista.OrderBy(x => x.Descripcion));
                  
             }
             catch (Exception ex)
@@ -1115,9 +1376,10 @@ namespace Presentation.Web.Controllers
         /// <param name="ExpedienteID"></param>
         /// <param name="EstadoCausaID"></param>
         /// <param name="OpcionesTramiteID"></param>
+        /// <param name="IsTabla"></param>
         /// <returns></returns>
         [HttpPost, ValidateAntiForgeryToken]
-        public ActionResult GetDetalleEvento(int TipoTramiteID, int ExpedienteID, int EstadoCausaID, int OpcionesTramiteID)
+        public ActionResult GetDetalleEvento(int TipoTramiteID, int ExpedienteID, int EstadoCausaID, int OpcionesTramiteID, bool IsTabla)
         {
             var sso = new SsoActionResult();
             if (!sso.AsyncAuthenticate(ControllerContext)) return Response403();
@@ -1133,17 +1395,25 @@ namespace Presentation.Web.Controllers
 
                 DTO.DataForm DataForm = new DTO.DataForm();
                 DataForm.ExpedienteID = ExpedienteID;
-                DataForm.EstadosAplica = EstadosLista.FirstOrDefault(x => x.AsocTipoTramiteOpciones.OpcionesTramiteID == OpcionesTramiteID);
+                DataForm.EstadosAplica = EstadosLista
+                    .FirstOrDefault(x => x.AsocTipoTramiteOpciones.OpcionesTramiteID == OpcionesTramiteID && x.AsocTipoTramiteOpciones.IsTabla == IsTabla);
 
                 ViewBag.DataForm = DataForm;
 
                 DTO.Models.Expediente model = new DTO.Models.Expediente();
                 model.ExpedienteID = ExpedienteID;
+                model.TipoTramiteID = TipoTramiteID;
 
                 if (model.ExpedienteID != 0)
                 {
-                    model = appExpediente.GetExpediente(ExpedienteID);  
+                    model = appExpediente.GetExpediente(ExpedienteID);
+                    model.AsocExpeFirma = appExpediente.GetAsocExpeFirmaByExpedienteID(model.ExpedienteID);
                 }
+
+                bool IsFirmado = model.AsocExpeFirma.Any(x => x.Firma.AsocFirmaDocto.Any(z => z.IsFirmado));
+                ViewBag.IsView = IsFirmado;
+
+                ViewBag.TipoTramiteID = TipoTramiteID;
 
                 return PartialView("_DetalleEvento", model);
             }
@@ -1157,7 +1427,142 @@ namespace Presentation.Web.Controllers
 
         #endregion
 
+       
+        #region Derivar
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ExpedienteID"></param>
+        /// <param name="CausaID"></param>
+        /// <returns></returns>
+        [HttpPost, ValidateAntiForgeryToken]
+        public ActionResult GetDerivarExpediente(int ExpedienteID, int CausaID)
+        {
+            var sso = new SsoActionResult();
+            if (!sso.AsyncAuthenticate(ControllerContext)) return Response403();
+
+            try
+            {
+                DTO.DataForm DataForm = new DTO.DataForm();
+                DataForm.Usuario = appCommon.GetUsuarios();
+                ViewBag.DataForm = DataForm;
+
+                DTO.Models.Expediente model = appExpediente.GetExpediente(ExpedienteID);
+                model.Causa = appExpediente.GetCausa(CausaID);
+                model.UsuarioResponsableName = DataForm.Usuario.FirstOrDefault(x => x.UsuarioID == model.UsuarioResponsableID).GetFullName();
+
+                return PartialView("_Derivar", model);
+            }
+            catch (Exception ex)
+            {
+                Logger.Execute().Error(ex);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// SaveDerivar
+        /// </summary>
+        /// <param name="dto"></param>
+        /// <param name="UsuarioNewID"></param>
+        /// <param name="Comentario"></param>
+        /// <returns></returns>
+        [HttpPost, ValidateAntiForgeryToken]
+        public ActionResult SaveDerivar(DTO.Models.Expediente dto, int UsuarioNewID, string Comentario)
+        {
+            var sso = new SsoActionResult();
+            if (!sso.AsyncAuthenticate(ControllerContext)) return Response403();
+
+            DateTime ahora = DateTime.Now;
+            int UsuarioActive = sso.GetUsuarioActivoID();
+
+            DBLogger dbLog = new DBLogger();
+            dbLog.Fecha = ahora;
+            dbLog.UsuarioID = UsuarioActive;
+            dbLog.ExpedienteID = dto.ExpedienteID;
+
+            try
+            {
+                #region Parametros
+                var Usuarios = appCommon.GetUsuarios();
+
+                DTO.Models.Expediente expediente = appExpediente.GetExpediente(dto.ExpedienteID);
+                expediente.UsuarioResponsableName = Usuarios.FirstOrDefault(x => x.UsuarioID == expediente.UsuarioResponsableID).GetFullName();
+
+                DTO.Models.Causa causa = appExpediente.GetCausa(dto.CausaID);
+
+                var NewUser = Usuarios.FirstOrDefault(x => x.UsuarioID == UsuarioNewID);
+                string ComentariosDerivacion = Comentario.Trim();
+
+                DTO.Models.Derivacion derivacion = new DTO.Models.Derivacion();
+                derivacion.DerivacionID = 0;
+                derivacion.ExpedienteID = dto.ExpedienteID;
+                derivacion.UsuarioID = UsuarioActive;
+                derivacion.UsuarioResponsableID = NewUser.UsuarioID;
+                derivacion.Observacion = ComentariosDerivacion;
+                derivacion.Fecha = ahora;
+                derivacion.PlazoDias = 0;
+                #endregion
+
+                derivacion.DerivacionID = appExpediente.SaveDerivacion(derivacion);
+                appExpediente.UpdateResponsable(expediente.ExpedienteID, NewUser.UsuarioID);
+                appMail.NotificacionDerivacion(causa.CausaID, NewUser.UsuarioID, UsuarioActive, ComentariosDerivacion);
+
+                #region Log Causa
+                LogCausa _logC = new LogCausa();
+                _logC.Fecha = ahora;
+                _logC.CausaID = causa.CausaID;
+                _logC.UsuarioID = UsuarioActive;
+                _logC.EstadoCausa = (Enums.EstadoCausa)causa.EstadoCausaID;
+                _logC.Observaciones = $"Trámite: { expediente.TipoTramite.Descripcion.Trim()}: { expediente.UsuarioResponsableName} => {NewUser.GetFullName()} <br /> Comentario: {ComentariosDerivacion}";
+                _logC.TipoLog = Enums.TipoLog.DerivarExpediente;
+                _logC.Save();
+                #endregion
+
+                dbLog.TipoLog = Enums.TipoLog.DerivarExpediente;
+                dbLog.Save();
+
+                return Json(0);
+            }
+            catch (Exception ex)
+            {
+                Logger.Execute().Error(ex);
+                throw;
+            }
+        }
+
+        #endregion
+
+        #region Admisible
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ExpedienteID"></param>
+        /// <param name="CausaID"></param>
+        /// <returns></returns>
+        [HttpPost, ValidateAntiForgeryToken]
+        public ActionResult GetAdmisibleExpediente(int ExpedienteID, int CausaID)
+        {
+            var sso = new SsoActionResult();
+            if (!sso.AsyncAuthenticate(ControllerContext)) return Response403();
+
+            try
+            {
+                DTO.Models.Expediente model = appExpediente.GetExpediente(ExpedienteID);
+                model.Causa = appExpediente.GetCausa(CausaID);
+                model.AsocEscritoDocto = appExpediente.GetAsocEscritoDocto(model.ExpedienteID);
+
+                return PartialView("_Admisibilidad", model);
+            }
+            catch (Exception ex)
+            {
+                Logger.Execute().Error(ex);
+                throw;
+            }
+        }
+
+        #endregion
 
         /// <summary>
         /// ActionExpediente => Generic actions
@@ -1171,17 +1576,13 @@ namespace Presentation.Web.Controllers
             var sso = new SsoActionResult();
             if (!sso.AsyncAuthenticate(ControllerContext)) return Response403();
 
-            DateTime ahora = DateTime.Now;
             int UserActiveID = sso.GetUsuarioActivoID();
             DTO.Models.Usuario UserActive = sso.UserActive;
 
-            //bool IsDev = true;
-            //if (IsDev)
-            //{
-            //    UserActiveID = 2;
-            //    UserActive = appCommon.GetUsuarioByID(UserActiveID);
-            //}
+            //int UserActiveID = 2;
+            //DTO.Models.Usuario UserActive = appCommon.GetUsuarioByID(UserActiveID);
 
+            DateTime ahora = DateTime.Now;
             DBLogger dbLog = new DBLogger();
             dbLog.Fecha = ahora;
             dbLog.UsuarioID = UserActiveID;
@@ -1204,13 +1605,46 @@ namespace Presentation.Web.Controllers
                 {
                     appExpediente.SetEstadoTabla(Identidad, Domain.Infrastructure.EstadoTabla.Eliminado);
 
+                    #region Limpia Firmas
+                    IList<DTO.Models.AsocDocumentoSistemaTabla> AsocDocumentoSistemaTabla = appExpediente.GetAsocDocumentoSistemaTabla(Identidad);
+
+                    IList<DTO.Models.AsocDocSistemaFirma> asocFirmas = new List<DTO.Models.AsocDocSistemaFirma>();
+
+                    if (AsocDocumentoSistemaTabla.Count > 0)
+                    {
+                        foreach (var item in AsocDocumentoSistemaTabla)
+                        {
+                            int thisDocumentoSistemaID = item.DocumentoSistemaID;
+                            IList<DTO.Models.AsocDocSistemaFirma> AsocDocSistemaFirma = appExpediente.GetAsocDocSistemaFirmaByDocto(thisDocumentoSistemaID);
+                            foreach (var _asocDocSisFirma in AsocDocSistemaFirma)
+                            {
+                                asocFirmas.Add(_asocDocSisFirma);
+                            }
+                        }
+                    }
+
+                    foreach (var item in asocFirmas)
+                    {
+                        appExpediente.BorrarFirmaByAsocDocSistema(item.AsocDocSistemaFirmaID);
+                    }
+                    #endregion
+
                     dbLog.TipoLog = Enums.TipoLog.EliminarTabla;
                     dbLog.Save();
                 }
 
                 if (action == Enums.ActionSystem.QuitarVigenciaDetalleTabla)
                 {
-                    appExpediente.SetVigenciaDetalleTabla(Identidad, false);
+                    int detalleTablaID = Identidad;
+                    int TablaID = active.GetIntValueForm(Request.Form["TablaID"]);
+
+                    appExpediente.SetVigenciaDetalleTabla(detalleTablaID, false);
+                    
+                    DTO.Models.Tabla tabla = appExpediente.GetTablaByID(TablaID);
+                    if (tabla.IsGenerado())
+                    {
+                        appExpediente.SetEstadoTabla(TablaID, Domain.Infrastructure.EstadoTabla.Borrador);
+                    }
 
                     dbLog.TipoLog = Enums.TipoLog.QuitarVigenciaDetalleTabla;
                     dbLog.Save();
@@ -1220,6 +1654,12 @@ namespace Presentation.Web.Controllers
                 {
                     int TablaID = active.GetIntValueForm(Request.Form["TablaID"]);
                     int CausaID = Identidad;
+
+                    DTO.Models.Tabla tabla = appExpediente.GetTablaByID(TablaID);
+                    if (tabla.IsGenerado())
+                    {
+                        appExpediente.SetEstadoTabla(TablaID, Domain.Infrastructure.EstadoTabla.Borrador);
+                    }
 
                     DTO.Models.DetalleTabla detalle = new DTO.Models.DetalleTabla();
                     detalle.DetalleTablaID = 0;
@@ -1234,9 +1674,56 @@ namespace Presentation.Web.Controllers
                     dbLog.Save();
                 }
 
+
+                if (action == Enums.ActionSystem.EditarCausaTabla)
+                {
+                    int TablaID = active.GetIntValueForm(Request.Form["TablaID"]);
+                    int NuevoOrden = active.GetIntValueForm(Request.Form["Orden"]);
+                    int CausaID = Identidad;
+
+                    DTO.Models.Tabla tabla = appExpediente.GetTablaByID(TablaID);
+                    if (tabla.IsGenerado())
+                    {
+                        appExpediente.SetEstadoTabla(TablaID, Domain.Infrastructure.EstadoTabla.Borrador);
+                    }
+
+                    DTO.Models.DetalleTabla detalle = tabla.DetalleTabla.FirstOrDefault(x => x.CausaID == CausaID);
+                    detalle.Orden = NuevoOrden;
+
+                    detalle.DetalleTablaID = appExpediente.SaveDetalleTabla(detalle, SetLastOrder: false);
+                    result = Enums.ReturnJson.ActionSuccess;
+
+                    dbLog.TipoLog = Enums.TipoLog.EditarCausaTabla;
+                    dbLog.Save();
+                }
+
                 if (action == Enums.ActionSystem.EliminarEstadoDiario)
                 {
                     appExpediente.SetTipoEstadoDiario(Identidad, Domain.Infrastructure.TipoEstadoDiario.Eliminado);
+
+                    #region Limpia Firmas
+                    IList<DTO.Models.AsocDocumentoSistemaEstadoDiario> AsocDocumentoSistemaEstadoDiario = appExpediente.GetAsocDocumentoSistemaEstadoDiario(Identidad);
+
+                    IList<DTO.Models.AsocDocSistemaFirma> asocFirmas = new List<DTO.Models.AsocDocSistemaFirma>();
+
+                    if (AsocDocumentoSistemaEstadoDiario.Count > 0)
+                    {
+                        foreach (var item in AsocDocumentoSistemaEstadoDiario)
+                        {
+                            int thisDocumentoSistemaID = item.DocumentoSistemaID;
+                            IList<DTO.Models.AsocDocSistemaFirma> AsocDocSistemaFirma = appExpediente.GetAsocDocSistemaFirmaByDocto(thisDocumentoSistemaID);
+                            foreach (var _asocDocSisFirma in AsocDocSistemaFirma)
+                            {
+                                asocFirmas.Add(_asocDocSisFirma);
+                            }
+                        }
+                    }
+
+                    foreach (var item in asocFirmas)
+                    {
+                        appExpediente.BorrarFirmaByAsocDocSistema(item.AsocDocSistemaFirmaID);
+                    }
+                    #endregion
 
                     dbLog.TipoLog = Enums.TipoLog.EliminarEstadoDiario;
                     dbLog.Save();
@@ -1295,7 +1782,31 @@ namespace Presentation.Web.Controllers
 
                 if (action == Enums.ActionSystem.FinalizarTabla)
                 {
+                    int TablaID = Identidad;
+
                     appExpediente.SetEstadoTabla(Identidad, Domain.Infrastructure.EstadoTabla.FirmadoPublicado);
+
+                    LogCausa _logC = new LogCausa();
+                    _logC.Fecha = ahora;
+                    _logC.UsuarioID = UserActiveID;
+                    _logC.TipoLog = Enums.TipoLog.CambiaEstadoCausa;
+
+                    DTO.Models.Tabla tabla = appExpediente.GetTablaByID(TablaID);
+                    
+                    Enums.EstadoCausa estadoNew = Enums.EstadoCausa.EnTabla;                    
+
+                    foreach (var c in tabla.DetalleTabla)
+                    {
+                        c.Causa = appExpediente.GetCausa(c.CausaID);
+                        Enums.EstadoCausa estadoActual = (Enums.EstadoCausa)c.Causa.EstadoCausaID;
+
+                        appExpediente.CambiarEstadoCausa(c.CausaID, Enums.EstadoCausa.EnTabla);
+
+                        _logC.CausaID = c.CausaID;
+                        _logC.EstadoCausa = estadoNew;
+                        _logC.Observaciones = $"{estadoActual} ==> {estadoNew}";
+                        _logC.Save();
+                    }
 
                     dbLog.TipoLog = Enums.TipoLog.FinalizarTabla;
                     dbLog.Save();
@@ -1325,6 +1836,19 @@ namespace Presentation.Web.Controllers
                             active.SetCambiaEstadoCausa(ahora, dbLog.UsuarioID, CausaID, asoc, dbLog);
                         }
                     }
+
+                    DTO.Models.Causa causa = appExpediente.GetCausa(CausaID);
+
+                    #region Log Causa
+                    LogCausa _logC = new LogCausa();
+                    _logC.Fecha = ahora;
+                    _logC.CausaID = causa.CausaID;
+                    _logC.UsuarioID = UserActiveID;
+                    _logC.EstadoCausa = (Enums.EstadoCausa)causa.EstadoCausaID;
+                    _logC.Observaciones = $"Trámite: { expediente.TipoTramite.Descripcion.Trim()}";
+                    _logC.TipoLog = Enums.TipoLog.FinalizarExpediente;
+                    _logC.Save();
+                    #endregion
                 }
 
                 if (action == Enums.ActionSystem.GenerarExpedientePDF)
@@ -1332,9 +1856,23 @@ namespace Presentation.Web.Controllers
                     int CausaID = Identidad;
 
                     DTO.Models.Causa causa = appExpediente.GetCausa(CausaID);
-                    causa.Expediente = appExpediente.GetExpedienteByCausa(CausaID);
+                    var Expediente = appExpediente.GetExpedienteByCausa(CausaID);
                     causa.Parte = appExpediente.GetParteByCausa(CausaID);
                     causa.DocumentoCausa = appExpediente.GetDocumentoCausa(CausaID, Domain.Infrastructure.TipoDocumento.Causa);
+
+                    foreach (var item in Expediente)
+                    {
+                        if (item.IsAdmisible && item.IsFinalizado)
+                        {
+                            causa.Expediente.Add(item);
+                        }
+                    }
+
+
+                    foreach (var e in causa.Expediente)
+                    {
+                        e.AsocEscritoDocto = appExpediente.GetAsocEscritoDocto(e.ExpedienteID);
+                    }
 
                     #region PDF
                     Enums.TipoDocumento tipoDocumento = Enums.TipoDocumento.ExpedienteElectronicoPDF;
@@ -1346,6 +1884,7 @@ namespace Presentation.Web.Controllers
 
                     DocPdf pdf = new DocPdf();
                     pdf.Causa = causa;
+                    pdf.TipoParte = appCommon.GetTipoParte();
                     pdf.Usuario = UserActive;
                     pdf.IsExpedienteElectronico = true;
                     pdf.Ahora = ahora;
@@ -1407,6 +1946,66 @@ namespace Presentation.Web.Controllers
                         d = doc.DocumentoCausaID,
                         i = CausaID
                     });
+                }
+
+                if (action == Enums.ActionSystem.ExpedienteInadmisible)
+                {
+                    int ExpedienteID = Identidad;
+                    string comentarios = active.GetStringValueForm(Request.Form["Comentario"]);
+                    
+                    DTO.Models.Expediente expediente = appExpediente.GetExpediente(ExpedienteID);
+                    DTO.Models.Causa causa = appExpediente.GetCausa(expediente.CausaID);
+
+                    appExpediente.SetExpedienteInadmisible(ExpedienteID);
+
+                    #region Firmas
+                    if (expediente.IsResolucion())
+                    {
+                        IList<DTO.Models.Firma> listaFirmasExpediente = appExpediente.GetFirmaByExpedienteID(ExpedienteID);
+
+                        foreach (var firma in listaFirmasExpediente)
+                        {
+                            appExpediente.BorrarFirmaByFirmaID(firma.FirmaID);
+                        }
+                    }
+                    
+                    #endregion
+                    appMail.NotificacionAdmisibilidad(expediente, expediente.UsuarioID, comentarios.Trim());
+
+                    #region LogCausa
+                    LogCausa _logC = new LogCausa();
+                    _logC.Fecha = ahora;
+                    _logC.CausaID = causa.CausaID;
+                    _logC.UsuarioID = UserActiveID;
+                    _logC.EstadoCausa = (Enums.EstadoCausa)causa.EstadoCausaID;
+                    _logC.Observaciones = $"Eliminado: {comentarios.Trim()}";
+                    _logC.TipoLog = Enums.TipoLog.AdmitirExpediente;
+                    _logC.Save();
+                    #endregion
+
+                    dbLog.TipoLog = Enums.TipoLog.AdmitirExpediente;
+                    dbLog.Save();
+                }
+
+                if (action == Enums.ActionSystem.EliminarExpediente)
+                {
+                    int CausaID = Identidad;
+
+                    DTO.Models.Causa causa = appExpediente.GetCausa(CausaID);
+
+                    appExpediente.CambiarEstadoCausa(CausaID, Enums.EstadoCausa.Eliminado);
+
+
+                    #region Log Causa
+                    LogCausa _logC = new LogCausa();
+                    _logC.Fecha = ahora;
+                    _logC.CausaID = causa.CausaID;
+                    _logC.UsuarioID = UserActiveID;
+                    _logC.EstadoCausa = Enums.EstadoCausa.Eliminado;
+                    _logC.Observaciones = "Eliminar Expediente";
+                    _logC.TipoLog = Enums.TipoLog.EliminarCausa;
+                    _logC.Save();
+                    #endregion
                 }
 
                 return Json(new { result = (int)result, message = message, active = activeAction });

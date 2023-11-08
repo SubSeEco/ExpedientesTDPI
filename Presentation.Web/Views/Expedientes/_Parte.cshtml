@@ -20,6 +20,31 @@
 
     int Index = (int)ViewBag.Index;
 
+    string HelpRut = "Si se trata de extranjeros que no tienen RUT, Puede ser RUT del Representante";
+
+    #region Listas
+    List<int> CausasSinConsignacion = new List<int>();
+    CausasSinConsignacion.Add((int)Enums.TipoCausa.VariedadVegetal);
+    CausasSinConsignacion.Add((int)Enums.TipoCausa.ProteccionSuplementaria);
+    CausasSinConsignacion.Add((int)Enums.TipoCausa.RecursoHechoMarca);
+    CausasSinConsignacion.Add((int)Enums.TipoCausa.RecursoHechoPatente);
+
+    List<int> PartesSinConsignacion = new List<int>();
+    PartesSinConsignacion.Add((int)Enums.TipoParte.Recurrido);
+    PartesSinConsignacion.Add((int)Enums.TipoParte.Apelado);
+    PartesSinConsignacion.Add((int)Enums.TipoParte.Solicitante);
+
+    List<int> ListaPrimeraParte = new List<int>();
+    ListaPrimeraParte.Add((int)Enums.TipoParte.Apelante);
+    ListaPrimeraParte.Add((int)Enums.TipoParte.Recurrente);
+    ListaPrimeraParte.Add((int)Enums.TipoParte.Solicitante);
+    #endregion
+
+    bool IsPrimeraParte = ListaPrimeraParte.Contains(Model.TipoParte.TipoParteID);
+
+    bool IsConsignacionVisible = (!PartesSinConsignacion.Contains(Model.TipoParte.TipoParteID) && !CausasSinConsignacion.Contains(config.TipoCausaID));
+
+
 }
 
 <script type="text/javascript">
@@ -39,6 +64,7 @@
             IsNumericValidate();
             IsEmail();
             callCalendarPopup("frmParte");
+            callToolTipsGrid("frmParte");
 
             ValidateRUT("Rut", "Dv");
             ValidateRUT("RutRepresentante", "DvRep");
@@ -79,14 +105,37 @@
 
                     if (IsParteTemp) {
                         let index = parseInt("@Index");
-                        appParte.updateParteTemp(objForm, index);
+
+                        @if (IsPrimeraParte)
+                        {
+                            @:appParte.updateParteTemp(objForm, index);
+                        }
+                        else
+                        {
+                            @:appParteSinConsignacion.updateParteTemp(objForm, index);
+                        }
                     }
                     else {
                         if (IsCausaNew) {
-                            appParte.createParte(objForm);
+                            @if (IsPrimeraParte)
+	                        {
+		                         @:appParte.createParte(objForm);
+                                                                                    	                        }
+                            else
+                            {
+                                @:appParteSinConsignacion.createParte(objForm);
+                            }
                         }
                         else {
-                            appParte.updateParte(xResultJsonData.IsNew, xResultJsonData.result, objForm);
+
+                            @if (IsPrimeraParte)
+                            {
+                                @:appParte.updateParte(xResultJsonData.IsNew, xResultJsonData.result, objForm);
+                            }
+                            else
+                            {
+                                @:appParteSinConsignacion.updateParte(xResultJsonData.IsNew, xResultJsonData.result, objForm);
+                            }
                         }
                     }
 
@@ -125,7 +174,7 @@
             <legend class="celeste">Datos del @Model.TipoParte.Descripcion</legend>
 
             <div class="form-group row align-items-center" id="">
-                <label for="Rut" class="col-md-3 col-form-label">RUT <span class="span-obligatorio">*</span></label>
+                <label for="Rut" class="col-md-3 col-form-label">RUT @Html.Raw(Html.HelpTitle(HelpRut)) <span class="span-obligatorio">*</span></label>
                 <div class="col-md-3 ">
                     <input type="text" class="form-control IsNumeric IsRut verificar" maxlength="10" value="" name="Rut" id="Rut">
                 </div>
@@ -213,7 +262,9 @@
 
         @if (config.IsConsignacion)
         {
-            <fieldset class="x-fieldset">
+            string hide = !IsConsignacionVisible ? "hide" : string.Empty;
+
+            <fieldset class="x-fieldset @hide">
                 <legend class="celeste">Consignación</legend>
 
 
@@ -250,7 +301,7 @@
                 <div class="form-group row align-items-center" id="">
                     <label for="RutConsignacion" class="col-md-3 col-form-label">RUT <span class="span-obligatorio">*</span></label>
                     <div class="col-md-3 ">
-                        <input type="text" class="form-control IsNumeric IsRut verificar" maxlength="10" value="" name="RutConsignacion" id="RutConsignacion">
+                        <input type="text" class="form-control IsNumeric IsRut verificar" maxlength="10" value="" name="RutConsignacion" id="RutConsignacion" data-default="0">
                     </div>
                     <div class="col-md-1 col-sm-3">
                         <input type="text" onkeyup="return OnlyK(event, 'DvCon')" style="margin-left: -20px;min-width: 60px;"

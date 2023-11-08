@@ -18,6 +18,7 @@ namespace Persistence.Repository
         public TipoCanal()
         {
             this.Causa = new HashSet<Causa>();
+            this.Expediente = new HashSet<Expediente>();
         }
     
         public int TipoCanalID { get; set; }
@@ -26,5 +27,7 @@ namespace Persistence.Repository
     
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Causa> Causa { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Expediente> Expediente { get; set; }
     }
 }

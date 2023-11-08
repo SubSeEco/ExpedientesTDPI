@@ -21,6 +21,19 @@ namespace Domain.Infrastructure
         Error
     }
 
+    public enum SignServiceIdentity
+    {
+        Disable = 0,
+        Economia = 1,
+    }
+
+
+
+    public enum TipoAcceso
+    {
+        ClaveUnica = 1
+    }
+
     public enum TipoPersonaSol
     {
         Solicitante = 1,
@@ -34,13 +47,42 @@ namespace Domain.Infrastructure
         EliminarTabla,
         QuitarVigenciaDetalleTabla,
         AgregarCausaTabla,
+        EditarCausaTabla,
         EliminarEstadoDiario,
         QuitarVigenciaDetalleEstadoDiario,
         AgregarExpedienteEstadoDiario,
         FinalizarEstadoDiario,
         FinalizarTabla,
         FinalizarExpediente,
-        GenerarExpedientePDF
+        GenerarExpedientePDF,
+        ExpedienteInadmisible,
+        EliminarExpediente,
+    }
+
+    public enum SignPosition
+    {
+        TOP_RIGHT = 1,
+        LEFT_TOP = 2,
+        BOTTOM_LEFT = 3,
+        BOTTOM_RIGHT = 4,
+        CENTERED_MIDDLE = 5,
+        TOP_EDGE_CENTER = 6,
+        BOTTOM_EDGE_CENTER = 7,
+        LEFT_EDGE_CENTER = 8,
+        RIGHT_EDGE_CENTER = 9
+    }
+
+    public enum SignPageNumber
+    {
+        LastPage = 0,
+        FirstPage = 1,
+        AllPages = -1
+    }
+
+    public enum SignStatus
+    {
+        Failed,
+        Success
     }
 
 
@@ -76,6 +118,7 @@ namespace Domain.Infrastructure
         EliminarTabla,
         QuitarVigenciaDetalleTabla,
         AgregarCausaTabla,
+        EditarCausaTabla,
         GenerarTablaPDF,
         EliminarEstadoDiario,
         QuitarVigenciaDetalleEstadoDiario,
@@ -88,7 +131,15 @@ namespace Domain.Infrastructure
         LoginAnonymous,
         FinalizarExpediente,
         AgregarCausa,
-        ActualizarCausa
+        ActualizarCausa,
+        AgregarExpediente,
+        ModificarExpediente,
+        DerivarExpediente,
+        AdmitirExpediente,
+        RegistroAbogado,
+        SubirCertificadoAbogado,
+        SaveSigner,
+        EliminarCausa
     }
 
 
@@ -108,6 +159,7 @@ namespace Domain.Infrastructure
         PlantillasEmail = 12,
         MantenedorUsuarios = 13,
         ExternoPrincipal = 14,
+        RegistroAbogado = 15,
 
     }
 
@@ -157,10 +209,12 @@ namespace Domain.Infrastructure
 
     public enum Perfil
     {
+        ClaveUnicaSinPerfil = 0,
         TDPI = 1,
         INAPI = 2,
         SAG = 3,
-        Administrador = 4
+        Administrador = 4,
+        Abogado = 5,
     }
 
     public enum TipoDocumento
@@ -172,7 +226,8 @@ namespace Domain.Infrastructure
         Ingreso = 4,
         Tabla = 5,
         EstadoDiario = 6,
-        ExpedienteElectronicoPDF = 7
+        ExpedienteElectronicoPDF = 7,
+        CertificadoTituloAbogado = 8,
     }
 
     public enum TipoContencioso
@@ -217,6 +272,7 @@ namespace Domain.Infrastructure
 
         AutosEnRelacion = 19,
         DeseCuenta = 20,
+        Eliminado = 29,
 
     }
 
@@ -289,7 +345,19 @@ namespace Domain.Infrastructure
     {
         IngresoNuevaCausa = 1,
         ListadoIngresoDiario = 2,
-        VerificacionEmail = 3,
+        Derivacion = 3,
+        IngresoExpediente = 4,
+        Admisibilidad = 5,
+        RegistroAbogado = 6,
+        SolicitudRegistroAbogado = 7,
+        RecordatorioAtraso = 8,
+        ExpedientesSinAsignar = 9,
+    }
+
+    public enum AlarmasInternas
+    {
+        AlarmaNoAsignados= 0,
+        AlarmasAtrasos = 1
     }
 
 

@@ -89,9 +89,10 @@ namespace Persistence.Repository
             return _context
                 .Expediente
                 .Include("TipoTramite.AsocTipoTramiteOpciones")
-                .Include("Usuario")
+                .Include("Usuario.AsocUsuarioPerfil.Perfil")
                 .Include("AsocEscritoDocto")
                 .Include("AsocExpedienteOpcion.OpcionesTramite")
+                .Include("AsocExpeFirma.Firma.AsocFirmaDocto")  //econtreras - 0000316: 05/01 - Estado Diario
                 .Where(x => x.CausaID == causaID).ToList();
         }
 
@@ -368,6 +369,7 @@ namespace Persistence.Repository
                 List<int> estadosFilter = new List<int>();
                 estadosFilter.Add((int)Domain.Infrastructure.EstadoCausa.AutosEnRelacion);
                 estadosFilter.Add((int)Domain.Infrastructure.EstadoCausa.DeseCuenta);
+                estadosFilter.Add((int)Domain.Infrastructure.EstadoCausa.EnTabla);
 
                 lista = (from a in _context.Causa
                            where a.CausaID > 0
@@ -385,8 +387,10 @@ namespace Persistence.Repository
 
                 var q = (from c in _context.Causa
                          where (c.EstadoCausaID > 0)
-                         && (c.FechaIngreso.Year >= fecha.Year && c.FechaIngreso.Month >= fecha.Month && c.FechaIngreso.Day >= fecha.Day)
-                         && (c.Expediente.Any(x => x.TipoTramiteID == (int)Domain.Infrastructure.TipoTramite.Resolucion))
+                         //&& (c.FechaIngreso.Year >= fecha.Year && c.FechaIngreso.Month >= fecha.Month && c.FechaIngreso.Day >= fecha.Day)
+                         && (c.Expediente.Any(x => x.TipoTramiteID == (int)Domain.Infrastructure.TipoTramite.Resolucion
+                                                && x.FechaIngreso.Year >= fecha.Year && x.FechaIngreso.Month >= fecha.Month && x.FechaIngreso.Day >= fecha.Day
+                                                && x.IsAdmisible && x.IsFinalizado))
                          select c
                          ).Include("Expediente").Include("EstadoCausa").ToList();
 
@@ -510,6 +514,32 @@ namespace Persistence.Repository
                 .Where(x => x.UsuarioID == UsuarioID).ToList();
         }
 
+        public IList<Firma> GetEscritorioFirmas(FiltrosEscritorio filtros)
+        {
+            DateTime Desde = Convert.ToDateTime(filtros.FechaDesde).Date;
+            DateTime Hasta = Convert.ToDateTime(filtros.FechaHasta).AddHours(23).AddMinutes(59).AddSeconds(59);
+            
+            var q = (from f in _context.Firma
+                       where f.UsuarioID == filtros.UsuarioID
+                        && (f.AsocExpeFirma.Any(z => z.Expediente.FechaIngreso >= Desde && z.Expediente.FechaIngreso <= Hasta)
+                            || f.AsocDocSistemaFirma.Any(z => z.DocumentoSistema.Fecha >= Desde && z.DocumentoSistema.Fecha <= Hasta))
+                         && ((filtros.TipoDocumentoID == 0)
+                              || (filtros.TipoDocumentoID == (int)Domain.Infrastructure.TipoDocumento.Expediente && f.AsocFirmaDocto.Count > 0)
+                              || (filtros.TipoDocumentoID != (int)Domain.Infrastructure.TipoDocumento.Expediente && f.AsocDocSistemaFirma.Any(z => z.DocumentoSistema.TipoDocumentoID == filtros.TipoDocumentoID)))
+                         //&& ((filtros.EstadoFirma == (int)Domain.Infrastructure.EstadosDoctoFirma.VerTodas) // Revisar Filtro, no está aplicando para los documentos de expediente
+                         //     || (filtros.EstadoFirma == (int)Domain.Infrastructure.EstadosDoctoFirma.SoloPendientes && (f.AsocFirmaDocto.Any(z => !z.IsFirmado && z.Firma.UsuarioID == filtros.UsuarioID) || f.AsocDocSistemaFirma.Any(z => !z.IsFirmado && z.Firma.UsuarioID == filtros.UsuarioID)))
+                         //     || (filtros.EstadoFirma == (int)Domain.Infrastructure.EstadosDoctoFirma.Firmadas && (f.AsocFirmaDocto.Any(z => z.IsFirmado && z.Firma.UsuarioID == filtros.UsuarioID) || f.AsocDocSistemaFirma.Any(z => z.IsFirmado && z.Firma.UsuarioID == filtros.UsuarioID))))
+                         && ((string.IsNullOrEmpty(filtros.NumeroTicket)) || (!string.IsNullOrEmpty(filtros.NumeroTicket) && f.AsocFirmaDocto.Any(z => z.AsocEscritoDocto.AsocCausaDocumento.DocumentoCausa.Causa.NumeroTicket.Trim() == filtros.NumeroTicket)))
+                     select f)
+                        .Include("Usuario")
+                        .Include("AsocExpeFirma.Expediente")
+                        .Include("AsocFirmaDocto.AsocEscritoDocto.AsocCausaDocumento.DocumentoCausa.Causa")
+                        .Include("AsocDocSistemaFirma.DocumentoSistema.TipoDocumento")
+                        .ToList();
+
+            return q;
+        }
+
         public IList<SP_FlujoEstado_Result> GetFlujoEstado(int tipoTramiteID)
         {
             return _context.SP_FlujoEstado(tipoTramiteID).ToList();
@@ -533,30 +563,71 @@ namespace Persistence.Repository
                 .Where(x => x.ExpedienteID == expedienteID).ToList();
         }
 
-        
-
         public void BorrarFirmasExpediente(int expedienteID)
         {
-            throw new NotImplementedException();
+            var lista = _context.AsocExpeFirma.AsNoTracking().Where(x => x.ExpedienteID == expedienteID).ToList();
+            if (lista.Count > 0)
+            {
+                List<int> d = lista.Select(s => s.FirmaID).ToList();
+                foreach (var item in d)
+                {
+                    IList<AsocFirmaDocto> asocFirmaList = _context.AsocFirmaDocto.AsNoTracking().Where(x => x.FirmaID == item).ToList();
+                    foreach (var asoc in asocFirmaList)
+                    {
+                        _context.Entry(asoc).State = EntityState.Deleted;
+                    }
 
-            //var lista = _context.Firma.AsNoTracking().Where(x => x.ExpedienteID == expedienteID).ToList();
-            //if (lista.Count > 0)
-            //{
+                    IList<AsocExpeFirma> asocExpeList = _context.AsocExpeFirma.AsNoTracking().Where(x => x.FirmaID == item).ToList();
+                    foreach (var asoc in asocExpeList)
+                    {
+                        _context.Entry(asoc).State = EntityState.Deleted;
+                    }
 
-            //    List<int> d = lista.Select(s => s.FirmaID).ToList();
-            //    foreach (var item in d)
-            //    {
-            //        IList<AsocFirmaDocto> asocFirmaList = _context.AsocFirmaDocto.AsNoTracking().Where(x=> x.FirmaID == item).ToList();
-            //        foreach (var asocFirma  in asocFirmaList)
-            //        {
-            //            _context.Entry(asocFirma).State = EntityState.Deleted;
-            //        }
+                    Firma firma = _context.Firma.Find(item);
+                    _context.Entry(firma).State = EntityState.Deleted;
+                    _context.SaveChanges();
+                }
+            }
+        }
 
-            //        Firma firma = _context.Firma.Find(item);
-            //        _context.Entry(firma).State = EntityState.Deleted;
-            //        _context.SaveChanges();
-            //    }
-            //}
+        public void BorrarFirmaByFirmaID(int FirmaID)
+        {
+            var lista = _context.AsocExpeFirma.AsNoTracking().Where(x => x.FirmaID == FirmaID).ToList();
+            if (lista.Count > 0)
+            {
+                List<int> d = lista.Select(s => s.FirmaID).ToList();
+                foreach (var item in d)
+                {
+                    IList<AsocFirmaDocto> asocFirmaList = _context.AsocFirmaDocto.AsNoTracking().Where(x => x.FirmaID == item).ToList();
+                    foreach (var asoc in asocFirmaList)
+                    {
+                        _context.Entry(asoc).State = EntityState.Deleted;
+                    }
+
+                    IList<AsocExpeFirma> asocExpeList = _context.AsocExpeFirma.AsNoTracking().Where(x => x.FirmaID == item).ToList();
+                    foreach (var asoc in asocExpeList)
+                    {
+                        _context.Entry(asoc).State = EntityState.Deleted;
+                    }
+
+                    Firma firma = _context.Firma.Find(item);
+                    _context.Entry(firma).State = EntityState.Deleted;
+                    _context.SaveChanges();
+                }
+            }
+        }
+
+        public void BorrarFirmaByAsocDocSistema(int AsocDocSistemaFirmaID)
+        {
+            var model = _context.AsocDocSistemaFirma.AsNoTracking().FirstOrDefault(x => x.AsocDocSistemaFirmaID == AsocDocSistemaFirmaID);
+            if (model != null)
+            {
+                _context.Entry(model).State = EntityState.Deleted;                    
+
+                Firma firma = _context.Firma.Find(model.FirmaID);
+                _context.Entry(firma).State = EntityState.Deleted;
+                _context.SaveChanges();                
+            }
         }
 
         public int SaveFirma(Firma model)
@@ -607,7 +678,16 @@ namespace Persistence.Repository
 
         public AsocDocSistemaFirma GetAsocDocSistemaFirma(int FirmaID, int DocumentoSistemaID)
         {
-            return _context.AsocDocSistemaFirma.Include("Firma").AsNoTracking().FirstOrDefault(x=> x.FirmaID == FirmaID && x.DocumentoSistemaID == DocumentoSistemaID);
+            return _context.AsocDocSistemaFirma
+                .Include("Firma")
+                .Include("DocumentoSistema.VersionEncript")
+                .AsNoTracking()
+                .FirstOrDefault(x=> x.FirmaID == FirmaID && x.DocumentoSistemaID == DocumentoSistemaID);
+        }
+
+        public IList<AsocDocSistemaFirma> GetAsocDocSistemaFirmaByDocto(int DocumentoSistemaID)
+        {
+            return _context.AsocDocSistemaFirma.Include("Firma").AsNoTracking().Where(x => x.DocumentoSistemaID == DocumentoSistemaID).ToList();
         }
 
         public int SaveAsocDocSistemaFirma(AsocDocSistemaFirma model)
@@ -704,7 +784,7 @@ namespace Persistence.Repository
                 .Include("Sala")
                 .Include("TipoTabla")
                 .Include("EstadoTabla")
-                .Include("DetalleTabla")
+                .Include("DetalleTabla").AsNoTracking()
                 .FirstOrDefault(x => x.TablaID == tablaID);
         }
 
@@ -807,6 +887,26 @@ namespace Persistence.Repository
             }
         }
 
+        public IList<AsocDocumentoSistemaTabla> GetAsocDocumentoSistemaTabla(int TablaID)
+        {
+            return _context.AsocDocumentoSistemaTabla.Where(x => x.TablaID == TablaID).ToList();
+        }
+
+        public IList<AsocDocumentoSistemaTabla> GetAsocDocumentoSistemaTablaByDocumentoSitemaID(int DocumentoSistemaID)
+        {
+            return _context.AsocDocumentoSistemaTabla.Where(x => x.DocumentoSistemaID == DocumentoSistemaID).ToList();
+        }
+
+        public IList<AsocDocumentoSistemaEstadoDiario> GetAsocDocumentoSistemaEstadoDiario(int EstadoDiarioID)
+        {
+            return _context.AsocDocumentoSistemaEstadoDiario.Where(x => x.EstadoDiarioID == EstadoDiarioID).ToList();
+        }
+
+        public IList<AsocDocumentoSistemaEstadoDiario> GetAsocDocumentoSistemaEstadoDiarioByDocumentoSitemaID(int DocumentoSistemaID)
+        {
+            return _context.AsocDocumentoSistemaEstadoDiario.Where(x => x.DocumentoSistemaID == DocumentoSistemaID).ToList();
+        }
+
         public int SaveAsocDocumentoSistemaEstadoDiario(AsocDocumentoSistemaEstadoDiario model)
         {
             if (model.AsocDocumentoSistemaEstadoDiarioID == 0)
@@ -836,7 +936,7 @@ namespace Persistence.Repository
 
             if (tipoDoc == Domain.Infrastructure.TipoDocumento.Tabla)
             {
-                var asoc = _context.AsocDocumentoSistemaTabla.Include("DocumentoSistema.VersionEncript")
+                var asoc = _context.AsocDocumentoSistemaTabla.Include("DocumentoSistema.VersionEncript").Include("DocumentoSistema.AsocDocSistemaFirma.Firma")
                     .Where(x => x.TablaID == identidad).ToList();
                 foreach (var item in asoc)
                 {
@@ -846,7 +946,7 @@ namespace Persistence.Repository
 
             if (tipoDoc == Domain.Infrastructure.TipoDocumento.EstadoDiario)
             {
-                var asoc = _context.AsocDocumentoSistemaEstadoDiario.Include("DocumentoSistema.VersionEncript")
+                var asoc = _context.AsocDocumentoSistemaEstadoDiario.Include("DocumentoSistema.VersionEncript").Include("DocumentoSistema.AsocDocSistemaFirma.Firma")
                     .Where(x => x.EstadoDiarioID == identidad).ToList();
 
                 foreach (var item in asoc)
@@ -906,6 +1006,7 @@ namespace Persistence.Repository
                        where a.EstadoDiarioID > 0
                        && (a.Fecha >= Desde && a.Fecha <= Hasta)
                        select a)
+                       .AsNoTracking()
                        .Include("TipoEstadoDiario")
                        .ToList();
 
@@ -965,6 +1066,240 @@ namespace Persistence.Repository
 
             _context.Entry(model).State = EntityState.Modified;
             _context.SaveChanges();
+        }
+
+        public void SetExpedienteInadmisible(int expedienteID)
+        {
+            Expediente model = _context.Expediente.Find(expedienteID);
+            model.IsFinalizado = true;
+            model.IsAdmisible = false;
+
+            _context.Entry(model).State = EntityState.Modified;
+            _context.SaveChanges();
+        }
+
+        public IList<AsocExpeFirma> GetAsocExpeFirmaByExpedienteID(int expedienteID)
+        {
+            return _context.AsocExpeFirma
+                .Include("Firma.Usuario")
+                .Include("Firma.AsocFirmaDocto")
+                .Where(x => x.ExpedienteID == expedienteID).ToList();
+        }
+
+        public int SaveAsocExpeFirma(AsocExpeFirma model)
+        {
+            if (model.AsocExpeFirmaID == 0)
+            {
+                _context.Entry(model).State = EntityState.Added;
+            }
+            else
+            {
+                _context.Entry(model).State = EntityState.Modified;
+            }
+
+            try
+            {
+                _context.SaveChanges();
+                return model.AsocExpeFirmaID;
+            }
+            catch (DbEntityValidationException ex)
+            {
+                string exceptionMessage = EscribirLog(ex);
+                throw new DbEntityValidationException(exceptionMessage, ex.EntityValidationErrors);
+            }
+        }
+
+        public void UpdateResponsable(int expedienteID, int usuarioID)
+        {
+            Expediente model = _context.Expediente.Find(expedienteID);
+            model.UsuarioResponsableID = usuarioID;
+
+            _context.Entry(model).State = EntityState.Modified;
+            _context.SaveChanges();
+        }
+
+        public int SaveDerivacion(Derivacion model)
+        {
+            if (model.DerivacionID == 0)
+            {
+                _context.Entry(model).State = EntityState.Added;
+            }
+            else
+            {
+                _context.Entry(model).State = EntityState.Modified;
+            }
+
+            try
+            {
+                _context.SaveChanges();
+                return model.DerivacionID;
+            }
+            catch (DbEntityValidationException ex)
+            {
+                string exceptionMessage = EscribirLog(ex);
+                throw new DbEntityValidationException(exceptionMessage, ex.EntityValidationErrors);
+            }
+
+        }
+
+        public IList<SP_Alarmas_Result> GetAlarmasInternasService(int UsuarioID)
+        {
+            return _context.SP_Alarmas(UsuarioID).ToList();
+        }
+
+
+
+        private bool IsFecha(string texto)
+        {
+            DateTime valor;
+            return (DateTime.TryParse(texto, out valor));
+        }
+
+
+        public IList<Causa> WCF_ObtenerExpediente(int expediente_tipo, string fecha_ingreso, int rolCorr,
+            int rolAnio, string numero_solicitud, string numero_registro, string individualizacion,
+            string nombre_solicitante, string nombre_apelante, string nombre_apelado, int paginaActual, int registrosPorPagina)
+        {
+
+            List<Causa> lista;
+
+            string numeroTicket = "";
+            if (rolCorr > 0)
+            {
+                if (rolAnio > 0)
+                {
+                    numeroTicket = string.Format("{0:000000}-{1}", rolCorr, rolAnio);
+                }
+                else
+                {
+                    numeroTicket = string.Format("{0:000000}", rolCorr);
+                }
+            }
+
+            lista = (from c in _context.Causa
+                     where c.CausaID > 0
+                     && (c.EstadoCausaID != (int)Domain.Infrastructure.EstadoCausa.PreIngresado)
+                     && ((expediente_tipo == 0) || (expediente_tipo != 0 && c.TipoCausaID == expediente_tipo))
+                     && ((rolAnio == 0) || (rolAnio != 0 && c.Anio == rolAnio))
+                     && ((string.IsNullOrEmpty(numeroTicket)) || (!string.IsNullOrEmpty(numeroTicket) && c.NumeroTicket.Contains(numeroTicket)))
+                     && ((string.IsNullOrEmpty(numero_solicitud)) || (!string.IsNullOrEmpty(numero_solicitud) && c.Numero == numero_solicitud))
+                     && ((string.IsNullOrEmpty(numero_registro)) || (!string.IsNullOrEmpty(numero_registro) && c.NumeroRegistro == numero_registro))
+                     && ((string.IsNullOrEmpty(individualizacion)) || (!string.IsNullOrEmpty(individualizacion) && c.Denominacion.ToLower().Contains(individualizacion.ToLower())))
+                     select c)
+                     .Include("EstadoCausa")
+                     .Include("TipoCausa")
+                     .Include("Parte")
+                     .Include("TipoContencioso")
+                     .OrderByDescending(a => a.CausaID).ToList();
+
+            if (!string.IsNullOrWhiteSpace(fecha_ingreso))
+            {
+                DateTime? fcing = null;
+                if (!IsFecha(fcing.ToString()))
+                {
+                    fcing = Convert.ToDateTime(fecha_ingreso).Date;
+                }
+
+                if (fcing.HasValue)
+                {
+                    lista = lista.Where(e => e.FechaIngreso.Date == fcing.Value.Date).ToList();
+                }
+            }
+
+            if (!string.IsNullOrEmpty(nombre_solicitante))
+            {
+                IList<Causa> filter = new List<Causa>();
+
+                foreach (var item in lista)
+                {
+                    if (item.Parte.Any(x => x.TipoParteID == (int)Domain.Infrastructure.TipoParte.Solicitante 
+                        && x.Nombre.ToLower().Contains(nombre_solicitante.ToLower())))
+                    {
+                        filter.Add(item);
+                    }
+                }
+
+                lista = filter.ToList();
+            }
+
+            if (!string.IsNullOrEmpty(nombre_apelante))
+            {
+                IList<Causa> filter = new List<Causa>();
+
+                foreach (var item in lista)
+                {
+                    if (item.Parte.Any(x => x.TipoParteID == (int)Domain.Infrastructure.TipoParte.Apelante
+                        && x.Nombre.ToLower().Contains(nombre_apelante.ToLower())))
+                    {
+                        filter.Add(item);
+                    }
+                }
+
+                lista = filter.ToList();
+            }
+
+
+            if (!string.IsNullOrEmpty(nombre_apelado))
+            {
+                IList<Causa> filter = new List<Causa>();
+
+                foreach (var item in lista)
+                {
+                    if (item.Parte.Any(x => x.TipoParteID == (int)Domain.Infrastructure.TipoParte.Apelado
+                        && x.Nombre.ToLower().Contains(nombre_apelado.ToLower())))
+                    {
+                        filter.Add(item);
+                    }
+                }
+
+                lista = filter.ToList();
+            }
+
+            if (paginaActual != 0 && registrosPorPagina > 0)
+            {
+                return lista.Skip((paginaActual - 1) * registrosPorPagina).Take(registrosPorPagina).ToList();
+            }
+            else
+            {
+                return lista;
+            }
+
+            
+        }
+
+        public IList<Expediente> WCF_ObtenerEventosExpediente(int rol, int anio)
+        {
+            string numeroTicket = string.Format("{0:000000}-{1}", rol, anio);
+
+            Causa causa = _context
+                .Causa
+                .Include("Expediente.TipoTramite")
+                .Include("Expediente.AsocExpedienteOpcion.OpcionesTramite")
+                .FirstOrDefault(x => x.Anio == anio && x.NumeroTicket == numeroTicket);
+
+            if (causa != null)
+            {
+                return causa.Expediente.Where(x => x.IsFinalizado && x.IsAdmisible).OrderBy(i => i.FechaIngreso).ToList();
+            }
+            else
+            {
+                IList<Expediente> lista = new List<Expediente>();
+                return lista;
+            }
+        }
+
+        public IList<ItemDocumentoMigracion> GetItemsMigracion(string query)
+        {
+            var result = _context.Database.SqlQuery<ItemDocumentoMigracion>(query).ToList();
+
+            return result;
+        }
+
+        public void UpdateRegistroMigrado(int TempID, bool IsMigrado, string Comentario)
+        {
+            int _migrado = IsMigrado ? 1 : 0;
+            string query = string.Format("UPDATE TempMigraAdjuntos SET Migrado = {0}, Comentario = '{1}' where TempID = '{2}' ", _migrado, Comentario, TempID);
+            _context.Database.ExecuteSqlCommand(query);
         }
     }
 }

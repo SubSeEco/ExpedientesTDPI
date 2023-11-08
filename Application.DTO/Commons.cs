@@ -51,6 +51,8 @@ namespace Application.DTO
         public int TablaID { get; set; }
         public bool IsSoloEscritos { get; set; }
         public bool IsSoloMisEscritos { get; set; }
+        public int EstadoFirma { get; set; } // Firmas
+        public int TipoDocumentoID { get; set; } // Firmas
 
         public IList<DTO.Models.TipoCausa> TipoCausa { get; set; }
         public IList<DTO.Models.EstadoCausa> EstadoCausa { get; set; }
@@ -240,6 +242,20 @@ namespace Application.DTO
         public string FechaConsignacion { get; set; }
         public int RutConsignacion { get; set; }
         public string NombreConsignacion { get; set; }
+    }
+    public class ParteVueSinConsignacion
+    {
+        public int ParteID { get; set; }
+        public int PaisID { get; set; }
+        public int CausaID { get; set; }
+        public int TipoParteID { get; set; }
+        public int Rut { get; set; }
+        public string Nombre { get; set; }
+        public int RutRepresentante { get; set; }
+        public string NombreRepresentante { get; set; }
+        public string NombreAbogado { get; set; }
+        public string EmailAbogado { get; set; }
+        public string NombreEstudioJuridico { get; set; }
     }
 
     public class ItemSession

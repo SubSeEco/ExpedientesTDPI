@@ -59,7 +59,6 @@
         <EntityTypeShape EntityType="SGDE_Model.TipoTabla" Width="1.5" PointX="3.75" PointY="1" />
         <EntityTypeShape EntityType="SGDE_Model.TipoTramite" Width="1.5" PointX="0.75" PointY="13.875" />
         <EntityTypeShape EntityType="SGDE_Model.TipoVentana" Width="1.5" PointX="13.75" PointY="1.125" />
-        <EntityTypeShape EntityType="SGDE_Model.Usuario" Width="1.5" PointX="3.75" PointY="9" />
         <EntityTypeShape EntityType="SGDE_Model.Ventana" Width="1.5" PointX="16" PointY="0.875" />
         <EntityTypeShape EntityType="SGDE_Model.VersionEncript" Width="1.5" PointX="9" PointY="10.25" />
         <AssociationConnector Association="SGDE_Model.R_302" />
@@ -90,11 +89,9 @@
         <AssociationConnector Association="SGDE_Model.R_545" />
         <AssociationConnector Association="SGDE_Model.R_552" />
         <AssociationConnector Association="SGDE_Model.R_331" />
-        <AssociationConnector Association="SGDE_Model.R_400" />
         <AssociationConnector Association="SGDE_Model.R_503" />
         <AssociationConnector Association="SGDE_Model.R_504" />
         <AssociationConnector Association="SGDE_Model.R_505" />
-        <AssociationConnector Association="SGDE_Model.R_506" />
         <AssociationConnector Association="SGDE_Model.R_508" />
         <AssociationConnector Association="SGDE_Model.R_509" />
         <AssociationConnector Association="SGDE_Model.R_511" />
@@ -102,7 +99,6 @@
         <AssociationConnector Association="SGDE_Model.R_535" />
         <AssociationConnector Association="SGDE_Model.R_558" />
         <AssociationConnector Association="SGDE_Model.R_547" />
-        <AssociationConnector Association="SGDE_Model.R_520" />
         <AssociationConnector Association="SGDE_Model.R_521" />
         <AssociationConnector Association="SGDE_Model.R_563" />
         <AssociationConnector Association="SGDE_Model.R_566" />
@@ -120,16 +116,24 @@
         <AssociationConnector Association="SGDE_Model.R_565" />
         <AssociationConnector Association="SGDE_Model.R_555" />
         <AssociationConnector Association="SGDE_Model.R_514" />
-        <AssociationConnector Association="SGDE_Model.R_516" />
         <AssociationConnector Association="SGDE_Model.R_110" />
-        <AssociationConnector Association="SGDE_Model.R_529" />
         <AssociationConnector Association="SGDE_Model.R_510" />
         <AssociationConnector Association="SGDE_Model.R_507" />
         <AssociationConnector Association="SGDE_Model.R_553" />
         <AssociationConnector Association="SGDE_Model.R_554" />
-        <AssociationConnector Association="SGDE_Model.R_562" />
         <AssociationConnector Association="SGDE_Model.R_139" />
         <AssociationConnector Association="SGDE_Model.R_575" />
+        <AssociationConnector Association="SGDE_Model.R_576" />
+        <EntityTypeShape EntityType="SGDE_Model.AsocDocumentoUsuario" Width="1.5" PointX="19.5" PointY="20.5" />
+        <AssociationConnector Association="SGDE_Model.R_577" />
+        <EntityTypeShape EntityType="SGDE_Model.Usuario" Width="1.5" PointX="3.75" PointY="30.75" />
+        <AssociationConnector Association="SGDE_Model.R_578" />
+        <AssociationConnector Association="SGDE_Model.R_400" />
+        <AssociationConnector Association="SGDE_Model.R_506" />
+        <AssociationConnector Association="SGDE_Model.R_520" />
+        <AssociationConnector Association="SGDE_Model.R_516" />
+        <AssociationConnector Association="SGDE_Model.R_529" />
+        <AssociationConnector Association="SGDE_Model.R_562" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

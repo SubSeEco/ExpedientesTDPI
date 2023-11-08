@@ -53,10 +53,10 @@
                             
                             <tr>
                                 <td class="ac">@count</td>
-                                <td class="">@Html.DatetimeToString(item.Fecha, "dd-MM-yyyy HH:mm") </td>
-                                <td style="max-width:200px" class="fixWord">@Html.SplitToUpper(item.Descripcion.Trim())</td>
+                                <td class="nw">@Html.DatetimeToString(item.Fecha, "dd-MM-yyyy HH:mm") </td>
+                                <td  class="nw fixWord">@Html.SplitToUpper(item.Descripcion.Trim())</td>
                                 <td class="ac">@item.Responsable</td>
-                                <td class="ac">@item.Observaciones.Trim()</td>
+                                <td class="ac">@Html.Raw(item.Observaciones.Trim())</td>
                             </tr>
                             count++;
                         }

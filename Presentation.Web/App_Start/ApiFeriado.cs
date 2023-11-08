@@ -10,15 +10,15 @@ using DTO = Application.DTO;
 namespace Presentation.Web
 {
     /// <summary>
-    /// API FEriados, actualiza registros de BBDD 
+    /// API Feriados, actualiza registros de BBDD 
     /// </summary>
     /// <returns></returns>
     public static class ApiFeriado
     {
-                
+
         #region Feriados
         /// <summary>
-        /// API FEriados, actualiza registros de BBDD 
+        /// API Feriados, actualiza registros de BBDD 
         /// </summary>
         /// <returns></returns>
         public static void Feriados()
@@ -35,11 +35,7 @@ namespace Presentation.Web
                     DateTime apiFecha = Convert.ToDateTime(item.fecha);
                     IList<DTO.Models.Feriado> listDTO = appCommon.GetAllFeriados();
 
-                    if (listDTO.Any(x => x.Fecha == apiFecha))
-                    {
-                        continue;
-                    }
-                    else
+                    if (!listDTO.Any(x => x.Fecha == apiFecha))
                     {
                         DTO.Models.Feriado _dto = new DTO.Models.Feriado();
                         _dto.Fecha = apiFecha;

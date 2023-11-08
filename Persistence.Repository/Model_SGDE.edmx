@@ -39,6 +39,14 @@
           <Property Name="TablaID" Type="int" Nullable="false" />
           <Property Name="DocumentoSistemaID" Type="int" Nullable="false" />
         </EntityType>
+        <EntityType Name="AsocDocumentoUsuario">
+          <Key>
+            <PropertyRef Name="AsocDocumentoUsuarioID" />
+          </Key>
+          <Property Name="AsocDocumentoUsuarioID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="UsuarioID" Type="int" Nullable="false" />
+          <Property Name="DocumentoSistemaID" Type="int" Nullable="false" />
+        </EntityType>
         <EntityType Name="AsocEscritoDocto">
           <Key>
             <PropertyRef Name="AsocEscritoDoctoID" />
@@ -283,6 +291,7 @@
             <PropertyRef Name="ExpedienteID" />
           </Key>
           <Property Name="ExpedienteID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="TipoCanalID" Type="int" Nullable="false" />
           <Property Name="TipoTramiteID" Type="int" Nullable="false" />
           <Property Name="CausaID" Type="int" Nullable="false" />
           <Property Name="UsuarioID" Type="int" Nullable="false" />
@@ -297,6 +306,7 @@
           <Property Name="IsTabla" Type="bit" Nullable="false" />
           <Property Name="TablaID" Type="int" />
           <Property Name="IsFinalizado" Type="bit" Nullable="false" />
+          <Property Name="NumeroTicket" Type="varchar" MaxLength="20" Nullable="false" />
         </EntityType>
         <EntityType Name="FamiliasMimeType">
           <Key>
@@ -565,9 +575,11 @@
           <Property Name="Nombres" Type="char" MaxLength="200" Nullable="false" />
           <Property Name="Apellidos" Type="char" MaxLength="200" Nullable="false" />
           <Property Name="Mail" Type="char" MaxLength="200" Nullable="false" />
+          <Property Name="Telefono" Type="varchar" MaxLength="20" Nullable="false" />
           <Property Name="IsClaveUnica" Type="bit" Nullable="false" />
           <Property Name="FechaRegistro" Type="datetime" Nullable="false" />
           <Property Name="FechaModificacion" Type="datetime" Nullable="false" />
+          <Property Name="Signer" Type="varchar" MaxLength="300" Nullable="false" />
         </EntityType>
         <EntityType Name="Ventana">
           <Key>
@@ -1401,6 +1413,45 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="R_576">
+          <End Role="TipoCanal" Type="Self.TipoCanal" Multiplicity="1" />
+          <End Role="Expediente" Type="Self.Expediente" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="TipoCanal">
+              <PropertyRef Name="TipoCanalID" />
+            </Principal>
+            <Dependent Role="Expediente">
+              <PropertyRef Name="TipoCanalID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="R_577">
+          <End Role="DocumentoSistema" Type="Self.DocumentoSistema" Multiplicity="1" />
+          <End Role="AsocDocumentoUsuario" Type="Self.AsocDocumentoUsuario" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="DocumentoSistema">
+              <PropertyRef Name="DocumentoSistemaID" />
+            </Principal>
+            <Dependent Role="AsocDocumentoUsuario">
+              <PropertyRef Name="DocumentoSistemaID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="R_578">
+          <End Role="Usuario" Type="Self.Usuario" Multiplicity="1" />
+          <End Role="AsocDocumentoUsuario" Type="Self.AsocDocumentoUsuario" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Usuario">
+              <PropertyRef Name="UsuarioID" />
+            </Principal>
+            <Dependent Role="AsocDocumentoUsuario">
+              <PropertyRef Name="UsuarioID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Function Name="SP_Alarmas" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="UsuarioID" Type="int" Mode="In" />
+        </Function>
         <Function Name="SP_Causas" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
           <Parameter Name="UsuarioID" Type="int" Mode="In" />
           <Parameter Name="NumeroTicket" Type="char" Mode="In" />
@@ -1424,6 +1475,7 @@
           <EntitySet Name="AsocDocSistemaFirma" EntityType="Self.AsocDocSistemaFirma" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="AsocDocumentoSistemaEstadoDiario" EntityType="Self.AsocDocumentoSistemaEstadoDiario" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="AsocDocumentoSistemaTabla" EntityType="Self.AsocDocumentoSistemaTabla" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="AsocDocumentoUsuario" EntityType="Self.AsocDocumentoUsuario" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="AsocEscritoDocto" EntityType="Self.AsocEscritoDocto" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="AsocExpedienteOpcion" EntityType="Self.AsocExpedienteOpcion" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="AsocExpeFirma" EntityType="Self.AsocExpeFirma" Schema="dbo" store:Type="Tables" />
@@ -1749,6 +1801,18 @@
             <End Role="Tabla" EntitySet="Tabla" />
             <End Role="Expediente" EntitySet="Expediente" />
           </AssociationSet>
+          <AssociationSet Name="R_576" Association="Self.R_576">
+            <End Role="TipoCanal" EntitySet="TipoCanal" />
+            <End Role="Expediente" EntitySet="Expediente" />
+          </AssociationSet>
+          <AssociationSet Name="R_577" Association="Self.R_577">
+            <End Role="DocumentoSistema" EntitySet="DocumentoSistema" />
+            <End Role="AsocDocumentoUsuario" EntitySet="AsocDocumentoUsuario" />
+          </AssociationSet>
+          <AssociationSet Name="R_578" Association="Self.R_578">
+            <End Role="Usuario" EntitySet="Usuario" />
+            <End Role="AsocDocumentoUsuario" EntitySet="AsocDocumentoUsuario" />
+          </AssociationSet>
         </EntityContainer>
       </Schema></edmx:StorageModels>
     <!-- CSDL content -->
@@ -1812,7 +1876,6 @@
           <EntitySet Name="TipoTabla" EntityType="SGDE_Model.TipoTabla" />
           <EntitySet Name="TipoTramite" EntityType="SGDE_Model.TipoTramite" />
           <EntitySet Name="TipoVentana" EntityType="SGDE_Model.TipoVentana" />
-          <EntitySet Name="Usuario" EntityType="SGDE_Model.Usuario" />
           <EntitySet Name="Ventana" EntityType="SGDE_Model.Ventana" />
           <EntitySet Name="VersionEncript" EntityType="SGDE_Model.VersionEncript" />
           <AssociationSet Name="R_302" Association="SGDE_Model.R_302">
@@ -1927,10 +1990,6 @@
             <End Role="Perfil" EntitySet="Perfil" />
             <End Role="AsocUsuarioPerfil" EntitySet="AsocUsuarioPerfil" />
           </AssociationSet>
-          <AssociationSet Name="R_400" Association="SGDE_Model.R_400">
-            <End Role="Usuario" EntitySet="Usuario" />
-            <End Role="AsocUsuarioPerfil" EntitySet="AsocUsuarioPerfil" />
-          </AssociationSet>
           <AssociationSet Name="R_503" Association="SGDE_Model.R_503">
             <End Role="TipoCausa" EntitySet="TipoCausa" />
             <End Role="Causa" EntitySet="Causa" />
@@ -1942,10 +2001,6 @@
           <AssociationSet Name="R_505" Association="SGDE_Model.R_505">
             <End Role="Causa" EntitySet="Causa" />
             <End Role="DocumentoCausa" EntitySet="DocumentoCausa" />
-          </AssociationSet>
-          <AssociationSet Name="R_506" Association="SGDE_Model.R_506">
-            <End Role="Usuario" EntitySet="Usuario" />
-            <End Role="Causa" EntitySet="Causa" />
           </AssociationSet>
           <AssociationSet Name="R_508" Association="SGDE_Model.R_508">
             <End Role="Causa" EntitySet="Causa" />
@@ -1974,10 +2029,6 @@
           <AssociationSet Name="R_547" Association="SGDE_Model.R_547">
             <End Role="TipoCausa" EntitySet="TipoCausa" />
             <End Role="ConfTipoCausa" EntitySet="ConfTipoCausa" />
-          </AssociationSet>
-          <AssociationSet Name="R_520" Association="SGDE_Model.R_520">
-            <End Role="Usuario" EntitySet="Usuario" />
-            <End Role="Derivacion" EntitySet="Derivacion" />
           </AssociationSet>
           <AssociationSet Name="R_521" Association="SGDE_Model.R_521">
             <End Role="Expediente" EntitySet="Expediente" />
@@ -2047,17 +2098,9 @@
             <End Role="TipoTramite" EntitySet="TipoTramite" />
             <End Role="Expediente" EntitySet="Expediente" />
           </AssociationSet>
-          <AssociationSet Name="R_516" Association="SGDE_Model.R_516">
-            <End Role="Usuario" EntitySet="Usuario" />
-            <End Role="Expediente" EntitySet="Expediente" />
-          </AssociationSet>
           <AssociationSet Name="R_110" Association="SGDE_Model.R_110">
             <End Role="TipoFormato" EntitySet="TipoFormato" />
             <End Role="FamiliasMimeType" EntitySet="FamiliasMimeType" />
-          </AssociationSet>
-          <AssociationSet Name="R_529" Association="SGDE_Model.R_529">
-            <End Role="Usuario" EntitySet="Usuario" />
-            <End Role="Firma" EntitySet="Firma" />
           </AssociationSet>
           <AssociationSet Name="R_510" Association="SGDE_Model.R_510">
             <End Role="Pais" EntitySet="Pais" />
@@ -2074,10 +2117,6 @@
           <AssociationSet Name="R_554" Association="SGDE_Model.R_554">
             <End Role="TipoTabla" EntitySet="TipoTabla" />
             <End Role="Tabla" EntitySet="Tabla" />
-          </AssociationSet>
-          <AssociationSet Name="R_562" Association="SGDE_Model.R_562">
-            <End Role="TipoGenero" EntitySet="TipoGenero" />
-            <End Role="Usuario" EntitySet="Usuario" />
           </AssociationSet>
           <AssociationSet Name="R_139" Association="SGDE_Model.R_139">
             <End Role="TipoVentana" EntitySet="TipoVentana" />
@@ -2102,6 +2141,47 @@
             <Parameter Name="IsSoloEscritos" Mode="In" Type="Boolean" />
             <Parameter Name="IsSoloMisEscritos" Mode="In" Type="Boolean" />
           </FunctionImport>
+          <AssociationSet Name="R_576" Association="SGDE_Model.R_576">
+            <End Role="TipoCanal" EntitySet="TipoCanal" />
+            <End Role="Expediente" EntitySet="Expediente" />
+          </AssociationSet>
+          <FunctionImport Name="SP_Alarmas" ReturnType="Collection(SGDE_Model.SP_Alarmas_Result)">
+          <Parameter Name="UsuarioID" Mode="In" Type="Int32" />
+          </FunctionImport>
+          <EntitySet Name="AsocDocumentoUsuario" EntityType="SGDE_Model.AsocDocumentoUsuario" />
+          <AssociationSet Name="R_577" Association="SGDE_Model.R_577">
+            <End Role="DocumentoSistema" EntitySet="DocumentoSistema" />
+            <End Role="AsocDocumentoUsuario" EntitySet="AsocDocumentoUsuario" />
+          </AssociationSet>
+          <EntitySet Name="Usuario" EntityType="SGDE_Model.Usuario" />
+          <AssociationSet Name="R_578" Association="SGDE_Model.R_578">
+            <End Role="Usuario" EntitySet="Usuario" />
+            <End Role="AsocDocumentoUsuario" EntitySet="AsocDocumentoUsuario" />
+          </AssociationSet>
+          <AssociationSet Name="R_400" Association="SGDE_Model.R_400">
+            <End Role="Usuario" EntitySet="Usuario" />
+            <End Role="AsocUsuarioPerfil" EntitySet="AsocUsuarioPerfil" />
+          </AssociationSet>
+          <AssociationSet Name="R_506" Association="SGDE_Model.R_506">
+            <End Role="Usuario" EntitySet="Usuario" />
+            <End Role="Causa" EntitySet="Causa" />
+          </AssociationSet>
+          <AssociationSet Name="R_520" Association="SGDE_Model.R_520">
+            <End Role="Usuario" EntitySet="Usuario" />
+            <End Role="Derivacion" EntitySet="Derivacion" />
+          </AssociationSet>
+          <AssociationSet Name="R_516" Association="SGDE_Model.R_516">
+            <End Role="Usuario" EntitySet="Usuario" />
+            <End Role="Expediente" EntitySet="Expediente" />
+          </AssociationSet>
+          <AssociationSet Name="R_529" Association="SGDE_Model.R_529">
+            <End Role="Usuario" EntitySet="Usuario" />
+            <End Role="Firma" EntitySet="Firma" />
+          </AssociationSet>
+          <AssociationSet Name="R_562" Association="SGDE_Model.R_562">
+            <End Role="TipoGenero" EntitySet="TipoGenero" />
+            <End Role="Usuario" EntitySet="Usuario" />
+          </AssociationSet>
           </EntityContainer>
         <ComplexType Name="SP_FlujoEstado_Result">
           <Property Type="Int32" Name="EstadoCausaID" Nullable="false" />
@@ -2280,13 +2360,13 @@
           <NavigationProperty Name="TipoCausa" Relationship="SGDE_Model.R_503" FromRole="Causa" ToRole="TipoCausa" />
           <NavigationProperty Name="TipoContencioso" Relationship="SGDE_Model.R_504" FromRole="Causa" ToRole="TipoContencioso" />
           <NavigationProperty Name="DocumentoCausa" Relationship="SGDE_Model.R_505" FromRole="Causa" ToRole="DocumentoCausa" />
-          <NavigationProperty Name="Usuario" Relationship="SGDE_Model.R_506" FromRole="Causa" ToRole="Usuario" />
           <NavigationProperty Name="LogCausa" Relationship="SGDE_Model.R_508" FromRole="Causa" ToRole="LogCausa" />
           <NavigationProperty Name="Parte" Relationship="SGDE_Model.R_509" FromRole="Causa" ToRole="Parte" />
           <NavigationProperty Name="EstadoCausa" Relationship="SGDE_Model.R_511" FromRole="Causa" ToRole="EstadoCausa" />
           <NavigationProperty Name="Expediente" Relationship="SGDE_Model.R_517" FromRole="Causa" ToRole="Expediente" />
           <NavigationProperty Name="TipoCanal" Relationship="SGDE_Model.R_535" FromRole="Causa" ToRole="TipoCanal" />
           <NavigationProperty Name="DetalleTabla" Relationship="SGDE_Model.R_558" FromRole="Causa" ToRole="DetalleTabla" />
+          <NavigationProperty Name="Usuario" Relationship="SGDE_Model.R_506" FromRole="Causa" ToRole="Usuario" />
         </EntityType>
         <EntityType Name="ConfigurarDescripcion">
           <Key>
@@ -2323,8 +2403,8 @@
           <Property Name="Fecha" Type="DateTime" Precision="3" />
           <Property Name="Observacion" Type="String" Nullable="false" MaxLength="500" FixedLength="false" Unicode="false" />
           <Property Name="PlazoDias" Type="Int32" Nullable="false" />
-          <NavigationProperty Name="Usuario" Relationship="SGDE_Model.R_520" FromRole="Derivacion" ToRole="Usuario" />
           <NavigationProperty Name="Expediente" Relationship="SGDE_Model.R_521" FromRole="Derivacion" ToRole="Expediente" />
+          <NavigationProperty Name="Usuario" Relationship="SGDE_Model.R_520" FromRole="Derivacion" ToRole="Usuario" />
         </EntityType>
         <EntityType Name="DetalleEstadoDiario">
           <Key>
@@ -2398,6 +2478,7 @@
           <NavigationProperty Name="AsocDocumentoSistemaTabla" Relationship="SGDE_Model.R_567" FromRole="DocumentoSistema" ToRole="AsocDocumentoSistemaTabla" />
           <NavigationProperty Name="TipoDocumento" Relationship="SGDE_Model.R_548" FromRole="DocumentoSistema" ToRole="TipoDocumento" />
           <NavigationProperty Name="VersionEncript" Relationship="SGDE_Model.R_549" FromRole="DocumentoSistema" ToRole="VersionEncript" />
+          <NavigationProperty Name="AsocDocumentoUsuario" Relationship="SGDE_Model.R_577" FromRole="DocumentoSistema" ToRole="AsocDocumentoUsuario" />
         </EntityType>
         <EntityType Name="DocumentoTmp">
           <Key>
@@ -2479,9 +2560,12 @@
           <NavigationProperty Name="Derivacion" Relationship="SGDE_Model.R_521" FromRole="Expediente" ToRole="Derivacion" />
           <NavigationProperty Name="DetalleEstadoDiario" Relationship="SGDE_Model.R_566" FromRole="Expediente" ToRole="DetalleEstadoDiario" />
           <NavigationProperty Name="TipoTramite" Relationship="SGDE_Model.R_514" FromRole="Expediente" ToRole="TipoTramite" />
-          <NavigationProperty Name="Usuario" Relationship="SGDE_Model.R_516" FromRole="Expediente" ToRole="Usuario" />
           <Property Name="TablaID" Type="Int32" />
           <NavigationProperty Name="Tabla" Relationship="SGDE_Model.R_575" FromRole="Expediente" ToRole="Tabla" />
+          <Property Name="TipoCanalID" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="TipoCanal" Relationship="SGDE_Model.R_576" FromRole="Expediente" ToRole="TipoCanal" />
+          <NavigationProperty Name="Usuario" Relationship="SGDE_Model.R_516" FromRole="Expediente" ToRole="Usuario" />
+          <Property Name="NumeroTicket" Type="String" Nullable="false" MaxLength="20" FixedLength="false" Unicode="false" />
         </EntityType>
         <EntityType Name="FamiliasMimeType">
           <Key>
@@ -2665,6 +2749,7 @@
           <Property Name="Descripcion" Type="String" Nullable="false" MaxLength="60" FixedLength="true" Unicode="false" />
           <Property Name="Vigente" Type="Boolean" Nullable="false" />
           <NavigationProperty Name="Causa" Relationship="SGDE_Model.R_535" FromRole="TipoCanal" ToRole="Causa" />
+          <NavigationProperty Name="Expediente" Relationship="SGDE_Model.R_576" FromRole="TipoCanal" ToRole="Expediente" />
         </EntityType>
         <EntityType Name="TipoCausa">
           <Key>
@@ -2781,27 +2866,6 @@
           <Property Name="TipoVentanaID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
           <Property Name="Descripcion" Type="String" Nullable="false" MaxLength="250" FixedLength="true" Unicode="false" />
           <NavigationProperty Name="Ventana" Relationship="SGDE_Model.R_139" FromRole="TipoVentana" ToRole="Ventana" />
-        </EntityType>
-        <EntityType Name="Usuario">
-          <Key>
-            <PropertyRef Name="UsuarioID" />
-          </Key>
-          <Property Name="UsuarioID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Name="TipoGeneroID" Type="Int32" Nullable="false" />
-          <Property Name="AdID" Type="String" MaxLength="30" FixedLength="true" Unicode="false" />
-          <Property Name="Rut" Type="Int32" />
-          <Property Name="Nombres" Type="String" Nullable="false" MaxLength="200" FixedLength="true" Unicode="false" />
-          <Property Name="Apellidos" Type="String" Nullable="false" MaxLength="200" FixedLength="true" Unicode="false" />
-          <Property Name="Mail" Type="String" Nullable="false" MaxLength="200" FixedLength="true" Unicode="false" />
-          <Property Name="IsClaveUnica" Type="Boolean" Nullable="false" />
-          <Property Name="FechaRegistro" Type="DateTime" Nullable="false" Precision="3" />
-          <Property Name="FechaModificacion" Type="DateTime" Nullable="false" Precision="3" />
-          <NavigationProperty Name="AsocUsuarioPerfil" Relationship="SGDE_Model.R_400" FromRole="Usuario" ToRole="AsocUsuarioPerfil" />
-          <NavigationProperty Name="Causa" Relationship="SGDE_Model.R_506" FromRole="Usuario" ToRole="Causa" />
-          <NavigationProperty Name="Derivacion" Relationship="SGDE_Model.R_520" FromRole="Usuario" ToRole="Derivacion" />
-          <NavigationProperty Name="Expediente" Relationship="SGDE_Model.R_516" FromRole="Usuario" ToRole="Expediente" />
-          <NavigationProperty Name="Firma" Relationship="SGDE_Model.R_529" FromRole="Usuario" ToRole="Firma" />
-          <NavigationProperty Name="TipoGenero" Relationship="SGDE_Model.R_562" FromRole="Usuario" ToRole="TipoGenero" />
         </EntityType>
         <EntityType Name="Ventana">
           <Key>
@@ -3160,18 +3224,6 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <Association Name="R_400">
-          <End Type="SGDE_Model.Usuario" Role="Usuario" Multiplicity="1" />
-          <End Type="SGDE_Model.AsocUsuarioPerfil" Role="AsocUsuarioPerfil" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Usuario">
-              <PropertyRef Name="UsuarioID" />
-            </Principal>
-            <Dependent Role="AsocUsuarioPerfil">
-              <PropertyRef Name="UsuarioID" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
         <Association Name="R_503">
           <End Type="SGDE_Model.TipoCausa" Role="TipoCausa" Multiplicity="1" />
           <End Type="SGDE_Model.Causa" Role="Causa" Multiplicity="*" />
@@ -3205,18 +3257,6 @@
             </Principal>
             <Dependent Role="DocumentoCausa">
               <PropertyRef Name="CausaID" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="R_506">
-          <End Type="SGDE_Model.Usuario" Role="Usuario" Multiplicity="1" />
-          <End Type="SGDE_Model.Causa" Role="Causa" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Usuario">
-              <PropertyRef Name="UsuarioID" />
-            </Principal>
-            <Dependent Role="Causa">
-              <PropertyRef Name="UsuarioID" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -3301,18 +3341,6 @@
             </Principal>
             <Dependent Role="ConfTipoCausa">
               <PropertyRef Name="TipoCausaID" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="R_520">
-          <End Type="SGDE_Model.Usuario" Role="Usuario" Multiplicity="1" />
-          <End Type="SGDE_Model.Derivacion" Role="Derivacion" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Usuario">
-              <PropertyRef Name="UsuarioID" />
-            </Principal>
-            <Dependent Role="Derivacion">
-              <PropertyRef Name="UsuarioID" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -3520,18 +3548,6 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <Association Name="R_516">
-          <End Type="SGDE_Model.Usuario" Role="Usuario" Multiplicity="1" />
-          <End Type="SGDE_Model.Expediente" Role="Expediente" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Usuario">
-              <PropertyRef Name="UsuarioID" />
-            </Principal>
-            <Dependent Role="Expediente">
-              <PropertyRef Name="UsuarioID" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
         <Association Name="R_110">
           <End Type="SGDE_Model.TipoFormato" Role="TipoFormato" Multiplicity="1" />
           <End Type="SGDE_Model.FamiliasMimeType" Role="FamiliasMimeType" Multiplicity="*" />
@@ -3541,18 +3557,6 @@
             </Principal>
             <Dependent Role="FamiliasMimeType">
               <PropertyRef Name="TipoFormatoID" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="R_529">
-          <End Type="SGDE_Model.Usuario" Role="Usuario" Multiplicity="1" />
-          <End Type="SGDE_Model.Firma" Role="Firma" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Usuario">
-              <PropertyRef Name="UsuarioID" />
-            </Principal>
-            <Dependent Role="Firma">
-              <PropertyRef Name="UsuarioID" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -3601,18 +3605,6 @@
             </Principal>
             <Dependent Role="Tabla">
               <PropertyRef Name="TipoTablaID" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="R_562">
-          <End Type="SGDE_Model.TipoGenero" Role="TipoGenero" Multiplicity="1" />
-          <End Type="SGDE_Model.Usuario" Role="Usuario" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="TipoGenero">
-              <PropertyRef Name="TipoGeneroID" />
-            </Principal>
-            <Dependent Role="Usuario">
-              <PropertyRef Name="TipoGeneroID" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -3668,6 +3660,158 @@
           <Property Type="Int32" Name="bt5" Nullable="false" />
           <Property Type="Int32" Name="bt6" Nullable="false" />
         </ComplexType>
+        <Association Name="R_576">
+          <End Type="SGDE_Model.TipoCanal" Role="TipoCanal" Multiplicity="1" />
+          <End Type="SGDE_Model.Expediente" Role="Expediente" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="TipoCanal">
+              <PropertyRef Name="TipoCanalID" />
+            </Principal>
+            <Dependent Role="Expediente">
+              <PropertyRef Name="TipoCanalID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <ComplexType Name="SP_Alarmas_Result">
+          <Property Type="Int32" Name="CausaID" Nullable="false" />
+          <Property Type="Int32" Name="ExpedienteID" Nullable="false" />
+          <Property Type="String" Name="NumeroTicket" Nullable="true" MaxLength="20" />
+          <Property Type="String" Name="Fecha" Nullable="true" MaxLength="10" />
+          <Property Type="String" Name="FechaVencimiento" Nullable="true" MaxLength="10" />
+          <Property Type="Int32" Name="UsuarioResponsableID" Nullable="false" />
+          <Property Type="String" Name="MailResponsable" Nullable="false" MaxLength="200" />
+          <Property Type="String" Name="NombreResponsable" Nullable="false" MaxLength="200" />
+        </ComplexType>
+        <EntityType Name="AsocDocumentoUsuario">
+          <Key>
+            <PropertyRef Name="AsocDocumentoUsuarioID" />
+          </Key>
+          <Property Name="AsocDocumentoUsuarioID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="UsuarioID" Type="Int32" Nullable="false" />
+          <Property Name="DocumentoSistemaID" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="DocumentoSistema" Relationship="SGDE_Model.R_577" FromRole="AsocDocumentoUsuario" ToRole="DocumentoSistema" />
+          <NavigationProperty Name="Usuario" Relationship="SGDE_Model.R_578" FromRole="AsocDocumentoUsuario" ToRole="Usuario" />
+        </EntityType>
+        <Association Name="R_577">
+          <End Type="SGDE_Model.DocumentoSistema" Role="DocumentoSistema" Multiplicity="1" />
+          <End Type="SGDE_Model.AsocDocumentoUsuario" Role="AsocDocumentoUsuario" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="DocumentoSistema">
+              <PropertyRef Name="DocumentoSistemaID" />
+            </Principal>
+            <Dependent Role="AsocDocumentoUsuario">
+              <PropertyRef Name="DocumentoSistemaID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="Usuario">
+          <Key>
+            <PropertyRef Name="UsuarioID" />
+          </Key>
+          <Property Name="UsuarioID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="TipoGeneroID" Type="Int32" Nullable="false" />
+          <Property Name="AdID" Type="String" MaxLength="30" FixedLength="true" Unicode="false" />
+          <Property Name="Rut" Type="Int32" />
+          <Property Name="Nombres" Type="String" Nullable="false" MaxLength="200" FixedLength="true" Unicode="false" />
+          <Property Name="Apellidos" Type="String" Nullable="false" MaxLength="200" FixedLength="true" Unicode="false" />
+          <Property Name="Mail" Type="String" Nullable="false" MaxLength="200" FixedLength="true" Unicode="false" />
+          <Property Name="Telefono" Type="String" Nullable="false" MaxLength="20" FixedLength="false" Unicode="false" />
+          <Property Name="IsClaveUnica" Type="Boolean" Nullable="false" />
+          <Property Name="FechaRegistro" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="FechaModificacion" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="Signer" Type="String" Nullable="false" MaxLength="300" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="AsocDocumentoUsuario" Relationship="SGDE_Model.R_578" FromRole="Usuario" ToRole="AsocDocumentoUsuario" />
+          <NavigationProperty Name="AsocUsuarioPerfil" Relationship="SGDE_Model.R_400" FromRole="Usuario" ToRole="AsocUsuarioPerfil" />
+          <NavigationProperty Name="Causa" Relationship="SGDE_Model.R_506" FromRole="Usuario" ToRole="Causa" />
+          <NavigationProperty Name="Derivacion" Relationship="SGDE_Model.R_520" FromRole="Usuario" ToRole="Derivacion" />
+          <NavigationProperty Name="Expediente" Relationship="SGDE_Model.R_516" FromRole="Usuario" ToRole="Expediente" />
+          <NavigationProperty Name="Firma" Relationship="SGDE_Model.R_529" FromRole="Usuario" ToRole="Firma" />
+          <NavigationProperty Name="TipoGenero" Relationship="SGDE_Model.R_562" FromRole="Usuario" ToRole="TipoGenero" />
+        </EntityType>
+        <Association Name="R_578">
+          <End Type="SGDE_Model.Usuario" Role="Usuario" Multiplicity="1" />
+          <End Type="SGDE_Model.AsocDocumentoUsuario" Role="AsocDocumentoUsuario" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Usuario">
+              <PropertyRef Name="UsuarioID" />
+            </Principal>
+            <Dependent Role="AsocDocumentoUsuario">
+              <PropertyRef Name="UsuarioID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="R_400">
+          <End Type="SGDE_Model.Usuario" Role="Usuario" Multiplicity="1" />
+          <End Type="SGDE_Model.AsocUsuarioPerfil" Role="AsocUsuarioPerfil" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Usuario">
+              <PropertyRef Name="UsuarioID" />
+            </Principal>
+            <Dependent Role="AsocUsuarioPerfil">
+              <PropertyRef Name="UsuarioID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="R_506">
+          <End Type="SGDE_Model.Usuario" Role="Usuario" Multiplicity="1" />
+          <End Type="SGDE_Model.Causa" Role="Causa" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Usuario">
+              <PropertyRef Name="UsuarioID" />
+            </Principal>
+            <Dependent Role="Causa">
+              <PropertyRef Name="UsuarioID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="R_520">
+          <End Type="SGDE_Model.Usuario" Role="Usuario" Multiplicity="1" />
+          <End Type="SGDE_Model.Derivacion" Role="Derivacion" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Usuario">
+              <PropertyRef Name="UsuarioID" />
+            </Principal>
+            <Dependent Role="Derivacion">
+              <PropertyRef Name="UsuarioID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="R_516">
+          <End Type="SGDE_Model.Usuario" Role="Usuario" Multiplicity="1" />
+          <End Type="SGDE_Model.Expediente" Role="Expediente" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Usuario">
+              <PropertyRef Name="UsuarioID" />
+            </Principal>
+            <Dependent Role="Expediente">
+              <PropertyRef Name="UsuarioID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="R_529">
+          <End Type="SGDE_Model.Usuario" Role="Usuario" Multiplicity="1" />
+          <End Type="SGDE_Model.Firma" Role="Firma" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Usuario">
+              <PropertyRef Name="UsuarioID" />
+            </Principal>
+            <Dependent Role="Firma">
+              <PropertyRef Name="UsuarioID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="R_562">
+          <End Type="SGDE_Model.TipoGenero" Role="TipoGenero" Multiplicity="1" />
+          <End Type="SGDE_Model.Usuario" Role="Usuario" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="TipoGenero">
+              <PropertyRef Name="TipoGeneroID" />
+            </Principal>
+            <Dependent Role="Usuario">
+              <PropertyRef Name="TipoGeneroID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -3986,6 +4130,8 @@
           <EntitySetMapping Name="Expediente">
             <EntityTypeMapping TypeName="SGDE_Model.Expediente">
               <MappingFragment StoreEntitySet="Expediente">
+                <ScalarProperty Name="NumeroTicket" ColumnName="NumeroTicket" />
+                <ScalarProperty Name="TipoCanalID" ColumnName="TipoCanalID" />
                 <ScalarProperty Name="TablaID" ColumnName="TablaID" />
                 <ScalarProperty Name="IsFinalizado" ColumnName="IsFinalizado" />
                 <ScalarProperty Name="IsTabla" ColumnName="IsTabla" />
@@ -4286,22 +4432,6 @@
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
-          <EntitySetMapping Name="Usuario">
-            <EntityTypeMapping TypeName="SGDE_Model.Usuario">
-              <MappingFragment StoreEntitySet="Usuario">
-                <ScalarProperty Name="FechaModificacion" ColumnName="FechaModificacion" />
-                <ScalarProperty Name="FechaRegistro" ColumnName="FechaRegistro" />
-                <ScalarProperty Name="IsClaveUnica" ColumnName="IsClaveUnica" />
-                <ScalarProperty Name="Mail" ColumnName="Mail" />
-                <ScalarProperty Name="Apellidos" ColumnName="Apellidos" />
-                <ScalarProperty Name="Nombres" ColumnName="Nombres" />
-                <ScalarProperty Name="Rut" ColumnName="Rut" />
-                <ScalarProperty Name="AdID" ColumnName="AdID" />
-                <ScalarProperty Name="TipoGeneroID" ColumnName="TipoGeneroID" />
-                <ScalarProperty Name="UsuarioID" ColumnName="UsuarioID" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
           <EntitySetMapping Name="Ventana">
             <EntityTypeMapping TypeName="SGDE_Model.Ventana">
               <MappingFragment StoreEntitySet="Ventana">
@@ -4352,6 +4482,47 @@
               </ComplexTypeMapping>
             </ResultMapping>
           </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="SP_Alarmas" FunctionName="SGDE_Model.Store.SP_Alarmas">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="SGDE_Model.SP_Alarmas_Result">
+                <ScalarProperty Name="CausaID" ColumnName="CausaID" />
+                <ScalarProperty Name="ExpedienteID" ColumnName="ExpedienteID" />
+                <ScalarProperty Name="NumeroTicket" ColumnName="NumeroTicket" />
+                <ScalarProperty Name="Fecha" ColumnName="Fecha" />
+                <ScalarProperty Name="FechaVencimiento" ColumnName="FechaVencimiento" />
+                <ScalarProperty Name="UsuarioResponsableID" ColumnName="UsuarioResponsableID" />
+                <ScalarProperty Name="MailResponsable" ColumnName="MailResponsable" />
+                <ScalarProperty Name="NombreResponsable" ColumnName="NombreResponsable" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
+          <EntitySetMapping Name="AsocDocumentoUsuario">
+            <EntityTypeMapping TypeName="SGDE_Model.AsocDocumentoUsuario">
+              <MappingFragment StoreEntitySet="AsocDocumentoUsuario">
+                <ScalarProperty Name="DocumentoSistemaID" ColumnName="DocumentoSistemaID" />
+                <ScalarProperty Name="UsuarioID" ColumnName="UsuarioID" />
+                <ScalarProperty Name="AsocDocumentoUsuarioID" ColumnName="AsocDocumentoUsuarioID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Usuario">
+            <EntityTypeMapping TypeName="SGDE_Model.Usuario">
+              <MappingFragment StoreEntitySet="Usuario">
+                <ScalarProperty Name="Signer" ColumnName="Signer" />
+                <ScalarProperty Name="FechaModificacion" ColumnName="FechaModificacion" />
+                <ScalarProperty Name="FechaRegistro" ColumnName="FechaRegistro" />
+                <ScalarProperty Name="IsClaveUnica" ColumnName="IsClaveUnica" />
+                <ScalarProperty Name="Telefono" ColumnName="Telefono" />
+                <ScalarProperty Name="Mail" ColumnName="Mail" />
+                <ScalarProperty Name="Apellidos" ColumnName="Apellidos" />
+                <ScalarProperty Name="Nombres" ColumnName="Nombres" />
+                <ScalarProperty Name="Rut" ColumnName="Rut" />
+                <ScalarProperty Name="AdID" ColumnName="AdID" />
+                <ScalarProperty Name="TipoGeneroID" ColumnName="TipoGeneroID" />
+                <ScalarProperty Name="UsuarioID" ColumnName="UsuarioID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
           </EntityContainerMapping>
       </Mapping>
     </edmx:Mappings>

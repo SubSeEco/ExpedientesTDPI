@@ -49,6 +49,7 @@
 
     <script type="text/javascript">
 
+        var IsClaveUnicaLogin = false;
 
 
         var ExceptionPages = {
@@ -141,7 +142,7 @@
                     }
                     //setCookie('fontSize', newFontSize, 30);
                     changeFont(newFontSize);
-                    console.log(newFontSize);
+                    //console.log(newFontSize);
                 });
 
                 KeepAlive();
@@ -157,25 +158,41 @@
 
             blockPageUI();
 
-            window.location.href = "https://api.claveunica.gob.cl/api/v1/accounts/app/logout";
+            var urlLogout = "https://accounts.claveunica.gob.cl/api/v1/accounts/app/logout?redirect=";
+            var urlFinal = urlLogout + "@Uri.EscapeDataString(WebConfig.LogOffAuthenticationSystem)";
+
+            if (IsClaveUnicaLogin) {
+                window.location.href = urlFinal;
+            } else {
+                    
+                setTimeout(function () {
+
+                    window.location.href = "@Url.Action("Salir", "Account")";
+
+                }, 1000);
+            }
+
+            
+            
+            @*window.location.href = "https://api.claveunica.gob.cl/api/v1/accounts/app/logout";
             setTimeout(function () {
 
                 window.location.href = "@Url.Action("Salir", "Account")";
 
-            }, 1000);
+            }, 1000);*@
         }
 
-        function ChangeEmailCiudadano() {
+        function MisDatos() {
             var opt = {
-                title: "Cambiar Email",
-                url: '@Url.Action("CambiarEmail", "Main")',
+                title: "Mis Datos",
+                url: '@Url.Action("MisDatos", "Main")',
                 params: {
                     __RequestVerificationToken: getVToken(),
                     lblEmail: "@HttpUtility.HtmlEncode("Email")",
                 },
                 size: 'modal-xl',
                 onOpen: function () {
-                   
+
                 },
                 callback: function () {
                     $(".modal-content .close").hide();
@@ -185,17 +202,38 @@
             GetModalContent(opt);
         }
 
+        function RegistroAbogado() {
+            var opt = {
+                title: "Registro de Abogado",
+                url: '@Url.Action("RegistroAbogado", "Main")',
+                params: {
+                    __RequestVerificationToken: getVToken()
+                },
+                size: 'modal-xl',
+                onOpen: function () {
+
+                },
+                callback: function () {
+                    $(".modal-content .close").hide();
+                }
+            }
+
+            GetModalContent(opt);
+        }
+
+
+
         function VerHistorial(CausaID) {
             var opt = {
                 title: "Historial Causa",
                 url: "@Url.Action("GetLogCausa", "Expedientes")",
                 params: {
-                __RequestVerificationToken: getVToken(),                
+                __RequestVerificationToken: getVToken(),
                 CausaID: CausaID
                 },
-                size: "modal-lg",
+                size: "modal-xl",
                 callback: function () {
-                    //goGrid();
+
                 }
             }
 
@@ -260,7 +298,9 @@
                                 bool IsSAG = false;
                                 bool IsAdministrador = false;
                                 bool IsInvitado = false;
+                                bool IsUsuarioCU = false;
 
+                            
                                 if (Session["IsTDPI"] != null)
                                 {
                                     IsTDPI = (bool)Session["IsTDPI"];
@@ -283,6 +323,11 @@
                                 if (Session["IsInvitado"] != null)
                                 {
                                     IsInvitado = (bool)Session["IsInvitado"];
+                                }
+                                if (Session["IsUsuarioCU"] != null)
+                                {
+                                    IsUsuarioCU = (bool)Session["IsUsuarioCU"];
+                                    @:IsClaveUnicaLogin = true;
                                 }
                             }
 
@@ -344,6 +389,11 @@
                                             perfilName = Session["PerfilDescription"].ToString();
                                         }
 
+                                        if (UsuarioActiveID > 0 && Session["PerfilDescription"] != null )
+                                        {
+                                            perfilName = Session["PerfilDescription"].ToString();
+                                        }
+
                                         string usr = string.Format("<span class='text-muted' style=''>{0}</span><br><span class='bold'>{1}</span></span>", UserName, perfilName);
 
                                         @Html.Raw(usr);
@@ -380,21 +430,25 @@
 
                         @if (WebConfig.IsAccesoPublico)
                         {
-                            <li class="nav-item"><a class="nav-link" href="@Url.RouteUrl("ActionInitialSystem")" style="">Acceso</a></li>
+                            @*<li class="nav-item"><a class="nav-link" href="@Url.RouteUrl("ActionInitialSystem")" style="">Acceso</a></li>*@
                             <li class="nav-item"><a class="nav-link" href="@Url.RouteUrl("VistaPublicaDashboard")" style="">Inicio</a></li>
-                            if (!IsInvitado)
+                            if (IsUsuarioCU)
                             {
-                                <li class="nav-item"><a class="nav-link" href="javascript:void(0)" onclick="ChangeEmailCiudadano()">Mi Email</a></li>
+                                <li class="nav-item"><a class="nav-link" href="javascript:void(0)" onclick="MisDatos()">Mis Datos</a></li>
+                                if (!IsSAG && !IsINAPI)
+                                {
+                                    <li class="nav-item"><a class="nav-link" href="javascript:void(0)" onclick="RegistroAbogado()">Registro Abogado</a></li>
+                                }
+
                             }
                             <li class="nav-item"><a class="nav-link" href="javascript:void(0)" onclick="SalirCiudadano()">Salir</a></li>
                         }
 
                         @if (!WebConfig.IsAccesoPublico)
                         {
-                            <li class="nav-item"><a class="nav-link" href="@Url.RouteUrl("EscritorioCausas")" style="">Expedientes</a></li>
-
                             if (IsTDPI)
                             {
+                                <li class="nav-item"><a class="nav-link" href="@Url.RouteUrl("EscritorioCausas")" style="">Expedientes</a></li>
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" id="nvListados" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                         @resources.Expediente.Listados
@@ -406,7 +460,33 @@
                                     </div>
                                 </li>
 
-                                <li class="nav-item"><a class="nav-link" href="@Url.Action("Index", "Firmas")" style="">Firmas</a></li>
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" id="nvListados" role="button" 
+                                       data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">@resources.Expediente.MenuFirmas</a>
+                                    <div class="dropdown-menu" aria-labelledby="nvListados">
+                                        <a class="dropdown-item" href="@Url.Action("Index", "Firmas")">@resources.Expediente.MenuEscritorioFirmas</a>
+                                        <a class="dropdown-item" href="javascript:void(0)" onclick="GetMiFirma()">@resources.Expediente.MenuMiFirma</a>
+                                        <script type="text/javascript">
+                                            function GetMiFirma() {
+                                                var opt = {
+                                                    title: "Mi Firma",
+                                                    url: "@Url.Action("GetMiFirma", "Main")",
+                                                    params: {
+                                                        __RequestVerificationToken: getVToken()
+                                                    },
+                                                    //size: "modal-sm",
+                                                    callback: function () {
+                                                        //goGrid();
+                                                    }
+                                                }
+
+                                                GetModalContent(opt);
+                                            }
+                                        </script>
+                                    </div>
+                                </li>
+
+
                             }
 
                             if (IsAdministrador)

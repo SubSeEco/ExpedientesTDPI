@@ -1,0 +1,108 @@
+﻿@model Application.DTO.Models.Expediente
+
+@using Enums = Domain.Infrastructure;
+@using resources = Infrastructure.Resources;
+
+@{
+    var DataForm = ViewBag.DataForm as Application.DTO.DataForm;
+}
+<script type="text/javascript">
+
+    ; (function ($) {
+        $(function () {
+
+            activateForm("btSaveDerivar", "frmDerivar",
+                 function () {
+
+                     return true;
+                 },
+                 function () {
+
+                     showBlockUI(CloseDialog);
+
+                     $("#grilla tr.selected i.x-icon-org").click();
+
+                 });
+
+        });
+    })(jQuery);
+
+</script>
+
+<div class="modal-body">
+
+    <form class="form-horizontal " id="frmDerivar" method="post" action="@Url.Action("SaveDerivar", "Expedientes")">
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(x => x.ExpedienteID)
+        @Html.HiddenFor(x => x.CausaID)
+
+        <fieldset class="x-fieldset">
+            <legend></legend>
+            <p class="bold mb0">N° ROL: @Model.Causa.NumeroTicket</p>
+        </fieldset>
+
+        <fieldset class="x-fieldset">
+            <legend class="celeste bold">Evento</legend>
+
+            <div class="form-group row align-items-center">
+                <label for="TipoTramiteID" class="col-md-3 col-form-label" id="">Tipo Trámite </label>
+                <div class="col-md-9">
+                    <input type="text" class="form-control" disabled="disabled" value="@Model.TipoTramite.Descripcion" />
+                </div>
+            </div>
+
+            <div class="form-group row align-items-center">
+                <label for="" class="col-md-3 col-form-label" id="">Fecha </label>
+                <div class="col-md-5">
+                    <input type="text" class="form-control ac" disabled="disabled" value="@Html.DatetimeToString(Model.FechaExpediente, "dd-MM-yyyy HH:mm")" />
+                </div>
+            </div>
+            <div class="form-group row align-items-center">
+                <label for="" class="col-md-3 col-form-label" id="">Responsable Actual </label>
+                <div class="col-md-9">
+                    <input type="text" class="form-control" disabled="disabled" value="@Model.UsuarioResponsableName" />
+                </div>
+            </div>
+
+        </fieldset>
+        <fieldset class="x-fieldset" id="fsAdjuntosExp">
+            <legend class="celeste bold">Datos Derivación</legend>
+
+
+
+           
+
+            <div class="form-group row" id="divComentario">
+                <label for="Comentario" class="col-md-3 col-form-label">Nuevo Responsable <span class="span-obligatorio">*</span></label>
+                <div class="col-md-9">
+                    <select id="UsuarioNewID" name="UsuarioNewID" class="custom-select verificar">
+                        <option value="">@resources.GlobalResources.Seleccionar</option>
+                        @foreach (var item in DataForm.Usuario.Where(x => x.IsTDPI()).OrderBy(x => x.GetFullName()))
+                        {
+                            <option value="@item.UsuarioID">@item.GetFullName()</option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group row" id="divComentario">
+                <label for="Comentario" class="col-md-3 col-form-label">Comentarios <span class="span-obligatorio">*</span></label>
+                <div class="col-md-9">
+                    <textarea class="notFilter form-control verificar" name="Comentario" id="Comentario" cols="2" rows="2" maxlength="500"></textarea>
+                </div>
+            </div>
+
+        </fieldset>
+
+    </form>
+
+</div>
+
+<div class="modal-footer">
+
+    <button id="btSaveDerivar" class="btn btn-default" onclick="$('#frmDerivar').submit()" type="button"><i class="x-icon x-icon-save2 icon-in-button"></i> @resources.GlobalResources.BtnGuardar</button>
+    <i class="x-icon-loader hide"></i>
+    <button class="btn btn-default" data-dismiss="modal" type="button"><i class="x-icon x-icon-cancel2 icon-in-button"></i> @resources.GlobalResources.BtnCancelar</button>
+
+</div>
+

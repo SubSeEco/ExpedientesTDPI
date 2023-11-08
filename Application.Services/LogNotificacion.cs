@@ -56,13 +56,13 @@ namespace Application.Services
 
         public void UpdateTabla()
         {
-            string MailCopia = String.Join(", ", MailConCopia.ToArray());
+            //string MailCopia = String.Join(", ", MailConCopia.ToArray());
 
-            if (string.IsNullOrEmpty(EmailDestinatario))
-                EmailDestinatario = "";
+            //if (string.IsNullOrEmpty(EmailDestinatario))
+            //    EmailDestinatario = "";
 
-            if (string.IsNullOrEmpty(MailCopia))
-                MailCopia = "";
+            //if (string.IsNullOrEmpty(MailCopia))
+            //    MailCopia = "";
 
             //ISolicitudRepository repo = new SolicitudRepository();
             //repo.UpdateDatosNotificacion(

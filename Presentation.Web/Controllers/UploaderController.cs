@@ -274,7 +274,12 @@ namespace Presentation.Web.Controllers
             int TipoDocumentoID = active.GetIntValueForm(frm["TipoDocumentoID"]);
             string Descripcion = active.GetStringValueForm(frm["Descripcion"]);
 
-            DTO.Models.Causa causa = appExpediente.GetCausa(CausaID);
+            DTO.Models.Causa causa = new Application.DTO.Models.Causa();
+
+            if (TipoDocumentoID != (int)Enums.TipoDocumento.CertificadoTituloAbogado)
+            {
+                causa = appExpediente.GetCausa(CausaID);
+            }
 
             if (file != null)
             {
@@ -406,6 +411,15 @@ namespace Presentation.Web.Controllers
                             DateTime.Now.TimeOfDay.Ticks);
                     }
 
+                    if (TipoDocumentoID == (int)Enums.TipoDocumento.CertificadoTituloAbogado)
+                    {
+                        FolderSave = string.Format("\\{0}\\{1}\\{2}\\{3}",
+                          "CertificadoTituloAbogado",
+                          ((TipoDocumento)TipoDocumentoID),
+                          UsuarioActive,
+                          DateTime.Now.TimeOfDay.Ticks);
+                    }
+
 
                     string MergePath = BasePath + FolderSave;
 
@@ -440,9 +454,9 @@ namespace Presentation.Web.Controllers
 
                 LogCausa _logC = new LogCausa();
                 _logC.Fecha = ahora;
-                _logC.CausaID = causa.CausaID;
+                _logC.CausaID = (TipoDocumentoID != (int)Enums.TipoDocumento.CertificadoTituloAbogado) ? causa.CausaID : 0;
                 _logC.UsuarioID = UsuarioActive;
-                _logC.EstadoCausa = (Enums.EstadoCausa)causa.EstadoCausaID;
+                _logC.EstadoCausa = (TipoDocumentoID != (int)Enums.TipoDocumento.CertificadoTituloAbogado) ? (Enums.EstadoCausa)causa.EstadoCausaID : Enums.EstadoCausa.EventoLog;
                 _logC.Observaciones = Descripcion;
 
                 if (TipoDocumentoID == (int)Enums.TipoDocumento.Causa || TipoDocumentoID == (int)Enums.TipoDocumento.Expediente)
@@ -484,6 +498,26 @@ namespace Presentation.Web.Controllers
 
                     _logC.TipoLog = TipoLog.CambiaEstadoCausa;
                     _logC.Save();
+                }
+
+                if (TipoDocumentoID == (int)Enums.TipoDocumento.CertificadoTituloAbogado)
+                {
+                    DTO.Models.DocumentoSistema doc = new DTO.Models.DocumentoSistema();
+                    doc.DocumentoSistemaID = 0;
+                    doc.VersionEncriptID = enc.VersionEncriptID;
+                    doc.TipoDocumentoID = TipoDocumentoID;
+                    doc.Hash = SHAFile;
+                    doc.NombreArchivoFisico = fileNameTmp;
+                    doc.Fecha = ahora;
+                    doc.Descripcion = Enums.TipoDocumento.CertificadoTituloAbogado.ToString();
+
+                    doc.DocumentoSistemaID = appExpediente.SaveDocumentoSistema(doc);
+
+                    DTO.Models.AsocDocumentoUsuario asoc = new Application.DTO.Models.AsocDocumentoUsuario();
+                    asoc.AsocDocumentoUsuarioID = 0;
+                    asoc.DocumentoSistemaID = doc.DocumentoSistemaID;
+                    asoc.UsuarioID = UsuarioActive;
+                    appCommon.SaveAsocDocumentoUsuario(asoc);
                 }
 
                 #endregion
@@ -581,6 +615,15 @@ namespace Presentation.Web.Controllers
                     _logC.Save();
                 }
 
+                if (TipoDoc == (int)Enums.TipoDocumento.Expediente)
+                {
+                    appCommon.DeleteDocumento(Enums.TipoDocumento.Expediente, ObjID1);
+                    dbLog.TipoLog = TipoLog.EliminarArchivoAdjunto;
+
+                    _logC.TipoLog = TipoLog.EliminarArchivoAdjunto;
+                    _logC.Save();
+                }
+
                 bool IsLocalRepository = bool.Parse(HashDecode[0]);
 
                 if (IsLocalRepository)
@@ -637,7 +680,7 @@ namespace Presentation.Web.Controllers
 
                     PathFinal = decode;
 
-                    if (TipoDocumento == TipoDocumento.Causa)
+                    if (TipoDocumento == TipoDocumento.Causa || TipoDocumento == TipoDocumento.Expediente)
                     {
                         string[] HashDecode = decode.Split(new string[] { TipoUploadChar }, StringSplitOptions.None);
 
@@ -708,7 +751,8 @@ namespace Presentation.Web.Controllers
                 TipoDoc == (int)Enums.TipoDocumento.Tabla ||
                 TipoDoc == (int)Enums.TipoDocumento.ExpedienteElectronicoPDF ||
                 TipoDoc == (int)Enums.TipoDocumento.EstadoDiario ||
-                TipoDoc == (int)Enums.TipoDocumento.Expediente )
+                TipoDoc == (int)Enums.TipoDocumento.Expediente ||
+                TipoDoc == (int)Enums.TipoDocumento.CertificadoTituloAbogado)
             {
                 int DocID = DocumentoID;
 

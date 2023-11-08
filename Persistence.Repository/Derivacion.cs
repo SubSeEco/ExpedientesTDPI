@@ -22,7 +22,7 @@ namespace Persistence.Repository
         public string Observacion { get; set; }
         public int PlazoDias { get; set; }
     
-        public virtual Usuario Usuario { get; set; }
         public virtual Expediente Expediente { get; set; }
+        public virtual Usuario Usuario { get; set; }
     }
 }

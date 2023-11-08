@@ -21,6 +21,7 @@ namespace Presentation.Web.Controllers
     public class AdministracionController : GlobalController
     {
         private readonly ICommonAppServices appCommon = new CommonAppServices();
+        private readonly IMailAppServices appMail = new MailAppServices();
 
         private readonly Commons active = new Commons();
         
@@ -91,7 +92,8 @@ namespace Presentation.Web.Controllers
                     (from u in usuarios
                      where
                       //title.Contains("string", StringComparison.OrdinalIgnoreCase)
-                      (string.IsNullOrEmpty(Usuario) || (!string.IsNullOrEmpty(Usuario) && u.Nombres.ToUpper().Contains(Usuario.ToUpper()))) &&
+                      (string.IsNullOrEmpty(Usuario) || (!string.IsNullOrEmpty(Usuario) && u.Nombres.ToUpper().Contains(Usuario.ToUpper()))
+                                                     || (!string.IsNullOrEmpty(Usuario) && u.Apellidos.ToUpper().Contains(Usuario.ToUpper()))) &&
                       (PerfilID == 0 || (PerfilID != 0 && u.AsocUsuarioPerfil.Any(x => x.PerfilID == PerfilID)))
                      select u).ToList();
 
@@ -167,6 +169,7 @@ namespace Presentation.Web.Controllers
 
                 DTO.Models.Usuario dto = new DTO.Models.Usuario();
                 dto.AsocUsuarioPerfil = new List<DTO.Models.AsocUsuarioPerfil>();
+                dto.AsocDocumentoUsuario = new List<DTO.Models.AsocDocumentoUsuario>();
                 dto.UsuarioID = UsuarioID;
 
                 if (!IsNew)
@@ -176,6 +179,7 @@ namespace Presentation.Web.Controllers
                     if (user != null)
                     {
                         dto = user;
+                        dto.AsocDocumentoUsuario = appCommon.GetAsocDocumentoUsuario(dto.UsuarioID);
                     }
                 }
 
@@ -221,12 +225,16 @@ namespace Presentation.Web.Controllers
                 dto.Rut = active.GetIntValueForm(Request.Form["Rut"]); 
                 dto.Nombres = active.GetStringValueForm(Request.Form["Nombres"]); 
                 dto.Apellidos = active.GetStringValueForm(Request.Form["Apellidos"]); 
-                dto.Mail = active.GetStringValueForm(Request.Form["Mail"]); 
-                dto.IsClaveUnica = active.GetBoolValueForm(Request.Form["IsClaveUnica"]); 
+                dto.Mail = active.GetStringValueForm(Request.Form["Mail"]);
+                dto.Telefono = active.GetStringValueForm(Request.Form["Telefono"]);
+                dto.IsClaveUnica = active.GetBoolValueForm(Request.Form["IsClaveUnica"]);
                 
+                bool IsAbogadoAnterior = false;
 
                 if (dto.UsuarioID >= 0)
                 {
+                    dto.Signer = active.GetStringValueForm(Request.Form["Signer"]);
+                    IsAbogadoAnterior = sso.IsAbogado();
                     appCommon.DeletePerfilesUser(dto.UsuarioID);
                     tipoLog = Enums.TipoLog.EditarUsuario;
                     dto.FechaModificacion = ahora;
@@ -236,6 +244,14 @@ namespace Presentation.Web.Controllers
                 {
                     dto.FechaRegistro = ahora;
                     dto.FechaModificacion = ahora;
+                    dto.Signer = string.Empty;
+                }
+
+                bool ExisteUsuarioAD = dto.AdID != string.Empty && appCommon.GetUsuarios().Any(X=> X.AdID.Trim() == dto.AdID.Trim());
+
+                if (dto.UsuarioID < 0 && ExisteUsuarioAD)
+                {
+                    return Json(new { Update = Enums.ReturnJson.FolioYaExiste });
                 }
 
                 dto.UsuarioID = appCommon.SaveUser(dto);
@@ -252,6 +268,11 @@ namespace Presentation.Web.Controllers
                         asoc.PerfilID = PerfilIDs[i];
 
                         appCommon.SaveAsocPerfilUsuario(asoc);
+
+                        if (PerfilIDs[i] == (int)Enums.Perfil.Abogado && !IsAbogadoAnterior)
+                        {
+                            appMail.RegistroAbogado(dto.UsuarioID);
+                        }
                     }
                 }
 

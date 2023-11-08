@@ -69,6 +69,16 @@
 
                 blockPageUI();
 
+                var urlLogout = "https://accounts.claveunica.gob.cl/api/v1/accounts/app/logout?redirect=";
+                var urlFinal = urlLogout + "@Uri.EscapeDataString(WebConfig.Url_MenuSistemas + Url.Action("LoginCU", "Account"))";
+
+                LinkRedirect(urlFinal);
+            }
+
+            @*function GetLoginCU() {
+
+                blockPageUI();
+
                 window.location.href = "https://api.claveunica.gob.cl/api/v1/accounts/app/logout";
                 setTimeout(function () {
 
@@ -76,7 +86,7 @@
                     LinkRedirect(Url);
 
                 }, 1000);
-            }
+            }*@
 
     </script>
 
@@ -105,7 +115,7 @@
 
                 </fieldset>
 
-                <fieldset class="x-fieldset ma" style="width: 90%; margin-top: 15px !important">
+                <fieldset class="x-fieldset ma" style="width: 90%; margin-top: 15px !important;display:none">
                     <legend class="celeste bold">No deseo iniciar sesión</legend>
 
                     <div class="botones-login-user" style="margin-top:5px; margin-bottom: 20px">

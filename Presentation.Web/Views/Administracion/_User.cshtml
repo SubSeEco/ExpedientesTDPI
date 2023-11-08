@@ -4,11 +4,23 @@
 @using Enums = Domain.Infrastructure;
 
 @{
+    #region Perfiles
     var Perfiles = ViewBag.Perfiles as IList<Application.DTO.Models.Perfil>;
 
-    string rutUsuario = (Model.IsClaveUnica) ? Model.Rut + "-" + Html.GetDv(Convert.ToInt32(Model.Rut)): string.Empty;
+    List<int> perfilesExternos = new List<int>();
+    perfilesExternos.Add((int)Enums.Perfil.Abogado);
+    perfilesExternos.Add((int)Enums.Perfil.INAPI);
+    perfilesExternos.Add((int)Enums.Perfil.SAG);
+
+    List<int> perfilesInternos = new List<int>();
+    perfilesInternos.Add((int)Enums.Perfil.Administrador);
+    perfilesInternos.Add((int)Enums.Perfil.TDPI);
+    #endregion
+
+    string rutUsuario = (Model.IsClaveUnica) ? Model.Rut + "-" + Html.GetDv(Convert.ToInt32(Model.Rut)) : string.Empty;
 
     var TipoGeneroList = ViewBag.TipoGeneroList as IList<Application.DTO.Models.TipoGenero>;
+
 }
 
 <script type="text/javascript">
@@ -17,6 +29,7 @@
     var perSAG = parseInt(@Html.EnumToInt(Enums.Perfil.SAG));
     var perTDPI = parseInt(@Html.EnumToInt(Enums.Perfil.TDPI));
     var perAdmin = parseInt(@Html.EnumToInt(Enums.Perfil.Administrador));
+    var perAbogado = parseInt(@Html.EnumToInt(Enums.Perfil.Abogado));
 
     ; (function ($) {
         $(function () {
@@ -33,23 +46,26 @@
 
             $(".chekPerfil").click(function () {
                 var val = $(this).val();
-                if ($(this).is(":checked")) 
+                if ($(this).is(":checked"))
                 {
                     if (val == perINAPI) {
-                        $('#chk_' + perSAG).attr("disabled",true);
+                        $('#chk_' + perSAG).attr("disabled", true);
+                        $('#chk_' + perAbogado).attr("disabled", true);
                     }
 
                     if (val == perSAG) {
                         $('#chk_' + perINAPI).attr("disabled", true);
+                        $('#chk_' + perAbogado).attr("disabled", true);
+                    }
+
+                    if (val == perAbogado) {
+                        $('#chk_' + perINAPI).attr("disabled", true);
+                        $('#chk_' + perSAG).attr("disabled", true);
                     }
 
                 } else {
-                    if (val == perINAPI) {
-                        $('#chk_' + perSAG).attr("disabled", false);
-                    }
-                    if (val == perSAG) {
-                        $('#chk_' + perINAPI).attr("disabled", false);
-                    }
+
+                    $('.chekPerfil').attr("disabled", false);
                 }
             });
 
@@ -69,17 +85,25 @@
                         var url = "/Administracion/Usuarios?autosearch=1";
                         showBlockUI(LinkRedirect(url));
 
-                    } else {
+                    } else if (xResultJsonData.Update == parseInt("@Convert.ToInt32(Enums.ReturnJson.FolioYaExiste)")) {
 
+                        showBlockUIError("Ya existe Usuario, valide e intente nuevamente");
+                        return false;
+
+                    } else {
                         showBlockUI();
                         DialogClose();
                         $("#btnBuscar").trigger("click");
-
                     }
 
 
 
                 });
+
+            @if (Model.IsClaveUnica)
+            {
+                @:ValidarTelefonos();
+            }
 
         });
     })(jQuery);
@@ -94,6 +118,7 @@
         @Html.HiddenFor(x => x.IsClaveUnica)
         @Html.HiddenFor(x => x.FechaRegistro)
         @Html.HiddenFor(x => x.Rut)
+        @Html.Hidden("Signer", Model.Signer)
 
         @if (Model.IsClaveUnica)
         {
@@ -150,6 +175,57 @@
                 </div>
             </div>
         }
+        else
+        {
+            <div class="form-group row">
+                <label for="Mail" id="" class="col-md-3 col-form-label">Teléfono </label>
+                <div class="col-md-9">
+                    @Html.TextBoxFor(x => x.Telefono, new { @class = "form-control", @maxlength = "100" })
+                </div>
+            </div>
+        }
+
+        @if (Model.AsocDocumentoUsuario.Count > 0)
+        {
+            var doc = Model.AsocDocumentoUsuario.OrderByDescending(x => x.DocumentoSistemaID).FirstOrDefault().DocumentoSistema; 
+            int TipoDocumentoEnum = (int)Enums.TipoDocumento.CertificadoTituloAbogado;
+
+            <fieldset class="x-fieldset">
+                <legend class="celeste bold">Certificado de Título</legend>
+
+                <div class="table-responsive">
+
+                    <table class="@Html.GetBaseTableCSS()" id="">
+                        <thead>
+                            <tr>
+                                <th class="ac" style="">Nombre Documento</th>
+                                <th class="ac" style="">Descripción</th>
+                                <th class="ac" style="">Fecha Carga</th>
+                                <th class="ac" style="">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="">@doc.NombreArchivoFisico</td>
+                                <td style="max-width:200px" class="fixWord">@Html.SplitToUpper(doc.Descripcion)</td>
+                                <td class="ac">@Html.DatetimeToString(doc.Fecha, "dd-MM-yyyy HH:mm")</td>
+                                <td class="ac">
+
+                                    <a style="margin-right:2px" href="javascript:void(0)"
+                                        onclick='getDownloadFile(0, 0, "@doc.Hash.Trim()", @TipoDocumentoEnum)'
+                                        class="x-title-t" title="@resources.GlobalResources.BtnDescargar">
+                                        <i class="x-icon @Html.GetCSS(doc.NombreArchivoFisico)" style="cursor: pointer;"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                </div>
+
+                </fieldset>
+
+        }
 
 
         <fieldset class="x-fieldset">
@@ -166,11 +242,11 @@
                     @foreach (var item in Perfiles)
                     {
                         #region Parametros
-                        if ((item.PerfilID == (int)Enums.Perfil.Administrador || item.PerfilID == (int)Enums.Perfil.TDPI) && Model.IsClaveUnica)
+                        if (Model.IsClaveUnica && !perfilesExternos.Contains(item.PerfilID))
                         {
                             continue;
                         }
-                        if ((item.PerfilID == (int)Enums.Perfil.INAPI || item.PerfilID == (int)Enums.Perfil.SAG) && !Model.IsClaveUnica)
+                        if (!Model.IsClaveUnica && !perfilesInternos.Contains(item.PerfilID))
                         {
                             continue;
                         }

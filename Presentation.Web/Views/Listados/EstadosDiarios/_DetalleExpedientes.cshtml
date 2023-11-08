@@ -28,7 +28,7 @@
             generalGridParams.pageLength = parseInt("@Domain.Infrastructure.WebConfigValues.CantidadResultadosGrilla");
 
             //var allGridParams = $.extend({}, localGridParams, generalGridParams);
-           // var oTableGrid2 = $('#grillaDetalleTablaED').removeClass("hide").dataTable(allGridParams);
+            // var oTableGrid2 = $('#grillaDetalleTablaED').removeClass("hide").dataTable(allGridParams);
 
         });
     })(jQuery);
@@ -50,7 +50,12 @@
                 Keys: ids
             },
             callback: function () {
-                GetDetalleExpedientes(@Model.EstadoDiarioID);
+                $("#btnBuscar").click();
+
+                setTimeout(function () {
+                    GetDetalleExpedientes(parseInt("@Model.EstadoDiarioID"));
+                }, 1000);
+                @*GetDetalleExpedientes(@Model.EstadoDiarioID);*@
             },
             alert: "alert-danger",
             txtBtn1: "Sí"
@@ -65,7 +70,7 @@
         var opt = {
             title: "Agregar Expediente a Estado Diario",
             url: "@Url.Action("GetAgregarDetalleEstadoDiario", "Listados")",
-            params:  {
+            params: {
                 __RequestVerificationToken: getVToken(),
                 EstadoDiarioID: EstadoDiarioID
             },

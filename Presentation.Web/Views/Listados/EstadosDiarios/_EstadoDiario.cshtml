@@ -27,6 +27,11 @@
                         showBlockUI();
                         GetListadoEstadoDiario();
                     }
+
+                    if (xResultJsonData.result == ReturnJson.ErrorModelo) {
+                        showBlockUIError("Ya existe Estado Diario para la fecha ingresada");
+                        return false;
+                    }
                 });
         });
     })(jQuery);

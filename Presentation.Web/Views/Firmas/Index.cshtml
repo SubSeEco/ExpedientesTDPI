@@ -7,6 +7,8 @@
 
     Application.DTO.FiltrosEscritorio FiltrosEscritorio = ViewBag.FiltrosEscritorio;
 
+    var TipoDocumentoList = ViewBag.TipoDocumentoList as IList<Application.DTO.Models.TipoDocumento>;
+
     List<SelectListItem> EstadosDoctoFirma = new List<SelectListItem>();
     EstadosDoctoFirma.Add(new SelectListItem { Text = "Solo Pendientes", Value = "2" });
     EstadosDoctoFirma.Add(new SelectListItem { Text = "Ver Todas", Value = "1", });
@@ -28,9 +30,6 @@
             $("#btnBuscar").on("click", goGrid);
 
             goGrid();
-
-            
-
         });
     })(jQuery);
 
@@ -90,11 +89,11 @@
                 'Contador': (i + 1),
                 'ticket': item.ticket,
                 'date': item.date,
-                'denom': item.resp,                                
+                'denom': item.resp,
                 'estado': function () {
                     var h = '' + item.diasT + ',' + item.St1 + ',' + item.St2 + '';
                     return h;
-                },              
+                },
                 'Acciones': item.AccionesList,
                 'DT_RowId': 'tr_' + i
             }
@@ -155,9 +154,9 @@
                         let html = GetSemaforo(dias, Config.IntMaxValue, Config.IntMaxValue);
                         $(this).html(html);
                     }
-                    
+
                 }
-            }            
+            }
         })
     }
 
@@ -170,41 +169,55 @@
 
     }
 
-    function FirmarDocumento(ExpedienteID, AsocFirmaDoctoID, UsuarioID)
-    {
-        xDialogConfirmAction({
-            url: "@Url.Action("FirmarDocumento", "Firmas")",
-            title: "Firma Documento",
-            msg1: "¿Confirma firmar documento ?",
-            IsHideMessageEnd: true,
-            params: {
-                __RequestVerificationToken: getVToken(),
-                ExpedienteID: ExpedienteID,
-                AsocFirmaDoctoID: AsocFirmaDoctoID,
-                UsuarioID: UsuarioID
-            },
-            callback: function () {
-            xAlert({
+    function FirmarDocumento(ExpedienteID, AsocFirmaDoctoID, DocumentoCausaID, UsuarioID) {
+            xDialogConfirmAction({
+                url: "@Url.Action("FirmarDocumentoExpediente", "Firmas")",
                 title: "Firma Documento",
-                html: $("#messageEnd").html(),
-                onOpen: function () {
-
+                msg1: "¿Confirma firmar documento?",
+                IsHideMessageEnd: true,
+                params: {
+                    __RequestVerificationToken: getVToken(),
+                    ExpedienteID: ExpedienteID,
+                    AsocFirmaDoctoID: AsocFirmaDoctoID,
+                    DocumentoCausaID: DocumentoCausaID,
+                    UsuarioID: UsuarioID
                 },
                 callback: function () {
-                    goGrid();
-                }
-            })
-        }
 
-    });
+                    if (xJSONResult.result == ReturnJson.ActionSuccess) {
+                        xAlert({
+                            title: "Firma Documento",
+                            html: $("#messageEnd").html(),
+                            onOpen: function () {
+
+                            },
+                            callback: function () {
+                                goGrid();
+                            }
+                        })
+                    }
+
+                    if (xJSONResult.result == ReturnJson.ErrorCodigoVerificacion) {
+                        showBlockUIError("No es posible firmar, compruebe su firma en el menú Mi Firma");
+                        console.log(xJSONResult.message);
+                        return false;
+                    }
+
+                    if (xJSONResult.result == ReturnJson.ErrorModelo || xJSONResult.result == ReturnJson.SinAccion) {
+                        showBlockUIError("No es posible firmar, por favor intente más tarde");
+                        console.log(xJSONResult.message);
+                        return false;
+                    }
+                }
+
+            });
     }
 
-    function FirmarDocumentoSistema(DocumentoSistemaID, FirmaID, UsuarioID)
-    {
+    function FirmarDocumentoSistema(DocumentoSistemaID, FirmaID, UsuarioID) {
         xDialogConfirmAction({
             url: "@Url.Action("FirmarDocumentoSistema", "Firmas")",
             title: "Firma Documento",
-            msg1: "¿Confirma firmar documento ?",
+            msg1: "¿Confirma firmar documento?",
             IsHideMessageEnd: true,
             params: {
                 __RequestVerificationToken: getVToken(),
@@ -213,20 +226,39 @@
                 UsuarioID: UsuarioID
             },
             callback: function () {
-                xAlert({
-                    title: "Firma Documento",
-                    html: $("#messageEnd").html(),
-                    onOpen: function () {
 
-                    },
-                    callback: function () {
-                        goGrid();
-                    }
-                })
+                if (xJSONResult.result == ReturnJson.ActionSuccess) {
+                    xAlert({
+                        title: "Firma Documento",
+                        html: $("#messageEnd").html(),
+                        onOpen: function () {
+
+                        },
+                        callback: function () {
+                            goGrid();
+                        }
+                    })
+                }
+
+                if (xJSONResult.result == ReturnJson.ErrorCodigoVerificacion) {
+                    showBlockUIError("No es posible firmar, compruebe su firma en el menú Mi Firma");
+                    console.log(xJSONResult.message);
+                    return false;
+                }
+
+                if (xJSONResult.result == ReturnJson.ErrorModelo || xJSONResult.result == ReturnJson.SinAccion) {
+                    showBlockUIError("No es posible firmar, por favor intente más tarde");
+                    console.log(xJSONResult.message);
+                    return false;
+                }
+
             }
-     });
+        });
     }
 
+    function LimpiaForm() {
+        $("#frmFiltros").reset();
+    }
 
 </script>
 
@@ -298,18 +330,33 @@
 
                         </div>
 
-
-
                         <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group row">
+                                    <label for="TipoDocumentoID" class="col-sm-4 col-form-label">Tipo Documento</label>
+                                    <div class="col-sm-8">
+                                        <select id="TipoDocumentoID" name="TipoDocumentoID" class="custom-select" data-default="0">
+                                            <option value="">@resources.GlobalResources.OptionInicial</option>
+                                            @foreach (var item in TipoDocumentoList)
+                                            {
+                                                <option value="@item.TipoDocumentoID">@item.Descripcion.Trim()</option>
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="col-sm-6">
                                 <div class="form-group row">
                                     <label for="NumeroTicket" class="col-sm-4 col-form-label" id="lblNumeroTicket">Rol</label>
                                     <div class="col-sm-8">
-                                        @Html.TextBox("NumeroTicket", "", new { @class = "form-control", @style = "", @placeholder = "", @maxlength = "20" })
+                                        @Html.TextBox("NumeroTicket", "", new { @class = "form-control", @style = "", @placeholder = "Ej. 001348-2020", @maxlength = "20" })
                                     </div>
                                 </div>
                             </div>
                         
+                            
+                        </div>
+                        <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group row">
                                     <label for="EstadoDoctoFirma" class="col-sm-4 col-form-label">Estado Firma</label>
@@ -346,7 +393,7 @@
                     <thead>
                         <tr>
                             <th class="ac" style="">@resources.GlobalResources.TH_Number</th>
-                            <th class="ac" style="">N° Rol TDPI</th>
+                            <th class="ac" style="">@*N° Rol TDPI*@Tipo Documento</th>
                             <th class="ac " style="">Fecha Evento</th>
                             <th class="ac" style="">Días Transcurridos</th>
                             <th class="ac" style="">Responsable Actual</th>                            

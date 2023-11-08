@@ -32,7 +32,6 @@ namespace Presentation.Web
         {
 
             String literal = "";
-            String parte_decimal;
             //si el numero utiliza (.) en lugar de (,) -> se reemplaza
             numero = numero.Replace(".", ",");
 
@@ -49,12 +48,6 @@ namespace Presentation.Web
                 //se divide el numero 0000000,00 -> entero y decimal
                 String[] Num = numero.Split(',');
 
-                string MN = " M.N.";
-                if (moneda != "PESOS")
-                    MN = "";
-
-                //de da formato al numero decimal
-                parte_decimal = moneda + " " + Num[1] + "/100" + MN;
                 //se convierte el numero a literal
                 if (int.Parse(Num[0]) == 0)
                 {//si el valor es cero

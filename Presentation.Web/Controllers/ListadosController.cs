@@ -413,11 +413,23 @@ namespace Presentation.Web.Controllers
                 filtros.NumeroTicket = active.GetStringValueForm(Request.Form["buscaRol"]);
                 filtros.Anio = active.GetIntValueForm(Request.Form["buscaAnio"]);
 
-                IList<DTO.Models.Causa> causas = appExpediente.GetCausasByFilter(filtros, Enums.TipoGrid.ListadoTablas);
+                DTO.Models.Tabla tabla = appExpediente.GetTablaByID(TablaID);
+
+                var causasList = appExpediente.GetCausasByFilter(filtros, Enums.TipoGrid.ListadoTablas);
+                IList<DTO.Models.Causa> causas = new List<DTO.Models.Causa>();
+
+                foreach (var item in causasList)
+                {
+                    if ((tabla.TipoTablaID == (int)Enums.TipoTabla.ConAlegatos && item.EstadoCausaID == (int)Enums.EstadoCausa.AutosEnRelacion || item.EstadoCausaID == (int)Enums.EstadoCausa.EnTabla) //0000325: DISPONIBILIDAD CAUSAS PARA TABLAS
+                        || (tabla.TipoTablaID == (int)Enums.TipoTabla.EnCuenta && item.EstadoCausaID == (int)Enums.EstadoCausa.DeseCuenta || item.EstadoCausaID == (int)Enums.EstadoCausa.EnTabla))
+                    {
+                        causas.Add(item);
+                    }
+                }
 
                 foreach (var item in causas)
                 {
-                    item.DetalleTabla = appExpediente.GetDetalleTablaByCausa(item.CausaID);
+                    item.DetalleTabla = appExpediente.GetDetalleTablaByCausa(item.CausaID);                    
                 }
 
                 ViewBag.Causas = causas;
@@ -502,6 +514,79 @@ namespace Presentation.Web.Controllers
             }
         }
 
+        /// <summary>
+        /// GetEditarCausaTabla
+        /// </summary>
+        /// <param name="TablaID"></param>
+        /// <param name="CausaID"></param>
+        /// <returns></returns>
+        [HttpPost, ValidateAntiForgeryToken]
+        public ActionResult GetEditarCausaTabla(int TablaID, int CausaID)
+        {
+            var sso = new SsoActionResult();
+            if (!sso.AsyncAuthenticate(ControllerContext)) return Response403();
+
+            try
+            {
+                DTO.Models.Tabla tabla = appExpediente.GetTablaByID(TablaID);
+                ViewBag.Tabla = tabla;
+                
+                DTO.Models.Causa causa = appExpediente.GetCausa(CausaID);
+                ViewBag.Causa = causa;
+
+                DTO.Models.DetalleTabla Detalle = tabla.DetalleTabla.FirstOrDefault(x => x.CausaID == CausaID);
+
+
+                return PartialView("Tablas/_EditarCausaTabla", Detalle);
+            }
+            catch (Exception ex)
+            {
+                Logger.Execute().Error(ex);
+                throw;
+            }
+        }
+
+
+
+        /// <summary>
+        /// GetTabla
+        /// </summary>
+        /// <param name="TablaID"></param>
+        /// <returns></returns>
+        [HttpPost, ValidateAntiForgeryToken]
+        public ActionResult GetGenerarListadoTablaPDF(int TablaID)
+        {
+            var sso = new SsoActionResult();
+            if (!sso.AsyncAuthenticate(ControllerContext)) return Response403();
+
+            try
+            {
+                DTO.Models.Tabla model = appExpediente.GetTablaByID(TablaID);
+                model.AsocDocumentoSistemaTabla = appExpediente.GetAsocDocumentoSistemaTabla(TablaID);
+
+                IList<DTO.Models.AsocDocSistemaFirma> asocFirmas = new List<DTO.Models.AsocDocSistemaFirma>();
+
+                if (model.AsocDocumentoSistemaTabla.Count > 0)
+                {
+                    int DocumentoSistemaID = model.AsocDocumentoSistemaTabla.OrderByDescending(x=> x.DocumentoSistemaID).FirstOrDefault().DocumentoSistemaID;
+                    asocFirmas = appExpediente.GetAsocDocSistemaFirmaByDocto(DocumentoSistemaID);
+                }
+
+                ViewBag.asocFirmas = asocFirmas;
+
+                DTO.DataForm DataForm = new DTO.DataForm();
+                DataForm.Usuario = appCommon.GetUsuarios().Where(x=> x.IsTDPI()).ToList();
+                ViewBag.DataForm = DataForm;
+
+
+                return PartialView("Tablas/_GenerarListadoTablaPDF", model);
+            }
+            catch (Exception ex)
+            {
+                Logger.Execute().Error(ex);
+                throw;
+            }
+        }
 
         /// <summary>
         /// 
@@ -552,16 +637,17 @@ namespace Presentation.Web.Controllers
 
 
                     DocPdf pdf = new DocPdf();
+                    pdf.TipoParte = appCommon.GetTipoParte();
                     pdf.Usuario = sso.UserActive;
                     pdf.IsTabla = true;
                     pdf.Tabla = tabla;
                     pdf.MapPath = Server.MapPath("~");
                     pdf.PathSave = MergePath;
                     pdf.Filename = $"Tabla-{tabla.Fecha.ToString("dd-MM-yyyy")}.pdf";
-                    pdf.Titulo = "TABLA DE CAUSAS CON ALEGATOS";
+                    pdf.Titulo = $"TABLA DE CAUSAS {tabla.TipoTabla.Descripcion.Trim().ToUpper()}";
                     pdf.SubTitulo = $"{tabla.Fecha.ToString("dddd, dd MMMM \\de yyyy")}";
                     pdf.SubTitulo2 = $"{tabla.UsuarioRelator.GetTextoRelator()} {tabla.UsuarioRelator.GetFullName()}";
-                    pdf.CreateDocument("TDPI: Tabla de Causas");
+                    pdf.CreateDocument("TDPI: Tabla de Causas");                    
 
                     pdf.SetListadoTabla();
                     pdf.Render();
@@ -599,30 +685,80 @@ namespace Presentation.Web.Controllers
 
                     #endregion
 
-                    LogCausa _logC = new LogCausa();
-                    _logC.Fecha = ahora;
-                    _logC.UsuarioID = UsuarioActive;
-                    _logC.TipoLog = Enums.TipoLog.CambiaEstadoCausa;
+                    //LogCausa _logC = new LogCausa();
+                    //_logC.Fecha = ahora;
+                    //_logC.UsuarioID = UsuarioActive;
+                    //_logC.TipoLog = Enums.TipoLog.CambiaEstadoCausa;
 
 
-                    Enums.EstadoCausa estadoNew = Enums.EstadoCausa.EnTabla;
+                    //Enums.EstadoCausa estadoNew = Enums.EstadoCausa.EnTabla;
 
-                    foreach (var c in tabla.DetalleTabla)
-                    {
-                        Enums.EstadoCausa estadoActual = (Enums.EstadoCausa)c.Causa.EstadoCausaID;
+                    //foreach (var c in tabla.DetalleTabla)
+                    //{
+                    //    Enums.EstadoCausa estadoActual = (Enums.EstadoCausa)c.Causa.EstadoCausaID;
 
-                        appExpediente.CambiarEstadoCausa(c.CausaID, Enums.EstadoCausa.EnTabla);
+                    //    appExpediente.CambiarEstadoCausa(c.CausaID, Enums.EstadoCausa.EnTabla);
 
-                        _logC.CausaID = c.CausaID;
-                        _logC.EstadoCausa = estadoNew;
-                        _logC.Observaciones = $"{estadoActual} ==> {estadoNew}";
-                        _logC.Save();
-                    }
+                    //    _logC.CausaID = c.CausaID;
+                    //    _logC.EstadoCausa = estadoNew;
+                    //    _logC.Observaciones = $"{estadoActual} ==> {estadoNew}";
+                    //    _logC.Save();
+                    //}
 
                     appExpediente.SetEstadoTabla(tabla.TablaID, Enums.EstadoTabla.Generado);
 
                     retorno = Enums.ReturnJson.ActionSuccess;
 
+                    #region Firmas
+
+                    #region Limpia Firmas
+                    tabla.AsocDocumentoSistemaTabla = appExpediente.GetAsocDocumentoSistemaTabla(TablaID);
+
+                    IList<DTO.Models.AsocDocSistemaFirma> asocFirmas = new List<DTO.Models.AsocDocSistemaFirma>();
+
+                    if (tabla.AsocDocumentoSistemaTabla.Count > 0)
+                    {
+                        foreach (var item in tabla.AsocDocumentoSistemaTabla)
+                        {
+                            int thisDocumentoSistemaID = item.DocumentoSistemaID;                                                        
+                            IList<DTO.Models.AsocDocSistemaFirma> AsocDocSistemaFirma = appExpediente.GetAsocDocSistemaFirmaByDocto(thisDocumentoSistemaID);
+                            foreach (var _asocDocSisFirma in AsocDocSistemaFirma)
+                            {
+                                asocFirmas.Add(_asocDocSisFirma);
+                            }
+                        }
+                    }
+
+                    foreach (var item in asocFirmas)
+                    {
+                        appExpediente.BorrarFirmaByAsocDocSistema(item.AsocDocSistemaFirmaID);
+                    }
+                    #endregion
+                    
+                    if (active.IsInputValue(Request.Form["strFirmas"]))
+                    {
+                        string strFirmas = active.GetStringValueForm(Request.Form["strFirmas"]);
+                        List<DTO.Models.Firma> listaFirmas = JsonConvert.DeserializeObject<List<DTO.Models.Firma>>(strFirmas);
+
+                        foreach (var item in listaFirmas)
+                        {
+                            DTO.Models.Firma f = new Application.DTO.Models.Firma();
+                            f.FirmaID = 0;
+                            f.UsuarioID = item.UsuarioFirmaID;
+                            f.Orden = item.Orden;
+                            f.FirmaID = appExpediente.SaveFirma(f);
+
+                            DTO.Models.AsocDocSistemaFirma asocDocSis = new DTO.Models.AsocDocSistemaFirma();
+                            asocDocSis.AsocDocSistemaFirmaID = 0;
+                            asocDocSis.FirmaID = f.FirmaID;
+                            asocDocSis.DocumentoSistemaID = doc.DocumentoSistemaID;
+                            asocDocSis.IsFirmado = false;
+                            asocDocSis.AsocDocSistemaFirmaID = appExpediente.SaveAsocDocSistemaFirma(asocDocSis);
+                        }
+                    }
+
+                    #endregion
+                    
                     #region LogSistema
                     dbLog.TipoLog = Enums.TipoLog.GenerarTablaPDF;
                     dbLog.Save();
@@ -647,6 +783,46 @@ namespace Presentation.Web.Controllers
 
 
         #region Estados Diarios EstadosDiarios
+
+        /// <summary>
+        /// GetTabla
+        /// </summary>
+        /// <param name="EstadoDiarioID"></param>
+        /// <returns></returns>
+        [HttpPost, ValidateAntiForgeryToken]
+        public ActionResult GetGenerarListadoEstadoDiarioPDF(int EstadoDiarioID)
+        {
+            var sso = new SsoActionResult();
+            if (!sso.AsyncAuthenticate(ControllerContext)) return Response403();
+
+            try
+            {
+                DTO.Models.EstadoDiario model = appExpediente.GetEstadoDiarioByID(EstadoDiarioID);
+                model.AsocDocumentoSistemaEstadoDiario = appExpediente.GetAsocDocumentoSistemaEstadoDiario(EstadoDiarioID);
+
+                IList<DTO.Models.AsocDocSistemaFirma> asocFirmas = new List<DTO.Models.AsocDocSistemaFirma>();
+
+                if (model.AsocDocumentoSistemaEstadoDiario.Count > 0)
+                {
+                    int DocumentoSistemaID = model.AsocDocumentoSistemaEstadoDiario.OrderByDescending(x => x.DocumentoSistemaID).FirstOrDefault().DocumentoSistemaID;
+                    asocFirmas = appExpediente.GetAsocDocSistemaFirmaByDocto(DocumentoSistemaID);
+                }
+
+                ViewBag.asocFirmas = asocFirmas;
+
+                DTO.DataForm DataForm = new DTO.DataForm();
+                DataForm.Usuario = appCommon.GetUsuarios().Where(x => x.IsTDPI()).ToList();
+                ViewBag.DataForm = DataForm;
+
+
+                return PartialView("EstadosDiarios/_GenerarListadoEstadoDiarioPDF", model);
+            }
+            catch (Exception ex)
+            {
+                Logger.Execute().Error(ex);
+                throw;
+            }
+        }
 
         /// <summary>
         /// GenerarListadoEstadoDiarioPDF
@@ -759,6 +935,58 @@ namespace Presentation.Web.Controllers
                     #endregion
 
                     appExpediente.SetTipoEstadoDiario(model.EstadoDiarioID, Enums.TipoEstadoDiario.Generado);
+
+                    #region Firmas
+
+
+                    #region Limpia Firmas
+                    model.AsocDocumentoSistemaEstadoDiario = appExpediente.GetAsocDocumentoSistemaEstadoDiario(model.EstadoDiarioID);
+
+                    IList<DTO.Models.AsocDocSistemaFirma> asocFirmas = new List<DTO.Models.AsocDocSistemaFirma>();
+
+                    if (model.AsocDocumentoSistemaEstadoDiario.Count > 0)
+                    {
+                        foreach (var item in model.AsocDocumentoSistemaEstadoDiario)
+                        {
+                            int thisDocumentoSistemaID = item.DocumentoSistemaID;
+                            IList<DTO.Models.AsocDocSistemaFirma> AsocDocSistemaFirma = appExpediente.GetAsocDocSistemaFirmaByDocto(thisDocumentoSistemaID);
+                            foreach (var _asocDocSisFirma in AsocDocSistemaFirma)
+                            {
+                                asocFirmas.Add(_asocDocSisFirma);
+                            }
+                        }                               
+                    }
+
+                    foreach (var item in asocFirmas)
+                    {
+                        appExpediente.BorrarFirmaByAsocDocSistema(item.AsocDocSistemaFirmaID);
+                    }
+                    #endregion
+
+
+                    if (active.IsInputValue(Request.Form["strFirmas"]))
+                    {
+                        string strFirmas = active.GetStringValueForm(Request.Form["strFirmas"]);
+                        List<DTO.Models.Firma> listaFirmas = JsonConvert.DeserializeObject<List<DTO.Models.Firma>>(strFirmas);
+
+                        foreach (var item in listaFirmas)
+                        {
+                            DTO.Models.Firma f = new DTO.Models.Firma();
+                            f.FirmaID = 0;
+                            f.UsuarioID = item.UsuarioFirmaID;
+                            f.Orden = item.Orden;
+                            f.FirmaID = appExpediente.SaveFirma(f);
+
+                            DTO.Models.AsocDocSistemaFirma asocDocSis = new DTO.Models.AsocDocSistemaFirma();
+                            asocDocSis.AsocDocSistemaFirmaID = 0;
+                            asocDocSis.FirmaID = f.FirmaID;
+                            asocDocSis.DocumentoSistemaID = doc.DocumentoSistemaID;
+                            asocDocSis.IsFirmado = false;
+                            asocDocSis.AsocDocSistemaFirmaID = appExpediente.SaveAsocDocSistemaFirma(asocDocSis);
+                        }
+                    }
+
+                    #endregion
 
                     retorno = Enums.ReturnJson.ActionSuccess;
                 }
@@ -884,10 +1112,27 @@ namespace Presentation.Web.Controllers
             {
                 Enums.ReturnJson retorno;
 
-                dto.EstadoDiarioID = appExpediente.SaveEstadoDiario(dto);
-                retorno = Enums.ReturnJson.ActionSuccess;
+                #region Valida Fecha
+                DTO.FiltrosEscritorio filtros = new Application.DTO.FiltrosEscritorio();
+                filtros.FechaDesde = dto.Fecha.ToString("dd/MM/yyyy");
+                filtros.FechaHasta = dto.Fecha.ToString("dd/MM/yyyy");
+                IList<DTO.Models.EstadoDiario> EstadosDiarios = appExpediente.GetEstadoDiario(filtros);
+                bool existe = EstadosDiarios.Any(x => x.Fecha == dto.Fecha && x.EstadoDiarioID != dto.EstadoDiarioID);
+                #endregion
 
-                return Json(new { result = (int)retorno, EstadoDiarioID = dto.EstadoDiarioID });
+                if (!existe)
+                {
+                    dto.EstadoDiarioID = appExpediente.SaveEstadoDiario(dto);
+                    retorno = Enums.ReturnJson.ActionSuccess;
+
+                    return Json(new { result = (int)retorno, EstadoDiarioID = dto.EstadoDiarioID });
+                }
+                else
+                {                    
+                    retorno = Enums.ReturnJson.ErrorModelo;
+                    return Json(new { result = (int)retorno, EstadoDiarioID = dto.EstadoDiarioID });
+                }
+                
             }
             catch (Exception ex)
             {

@@ -39,6 +39,8 @@ namespace Persistence.Repository
         public bool IsTabla { get; set; }
         public bool IsFinalizado { get; set; }
         public Nullable<int> TablaID { get; set; }
+        public int TipoCanalID { get; set; }
+        public string NumeroTicket { get; set; }
     
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<AsocEscritoDocto> AsocEscritoDocto { get; set; }
@@ -52,7 +54,8 @@ namespace Persistence.Repository
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<DetalleEstadoDiario> DetalleEstadoDiario { get; set; }
         public virtual TipoTramite TipoTramite { get; set; }
-        public virtual Usuario Usuario { get; set; }
         public virtual Tabla Tabla { get; set; }
+        public virtual TipoCanal TipoCanal { get; set; }
+        public virtual Usuario Usuario { get; set; }
     }
 }

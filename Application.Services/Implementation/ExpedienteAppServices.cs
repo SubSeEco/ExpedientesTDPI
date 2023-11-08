@@ -55,6 +55,10 @@ namespace Application.Services
             dto.IsSoloEscritos = filtros.IsSoloEscritos;
             dto.IsSoloMisEscritos = filtros.IsSoloMisEscritos;
 
+            //Firmas
+            dto.TipoDocumentoID = filtros.TipoDocumentoID;
+            dto.EstadoFirma = filtros.EstadoFirma;
+
             return dto;
         }
 
@@ -154,6 +158,7 @@ namespace Application.Services
             dto.Usuario.Nombres = model.Usuario.Nombres;
             dto.Usuario.Apellidos = model.Usuario.Apellidos;
             dto.Usuario.Mail = model.Usuario.Mail;
+            dto.Usuario.Telefono = model.Usuario.Telefono;
             dto.Usuario.IsClaveUnica = model.Usuario.IsClaveUnica;
             dto.Usuario.FechaRegistro = model.Usuario.FechaRegistro;
             dto.Usuario.FechaModificacion = model.Usuario.FechaModificacion;
@@ -170,6 +175,7 @@ namespace Application.Services
             {
                 DTO.Models.Expediente dto = new DTO.Models.Expediente();
                 dto.ExpedienteID = item.ExpedienteID;
+                dto.TipoCanalID = item.TipoCanalID;
                 dto.TipoTramiteID = item.TipoTramiteID;
                 dto.CausaID = item.CausaID;
                 dto.UsuarioID = item.UsuarioID;
@@ -183,6 +189,9 @@ namespace Application.Services
                 dto.IsHabil = item.IsHabil;
                 dto.IsTabla = item.IsTabla;
                 dto.IsFinalizado = item.IsFinalizado;
+                dto.TablaID = item.TablaID;
+                dto.NumeroTicket = item.NumeroTicket;
+
 
                 dto.TipoTramite = new DTO.Models.TipoTramite();
                 dto.TipoTramite.TipoTramiteID = item.TipoTramite.TipoTramiteID;
@@ -220,10 +229,27 @@ namespace Application.Services
                 dto.Usuario.Nombres = item.Usuario.Nombres;
                 dto.Usuario.Apellidos = item.Usuario.Apellidos;
                 dto.Usuario.Mail = item.Usuario.Mail;
+                dto.Usuario.Telefono = item.Usuario.Telefono;
                 dto.Usuario.IsClaveUnica = item.Usuario.IsClaveUnica;
                 dto.Usuario.FechaRegistro = item.Usuario.FechaRegistro;
                 dto.Usuario.FechaModificacion = item.Usuario.FechaModificacion;
-                
+
+                dto.Usuario.AsocUsuarioPerfil = new List<DTO.Models.AsocUsuarioPerfil>();
+                foreach (var asoc in item.Usuario.AsocUsuarioPerfil)
+                {
+                    DTO.Models.AsocUsuarioPerfil a = new DTO.Models.AsocUsuarioPerfil();
+                    a.AsocUsuarioPerfilID = asoc.AsocUsuarioPerfilID;
+                    a.PerfilID = asoc.PerfilID;
+                    a.UsuarioID = asoc.UsuarioID;
+
+                    a.Perfil = new DTO.Models.Perfil();
+                    a.Perfil.PerfilID = asoc.Perfil.PerfilID;
+                    a.Perfil.Descripcion = asoc.Perfil.Descripcion.Trim();
+
+
+                    dto.Usuario.AsocUsuarioPerfil.Add(a);
+                }
+
                 dto.AsocExpedienteOpcion = new List<DTO.Models.AsocExpedienteOpcion>();
                 foreach (var asoc in item.AsocExpedienteOpcion)
                 {
@@ -251,6 +277,37 @@ namespace Application.Services
                     add.OpcionesTramiteID = asoc.OpcionesTramiteID;
 
                     dto.AsocEscritoDocto.Add(add);
+                }
+
+                dto.AsocExpeFirma = new List<DTO.Models.AsocExpeFirma>();
+                foreach (var asoc in item.AsocExpeFirma)
+                {
+                    DTO.Models.AsocExpeFirma add = new DTO.Models.AsocExpeFirma();
+                    add.AsocExpeFirmaID = asoc.AsocExpeFirmaID;
+                    add.FirmaID = asoc.FirmaID;
+                    add.ExpedienteID = asoc.ExpedienteID;
+
+                    add.Firma = new DTO.Models.Firma();
+                    add.Firma.FirmaID = asoc.Firma.FirmaID;
+                    add.Firma.UsuarioID = asoc.Firma.UsuarioID;
+                    add.Firma.Orden = asoc.Firma.Orden;
+
+                    foreach (var _asocFirmaDoctoAsocExpeFirma in asoc.Firma.AsocFirmaDocto)
+                    {
+                        DTO.Models.AsocFirmaDocto _asocFirmaDoctoExp = new DTO.Models.AsocFirmaDocto();
+                        _asocFirmaDoctoExp.AsocFirmaDoctoID = _asocFirmaDoctoAsocExpeFirma.AsocFirmaDoctoID;
+                        _asocFirmaDoctoExp.IsFirmado = _asocFirmaDoctoAsocExpeFirma.IsFirmado;
+                        _asocFirmaDoctoExp.AsocEscritoDoctoID = _asocFirmaDoctoAsocExpeFirma.AsocEscritoDoctoID;
+
+                        _asocFirmaDoctoExp.Firma = new DTO.Models.Firma();
+                        _asocFirmaDoctoExp.Firma.FirmaID = _asocFirmaDoctoAsocExpeFirma.Firma.FirmaID;
+                        _asocFirmaDoctoExp.Firma.UsuarioID = _asocFirmaDoctoAsocExpeFirma.Firma.UsuarioID;
+                        _asocFirmaDoctoExp.Firma.Orden = _asocFirmaDoctoAsocExpeFirma.Firma.Orden;
+
+                        add.Firma.AsocFirmaDocto.Add(_asocFirmaDoctoExp);
+                    }
+                    
+                    dto.AsocExpeFirma.Add(add);
                 }
 
                 listDTO.Add(dto);
@@ -323,7 +380,8 @@ namespace Application.Services
 
             if (tipoDocumento == Domain.Infrastructure.TipoDocumento.Ingreso ||
                 tipoDocumento == Domain.Infrastructure.TipoDocumento.Tabla ||
-                tipoDocumento == Domain.Infrastructure.TipoDocumento.EstadoDiario)
+                tipoDocumento == Domain.Infrastructure.TipoDocumento.EstadoDiario ||
+                tipoDocumento == Domain.Infrastructure.TipoDocumento.CertificadoTituloAbogado)
             {
                 DocumentoSistema _doc = repo.GetDocumentoSistemaByHash(Hash);
                 if (_doc != null)
@@ -622,11 +680,12 @@ namespace Application.Services
         {
             Expediente model = new Expediente();
             model.ExpedienteID = dto.ExpedienteID;
+            model.TipoCanalID = dto.TipoCanalID;
             model.TipoTramiteID = dto.TipoTramiteID;
             model.CausaID = dto.CausaID;
             model.UsuarioID = dto.UsuarioID;
             model.UsuarioResponsableID = dto.UsuarioResponsableID;
-            model.FechaIngreso = dto.FechaExpediente ?? DateTime.Now;
+            model.FechaIngreso = dto.FechaExpediente;
             model.IsAdmisible = dto.IsAdmisible;
             model.Observacion = dto.Observacion;
             model.Comentario = dto.Comentario;
@@ -635,6 +694,8 @@ namespace Application.Services
             model.IsHabil = dto.IsHabil;
             model.IsTabla = dto.IsTabla;
             model.IsFinalizado = dto.IsFinalizado;
+            model.TablaID = dto.TablaID;
+            model.NumeroTicket = dto.NumeroTicket;
 
             return repo.SaveExpediente(model);
         }
@@ -644,6 +705,7 @@ namespace Application.Services
 
             DTO.Models.Expediente dto = new DTO.Models.Expediente();
             dto.ExpedienteID = model.ExpedienteID;
+            dto.TipoCanalID = model.TipoCanalID;
             dto.TipoTramiteID = model.TipoTramiteID;
             dto.CausaID = model.CausaID;
             dto.UsuarioID = model.UsuarioID;
@@ -657,6 +719,8 @@ namespace Application.Services
             dto.IsHabil = model.IsHabil;
             dto.IsTabla = model.IsTabla;
             dto.IsFinalizado = model.IsFinalizado;
+            dto.TablaID = model.TablaID;
+            dto.NumeroTicket = model.NumeroTicket;
 
             dto.AsocExpedienteOpcion = new List<DTO.Models.AsocExpedienteOpcion>();
             foreach (var asoc in model.AsocExpedienteOpcion)
@@ -673,9 +737,6 @@ namespace Application.Services
 
                 dto.AsocExpedienteOpcion.Add(add);
             }
-
-            //AsocExpedienteOpcion.OpcionesTramite
-            //TipoTramite.AsocTipoTramiteOpciones//.EstadosAplica
 
             dto.TipoTramite = new DTO.Models.TipoTramite();
             dto.TipoTramite.TipoTramiteID = model.TipoTramite.TipoTramiteID;
@@ -727,6 +788,7 @@ namespace Application.Services
                 dto.Usuario.Nombres = item.Usuario.Nombres;
                 dto.Usuario.Apellidos = item.Usuario.Apellidos;
                 dto.Usuario.Mail = item.Usuario.Mail;
+                dto.Usuario.Telefono = item.Usuario.Telefono;
                 dto.Usuario.IsClaveUnica = item.Usuario.IsClaveUnica;
                 dto.Usuario.FechaRegistro = item.Usuario.FechaRegistro;
                 dto.Usuario.FechaModificacion = item.Usuario.FechaModificacion;
@@ -751,11 +813,9 @@ namespace Application.Services
 
         public IList<DTO.Models.Firma> GetEscritorioFirmas(DTO.FiltrosEscritorio filtros)
         {
-            IList<Firma> repoList = repo.GetFirmasByUsuarioID(filtros.UsuarioID);
+            IList<Firma> repoList = repo.GetEscritorioFirmas(MapFilter(filtros));
+            
             IList<DTO.Models.Firma> listDTO = new List<DTO.Models.Firma>();
-
-            DateTime Desde = Convert.ToDateTime(filtros.FechaDesde).Date;
-            DateTime Hasta = Convert.ToDateTime(filtros.FechaHasta).AddHours(23).AddMinutes(59).AddSeconds(59);
 
             foreach (var item in repoList)
             {
@@ -772,6 +832,7 @@ namespace Application.Services
                 dto.Usuario.Nombres = item.Usuario.Nombres;
                 dto.Usuario.Apellidos = item.Usuario.Apellidos;
                 dto.Usuario.Mail = item.Usuario.Mail;
+                dto.Usuario.Telefono = item.Usuario.Telefono;
                 dto.Usuario.IsClaveUnica = item.Usuario.IsClaveUnica;
                 dto.Usuario.FechaRegistro = item.Usuario.FechaRegistro;
                 dto.Usuario.FechaModificacion = item.Usuario.FechaModificacion;
@@ -803,13 +864,10 @@ namespace Application.Services
                     add.AsocEscritoDocto.Expediente = new DTO.Models.Expediente();
                     Expediente _expediente = repo.GetExpediente(add.AsocEscritoDocto.ExpedienteID);
                     
-                    //Filtro Escritorio - Fecha Desde Fecha Hasta
-                    if (Desde.Date > _expediente.FechaIngreso.Date) continue;
-                    if (Hasta.Date < _expediente.FechaIngreso.Date) continue;
-
                     #region Expediente
                     add.AsocEscritoDocto.Expediente.ExpedienteID = _expediente.ExpedienteID;
                     add.AsocEscritoDocto.Expediente.CausaID = _expediente.CausaID;
+                    add.AsocEscritoDocto.Expediente.TipoCanalID = _expediente.TipoCanalID;
                     add.AsocEscritoDocto.Expediente.UsuarioID = _expediente.UsuarioID;
                     add.AsocEscritoDocto.Expediente.UsuarioResponsableID = _expediente.UsuarioResponsableID;
                     add.AsocEscritoDocto.Expediente.FechaExpediente = _expediente.FechaIngreso;
@@ -820,6 +878,7 @@ namespace Application.Services
                     add.AsocEscritoDocto.Expediente.IsHabil = _expediente.IsHabil;
                     add.AsocEscritoDocto.Expediente.IsTabla = _expediente.IsTabla;
                     add.AsocEscritoDocto.Expediente.IsFinalizado = _expediente.IsFinalizado;
+                    add.AsocEscritoDocto.Expediente.NumeroTicket = _expediente.NumeroTicket;
                     #endregion
 
                     #region Firmas Expediente
@@ -938,9 +997,7 @@ namespace Application.Services
                         add.AsocEscritoDocto.AsocCausaDocumento.DocumentoCausa.Causa.CausaID = asoc.AsocEscritoDocto.AsocCausaDocumento.DocumentoCausa.Causa.CausaID;
                         add.AsocEscritoDocto.AsocCausaDocumento.DocumentoCausa.Causa.NumeroTicket = asoc.AsocEscritoDocto.AsocCausaDocumento.DocumentoCausa.Causa.NumeroTicket;
                     }
-
-                    //Filtro Escritorio - NumeroTicket
-                    if (filtros.NumeroTicket.Trim() != "" && filtros.NumeroTicket.Trim() != add.AsocEscritoDocto.AsocCausaDocumento.DocumentoCausa.Causa.NumeroTicket.Trim()) continue;
+                    
                     #endregion
 
                     dto.AsocFirmaDocto.Add(add);
@@ -956,6 +1013,8 @@ namespace Application.Services
 
                 foreach (var asocDocSistema in item.AsocDocSistemaFirma)
                 {
+                    bool Agregar = false;
+
                     #region AsocDocSistemaFirma
                     DTO.Models.AsocDocSistemaFirma add = new DTO.Models.AsocDocSistemaFirma();
                     add.AsocDocSistemaFirmaID = asocDocSistema.AsocDocSistemaFirmaID;
@@ -1000,10 +1059,59 @@ namespace Application.Services
                             add.DocumentoSistema.AsocDocSistemaFirma.Add(_AsocDocSistemaFirma);
                         }
                         #endregion
+
+                        #region AsocDocumentoSistemaTabla
+                        var AsocDocumentoSistemaTabla = repo.GetAsocDocumentoSistemaTablaByDocumentoSitemaID(asocDocSistema.DocumentoSistemaID);
+                        foreach (var _asocDoctoSistemaTabla in AsocDocumentoSistemaTabla)
+                        {
+                            DTO.Models.AsocDocumentoSistemaTabla _addAsoc = new DTO.Models.AsocDocumentoSistemaTabla();
+                            _addAsoc.AsocDocumentoSistemaTablaID = _asocDoctoSistemaTabla.AsocDocumentoSistemaTablaID;
+                            _addAsoc.TablaID = _asocDoctoSistemaTabla.TablaID;
+                            _addAsoc.DocumentoSistemaID = _asocDoctoSistemaTabla.DocumentoSistemaID;
+
+                            _addAsoc.Tabla = new DTO.Models.Tabla();
+                            var repoTabla = repo.GetTablaByID(_addAsoc.TablaID);
+
+                            _addAsoc.Tabla.TablaID = repoTabla.TablaID;
+                            _addAsoc.Tabla.EstadoTablaID = repoTabla.EstadoTablaID;
+                            _addAsoc.Tabla.SalaID = repoTabla.SalaID;
+                            _addAsoc.Tabla.Fecha = repoTabla.Fecha;
+                            _addAsoc.Tabla.UsuarioRelatorID = repoTabla.UsuarioSubroganteID;
+
+                            add.DocumentoSistema.AsocDocumentoSistemaTabla.Add(_addAsoc);
+
+                            Agregar = (_addAsoc.Tabla.EstadoTablaID == (int)Domain.Infrastructure.EstadoTabla.FirmadoPublicado);
+                        }
+                        #endregion
+
+                        #region AsocDocumentoSistemaEstadoDiario
+                        var AsocDocumentoSistemaEstadoDiario = repo.GetAsocDocumentoSistemaEstadoDiarioByDocumentoSitemaID(asocDocSistema.DocumentoSistemaID);
+                        foreach (var _asocDoctoSistemaEstadoDiario in AsocDocumentoSistemaEstadoDiario)
+                        {
+                            DTO.Models.AsocDocumentoSistemaEstadoDiario _addAsoc = new DTO.Models.AsocDocumentoSistemaEstadoDiario();
+                            _addAsoc.AsocDocumentoSistemaEstadoDiarioID = _asocDoctoSistemaEstadoDiario.AsocDocumentoSistemaEstadoDiarioID;
+                            _addAsoc.EstadoDiarioID = _asocDoctoSistemaEstadoDiario.EstadoDiarioID;
+                            _addAsoc.DocumentoSistemaID = _asocDoctoSistemaEstadoDiario.DocumentoSistemaID;
+
+                            _addAsoc.EstadoDiario = new DTO.Models.EstadoDiario();
+                            var repoEstadoDiario = repo.GetEstadoDiarioByID(_addAsoc.EstadoDiarioID);
+
+                            _addAsoc.EstadoDiario.EstadoDiarioID = repoEstadoDiario.EstadoDiarioID;
+                            _addAsoc.EstadoDiario.TipoEstadoDiarioID = repoEstadoDiario.TipoEstadoDiarioID;
+                            _addAsoc.EstadoDiario.Fecha = repoEstadoDiario.Fecha;
+
+                            add.DocumentoSistema.AsocDocumentoSistemaEstadoDiario.Add(_addAsoc);
+
+                            Agregar = (_addAsoc.EstadoDiario.TipoEstadoDiarioID == (int)Domain.Infrastructure.TipoEstadoDiario.FirmadoPublicado);
+                        }
+                        #endregion
+                        
                     }
                     #endregion
-
-                    dto.AsocDocSistemaFirma.Add(add);
+                    if (Agregar)
+                    {
+                        dto.AsocDocSistemaFirma.Add(add);
+                    }
                 }
                 if (dto.AsocDocSistemaFirma.Count > 0) listDTO.Add(dto);
                 #endregion
@@ -1115,18 +1223,24 @@ namespace Application.Services
         {
             repo.BorrarFirmasExpediente(expedienteID);
         }
+        public void BorrarFirmaByFirmaID(int FirmaID)
+        {
+            repo.BorrarFirmaByFirmaID(FirmaID);
+        }
+
+        public void BorrarFirmaByAsocDocSistema(int AsocDocSistemaFirmaID)
+        {
+            repo.BorrarFirmaByAsocDocSistema(AsocDocSistemaFirmaID);
+        }
 
         public int SaveFirma(DTO.Models.Firma dto)
         {
-            //Firma model = new Firma();
-            //model.FirmaID = dto.FirmaID;
-            //model.UsuarioID = dto.UsuarioID;
-            //model.ExpedienteID = dto.ExpedienteID;
-            //model.Orden = dto.Orden;
+            Firma model = new Firma();
+            model.FirmaID = dto.FirmaID;
+            model.UsuarioID = dto.UsuarioID;
+            model.Orden = dto.Orden;
 
-            //return repo.SaveFirma(model);
-
-            return 0;
+            return repo.SaveFirma(model);
         }
 
         public int SaveAsocFirmaDocto(DTO.Models.AsocFirmaDocto dto)
@@ -1156,6 +1270,20 @@ namespace Application.Services
                 dto.Firma.FirmaID = model.Firma.FirmaID;
                 dto.Firma.UsuarioID = model.Firma.UsuarioID;
                 dto.Firma.Orden = model.Firma.Orden;
+
+                dto.DocumentoSistema = new DTO.Models.DocumentoSistema();
+                dto.DocumentoSistema.DocumentoSistemaID = model.DocumentoSistema.DocumentoSistemaID;
+                dto.DocumentoSistema.VersionEncriptID = model.DocumentoSistema.VersionEncriptID;
+                dto.DocumentoSistema.TipoDocumentoID = model.DocumentoSistema.TipoDocumentoID;
+                dto.DocumentoSistema.Hash = model.DocumentoSistema.Hash.Trim();
+                dto.DocumentoSistema.NombreArchivoFisico = model.DocumentoSistema.NombreArchivoFisico.Trim();
+                dto.DocumentoSistema.Fecha = model.DocumentoSistema.Fecha;
+                dto.DocumentoSistema.Descripcion = model.DocumentoSistema.Descripcion.Trim();
+
+                dto.DocumentoSistema.VersionEncript = new DTO.Models.VersionEncript();
+                dto.DocumentoSistema.VersionEncript.VersionEncriptID = model.DocumentoSistema.VersionEncript.VersionEncriptID;
+                dto.DocumentoSistema.VersionEncript.Cadena = model.DocumentoSistema.VersionEncript.Cadena.Trim();
+
             }
 
             return dto;
@@ -1331,6 +1459,70 @@ namespace Application.Services
             return repo.SaveAsocDocumentoSistemaTabla(model);
         }
 
+        public IList<DTO.Models.AsocDocumentoSistemaTabla> GetAsocDocumentoSistemaTabla(int TablaID) {
+
+            IList<DTO.Models.AsocDocumentoSistemaTabla> listDTO = new List<DTO.Models.AsocDocumentoSistemaTabla>();
+            IList<AsocDocumentoSistemaTabla> repoList = repo.GetAsocDocumentoSistemaTabla(TablaID);
+
+            foreach (var item in repoList)
+            {
+                DTO.Models.AsocDocumentoSistemaTabla dto = new DTO.Models.AsocDocumentoSistemaTabla();
+                dto.AsocDocumentoSistemaTablaID = item.AsocDocumentoSistemaTablaID;
+                dto.TablaID = item.TablaID;
+                dto.DocumentoSistemaID= item.DocumentoSistemaID;
+
+                listDTO.Add(dto);
+            }
+
+            return listDTO;
+        }
+
+        public IList<DTO.Models.AsocDocumentoSistemaEstadoDiario> GetAsocDocumentoSistemaEstadoDiario(int EstadoDiarioID)
+        {
+            IList<DTO.Models.AsocDocumentoSistemaEstadoDiario> listDTO = new List<DTO.Models.AsocDocumentoSistemaEstadoDiario>();
+            IList<AsocDocumentoSistemaEstadoDiario> repoList = repo.GetAsocDocumentoSistemaEstadoDiario(EstadoDiarioID);
+
+            foreach (var item in repoList)
+            {
+                DTO.Models.AsocDocumentoSistemaEstadoDiario dto = new DTO.Models.AsocDocumentoSistemaEstadoDiario();
+                dto.AsocDocumentoSistemaEstadoDiarioID = item.AsocDocumentoSistemaEstadoDiarioID;
+                dto.DocumentoSistemaID = item.DocumentoSistemaID;
+                dto.EstadoDiarioID = item.EstadoDiarioID;
+
+                listDTO.Add(dto);
+            }
+            return listDTO;
+        }
+
+
+        public IList<DTO.Models.AsocDocSistemaFirma> GetAsocDocSistemaFirmaByDocto(int DocumentoSistemaID)
+        {
+            IList<DTO.Models.AsocDocSistemaFirma> listDTO = new List<DTO.Models.AsocDocSistemaFirma>();
+            IList<AsocDocSistemaFirma> repoList = repo.GetAsocDocSistemaFirmaByDocto(DocumentoSistemaID);
+
+            foreach (var item in repoList)
+            {
+                DTO.Models.AsocDocSistemaFirma dto = new DTO.Models.AsocDocSistemaFirma();
+                dto.AsocDocSistemaFirmaID = item.AsocDocSistemaFirmaID;
+                dto.DocumentoSistemaID = item.DocumentoSistemaID;
+                dto.FirmaID = item.FirmaID;
+                dto.IsFirmado = item.IsFirmado;
+
+                dto.Firma = new DTO.Models.Firma();
+                dto.Firma.FirmaID = item.Firma.FirmaID;
+                dto.Firma.UsuarioID = item.Firma.UsuarioID;
+                dto.Firma.UsuarioFirmaID = item.Firma.UsuarioID;
+                dto.Firma.Orden= item.Firma.Orden;
+
+                dto.Firma.Usuario = new DTO.Models.Usuario();
+                dto.Firma.Usuario = appCommon.GetUsuarioByID(item.Firma.UsuarioID);
+
+                listDTO.Add(dto);
+            }
+
+            return listDTO;
+        }
+
         public int SaveAsocDocumentoSistemaEstadoDiario(DTO.Models.AsocDocumentoSistemaEstadoDiario dto)
         {
             AsocDocumentoSistemaEstadoDiario model = new AsocDocumentoSistemaEstadoDiario();
@@ -1361,6 +1553,27 @@ namespace Application.Services
                 dto.VersionEncript = new DTO.Models.VersionEncript();
                 dto.VersionEncript.VersionEncriptID = item.VersionEncript.VersionEncriptID;
                 dto.VersionEncript.Cadena = item.VersionEncript.Cadena.Trim();
+
+                dto.AsocDocSistemaFirma = new List<DTO.Models.AsocDocSistemaFirma>();
+                if (item.AsocDocSistemaFirma != null && item.AsocDocSistemaFirma.Count > 0 )
+                {
+                    foreach (var asoc in item.AsocDocSistemaFirma)
+                    {
+                        DTO.Models.AsocDocSistemaFirma _addAsoc = new DTO.Models.AsocDocSistemaFirma();
+                        _addAsoc.AsocDocSistemaFirmaID = asoc.AsocDocSistemaFirmaID;
+                        _addAsoc.DocumentoSistemaID = asoc.DocumentoSistemaID;
+                        _addAsoc.FirmaID = asoc.FirmaID;
+                        _addAsoc.IsFirmado = asoc.IsFirmado;
+
+                        _addAsoc.Firma = new DTO.Models.Firma();
+                        _addAsoc.Firma.FirmaID = asoc.Firma.FirmaID;
+                        _addAsoc.Firma.UsuarioID = asoc.Firma.UsuarioID;
+                        _addAsoc.Firma.Orden = asoc.Firma.Orden;
+
+                        dto.AsocDocSistemaFirma.Add(_addAsoc);
+                    }
+                }
+
 
                 listDTO.Add(dto);
             }
@@ -1454,6 +1667,21 @@ namespace Application.Services
             return repo.SaveDetalleEstadoDiario(model);
         }
 
+        public int SaveAsocExpeFirma(DTO.Models.AsocExpeFirma dto)
+        {
+            AsocExpeFirma model = new AsocExpeFirma();
+            model.AsocExpeFirmaID = dto.AsocExpeFirmaID;
+            model.FirmaID = dto.FirmaID;
+            model.ExpedienteID = dto.ExpedienteID;
+
+            return repo.SaveAsocExpeFirma(model);
+        }
+
+        public void UpdateResponsable(int expedienteID, int usuarioID)
+        {
+            repo.UpdateResponsable(expedienteID, usuarioID);
+        }
+
         public IList<DTO.Models.DetalleEstadoDiario> GetDetalleEstadoDiarioByExpediente(int expedienteID)
         {
             IList<DetalleEstadoDiario> repoList = repo.GetDetalleEstadoDiarioByExpediente(expedienteID);
@@ -1478,5 +1706,72 @@ namespace Application.Services
         {
             repo.SetExpedienteFinalizado(expedienteID, finalizar);
         }
-    }
+
+        public void SetExpedienteInadmisible(int expedienteID)
+        {
+            repo.SetExpedienteInadmisible(expedienteID);
+        }
+
+        public IList<DTO.Models.AsocExpeFirma> GetAsocExpeFirmaByExpedienteID(int expedienteID)
+        {
+            IList<AsocExpeFirma> repoList = repo.GetAsocExpeFirmaByExpedienteID(expedienteID);
+
+            IList<DTO.Models.AsocExpeFirma> listDTO = new List<DTO.Models.AsocExpeFirma>();
+
+            foreach (var item in repoList)
+            {
+                DTO.Models.AsocExpeFirma dto = new DTO.Models.AsocExpeFirma();
+                dto.AsocExpeFirmaID = item.AsocExpeFirmaID;
+                dto.FirmaID = item.FirmaID;
+                dto.AsocExpeFirmaID = item.ExpedienteID;
+
+                dto.Firma = new DTO.Models.Firma();
+                dto.Firma.FirmaID = item.Firma.FirmaID;
+                dto.Firma.UsuarioID = item.Firma.UsuarioID;
+                dto.Firma.Orden = item.Firma.Orden;
+
+                dto.Firma.Usuario = new DTO.Models.Usuario();
+                dto.Firma.Usuario.UsuarioID = item.Firma.Usuario.UsuarioID;
+                dto.Firma.Usuario.AdID = item.Firma.Usuario.AdID;
+                dto.Firma.Usuario.Rut = item.Firma.Usuario.Rut;
+                dto.Firma.Usuario.Nombres = item.Firma.Usuario.Nombres;
+                dto.Firma.Usuario.Apellidos = item.Firma.Usuario.Apellidos;
+                dto.Firma.Usuario.Mail = item.Firma.Usuario.Mail;
+                dto.Firma.Usuario.Telefono = item.Firma.Usuario.Telefono;
+                dto.Firma.Usuario.IsClaveUnica = item.Firma.Usuario.IsClaveUnica;
+                dto.Firma.Usuario.FechaRegistro = item.Firma.Usuario.FechaRegistro;
+                dto.Firma.Usuario.FechaModificacion = item.Firma.Usuario.FechaModificacion;
+
+                dto.Firma.AsocFirmaDocto = new List<DTO.Models.AsocFirmaDocto>();
+                foreach (var asoc in item.Firma.AsocFirmaDocto)
+                {
+                    DTO.Models.AsocFirmaDocto add = new DTO.Models.AsocFirmaDocto();
+                    add.AsocFirmaDoctoID = asoc.AsocFirmaDoctoID;
+                    add.FirmaID = asoc.FirmaID;
+                    add.AsocEscritoDoctoID = asoc.AsocEscritoDoctoID;
+                    add.IsFirmado = asoc.IsFirmado;                 
+
+                    dto.Firma.AsocFirmaDocto.Add(add);
+                }
+
+                listDTO.Add(dto);
+            }
+
+            return listDTO;
+        }
+
+        public int SaveDerivacion(DTO.Models.Derivacion dto)
+        {
+            Derivacion model = new Derivacion();
+            model.DerivacionID = dto.DerivacionID;
+            model.ExpedienteID = dto.ExpedienteID;
+            model.UsuarioID = dto.UsuarioID;
+            model.UsuarioResponsableID = dto.UsuarioResponsableID;
+            model.Observacion = dto.Observacion;
+            model.PlazoDias = dto.PlazoDias;
+            model.Fecha = dto.Fecha;
+
+            return repo.SaveDerivacion(model);
+        }
+}
 }

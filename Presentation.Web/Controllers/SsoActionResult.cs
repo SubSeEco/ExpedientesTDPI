@@ -79,6 +79,11 @@ namespace Presentation.Web.Controllers
             return r;
         }
 
+        internal bool IsAbogado()
+        {
+            return GetPerfilUsuario().Any(x => x.PerfilID == (int)Perfil.Abogado);
+        }
+
 
         /// <summary>
         /// 
@@ -88,6 +93,11 @@ namespace Presentation.Web.Controllers
         {
             this.Perfiles = new List<DTO.Models.Perfil>();
             this.IsDesarrollo = WebConfigValues.IsDesarrollo;
+        }
+
+        internal bool IsSinPerfil()
+        {
+            return Perfiles.Count == 0;
         }
 
         /// <summary>
@@ -202,6 +212,7 @@ namespace Presentation.Web.Controllers
         {
             List<string> perfil = new List<string>();
 
+            HttpContext.Current.Session["IsAbogado"] = false;
             HttpContext.Current.Session["IsTDPI"] = false;
             HttpContext.Current.Session["IsINAPI"] = false;
             HttpContext.Current.Session["IsSAG"] = false;
@@ -229,6 +240,17 @@ namespace Presentation.Web.Controllers
             {
                 HttpContext.Current.Session["IsAdministrador"] = true;
                 perfil.Add(GetPerfilName(Perfil.Administrador));
+            }
+
+            if (IsAbogado())
+            {
+                HttpContext.Current.Session["IsAbogado"] = true;
+                perfil.Add(GetPerfilName(Perfil.Abogado));
+            }
+
+            if (IsSinPerfil())
+            {
+                perfil.Add("Invitado");
             }
 
             return string.Join(" &#183; ", perfil);

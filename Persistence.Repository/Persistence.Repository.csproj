@@ -68,6 +68,9 @@
     <Compile Include="AsocDocumentoSistemaTabla.cs">
       <DependentUpon>Model_SGDE.tt</DependentUpon>
     </Compile>
+    <Compile Include="AsocDocumentoUsuario.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
     <Compile Include="AsocEscritoDocto.cs">
       <DependentUpon>Model_SGDE.tt</DependentUpon>
     </Compile>
@@ -203,6 +206,9 @@
     <Compile Include="Sala.cs">
       <DependentUpon>Model_SGDE.tt</DependentUpon>
     </Compile>
+    <Compile Include="SP_Alarmas_Result.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
     <Compile Include="SP_Causas_Result.cs">
       <DependentUpon>Model_SGDE.tt</DependentUpon>
     </Compile>
@@ -260,7 +266,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.Config" />
-    <None Include="App_old.Config" />
     <EntityDeploy Include="Model_SGDE.edmx">
       <Generator>EntityModelCodeGenerator</Generator>
       <LastGenOutput>Model_SGDE.Designer.cs</LastGenOutput>

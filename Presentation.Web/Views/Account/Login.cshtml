@@ -153,7 +153,7 @@
                 IList<Application.DTO.Models.Usuario> Usuarios = app.GetUsuarios();
                 <div class="ar" style="width:100%">
                     <select name="UsuarioID" id="UsuarioID" style="" class="">
-                        @foreach (var item in Usuarios.Where(x => x.UsuarioID > 0).OrderBy(x => x.Nombres))
+                        @foreach (var item in Usuarios.Where(x => x.UsuarioID > 0 && !x.IsClaveUnica).OrderBy(x => x.Nombres))
                         {
                             <option value="@item.UsuarioID">@item.GetFullName()</option>
                         }

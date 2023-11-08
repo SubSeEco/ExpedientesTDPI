@@ -36,6 +36,9 @@ namespace Persistence.Repository
 
         IList<AsocUsuarioPerfil> GetAsocUsuarioPerfil();        
         IList<Perfil> PerfilesFuncionario(int FuncionarioID);
+
+        void SaveAsocDocumentoUsuario(AsocDocumentoUsuario model);
+        IList<AsocDocumentoUsuario> GetAsocDocumentoUsuario(int UsuarioID);
         #endregion
 
         #region Mantenedor de MimeTypes
@@ -86,6 +89,7 @@ namespace Persistence.Repository
         void DeleteDocumentoTmpByID(int documentoTmpID);
         void DeleteDocumentoTmp(int documentoID);
         void DeleteDocumentoCausa(int documentoID);
+        void DeleteDocumentoExpediente(int documentoID);
         #endregion
         ConfTipoCausa GetConfTipoCausa(int tipoCausaID);
         IList<TipoContencioso> GetTipoContencioso();
@@ -101,5 +105,6 @@ namespace Persistence.Repository
         IList<TipoGenero> GetTipoGenero();
         Usuario GetUsuarioByID(int usuarioID);
         IList<Perfil> GetPerfilUsuario(int usuarioID);
+        void SaveSigner(int usuarioActive, string signer);
     }
 }

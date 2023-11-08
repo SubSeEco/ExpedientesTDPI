@@ -1,0 +1,231 @@
+﻿@model Application.DTO.Models.EstadoDiario
+
+@using Enums = Domain.Infrastructure;
+@using resources = Infrastructure.Resources;
+
+@{
+
+    int count = 1;
+    string Fecha = Html.DatetimeToString(Model.Fecha, "dd-MM-yyyy");
+
+    var DataForm = ViewBag.DataForm as Application.DTO.DataForm;
+
+    var asocFirmas = ViewBag.asocFirmas as IList<Application.DTO.Models.AsocDocSistemaFirma>;
+    IList<Application.DTO.Models.Firma> ListaFirmas = new List<Application.DTO.Models.Firma>();
+
+    foreach (var item in asocFirmas)
+    {
+        ListaFirmas.Add(item.Firma);
+    }
+
+    string strMessage = $"¿Confirma generar documento PDF para la fecha <b>{ Fecha}</b>?";
+}
+
+<script type="text/javascript">
+
+    var appFirmas;
+    var firmasList = [];
+
+    @foreach (var item in ListaFirmas)
+    {
+        <text>
+    firmasList.push({
+        EstadoDiarioID: parseInt("@Model.EstadoDiarioID"),
+        FirmaID: parseInt("@item.FirmaID"),
+        UsuarioName: "@Html.Raw(item.Usuario.GetFullName())",
+        UsuarioFirmaID: parseInt("@item.UsuarioID"),
+        IsFirmado: "@item.AsocFirmaDocto",
+        Orden: parseInt("@item.Orden")
+    });
+    </text>
+    }
+
+    SetAppFirmas();
+
+    var optionSelected = 0;
+
+    ; (function ($) {
+        $(function () {
+
+            activateForm("btSaveExpediente", "frmGenerarPDF",
+                function () {
+
+                    @if (Model.DetalleEstadoDiario.Count == 0)
+                    {
+                        @:showBlockUIError("No hay Expedientes asignados para generar el PDF");
+                        @:return false;
+                    }
+
+                    if (appFirmas.lista.length == 0) {
+                        showBlockUIError("Debe adjuntar como mínimo una firma");
+                        return false;
+                    }
+
+
+                    if (!$("#checkDeclarar").is(":checked")) {
+                        showBlockUIError("Debe indicar haber adjuntado las firmas necesarias");
+                        return false;
+                    }
+
+                   
+                    try {
+                        if (appFirmas.lista.length > 0) {
+                            $("#strFirmas").val(JSON.stringify(appFirmas.lista));
+                        }
+
+                    } catch (e) {
+
+                    }
+
+
+                    return true;
+                },
+                function () {
+
+                    showBlockUI(CloseDialog);
+                    $("#btnBuscar").click();
+                });
+
+
+
+
+        });
+    })(jQuery);
+
+    function SetAppFirmas() {
+
+        appFirmas = new Vue({
+            el: '#firmasApp',
+            data: {
+                lista: firmasList
+            },
+            methods: {
+                create: function () {
+
+                    var UsuarioFirmaID = parseInt($("#UsuarioFirmaID").val()) || 0;
+                    var OrdenFirma = parseInt($("#OrdenFirma").val()) || 0;
+
+                    if (UsuarioFirmaID == 0) {
+                        showBlockUIError("Debe indicar Funcionario");
+                        $("#UsuarioFirmaID").addClass("is-invalid");
+                        return false;
+                    }
+
+                    if (OrdenFirma == 0) {
+                        showBlockUIError("Debe indicar Órden");
+                        $("#OrdenFirma").addClass("is-invalid");
+                        return false;
+                    }
+
+                    this.lista.push({
+                        EstadoDiarioID: parseInt("@Model.EstadoDiarioID"),
+                        FirmaID: 0,
+                        UsuarioName: $("#UsuarioFirmaID option:selected").text(),
+                        UsuarioFirmaID: UsuarioFirmaID,
+                        Orden: OrdenFirma
+                    });
+
+                    $("#UsuarioFirmaID option:selected").hide();
+                    $("#UsuarioFirmaID").val("");
+                    $("#OrdenFirma").val("");
+                    $("#OrdenFirma").removeClass("is-invalid");
+                    $("#UsuarioFirmaID").removeClass("is-invalid");
+                },
+                borrar: function (index) {
+
+                    let item = this.lista[index];
+                    $('#UsuarioFirmaID option[value="' + item.UsuarioFirmaID + '"]').show();
+                    $("#UsuarioFirmaID").val("");
+
+                    this.lista.splice(index, 1);
+                }
+            }
+        });
+    }
+
+
+</script>
+
+<div class="modal-body ">
+
+    @Html.Raw(Html.GetInfoVentanaIpsum(strMessage))
+
+    <form class="form-horizontal " id="frmGenerarPDF" method="post" action="@Url.Action("GenerarListadoEstadoDiarioPDF", "Listados")">
+        @Html.HiddenFor(x => x.EstadoDiarioID)
+        @Html.Hidden("strFirmas", "")
+
+        <fieldset class="x-fieldset" id="fsFirmasExpediente">
+            <legend class="celeste bold">Firmas</legend>
+
+            <div id="firmasApp">
+                <div class="form-inline">
+                    <div class="form-group">
+                        <label for="UsuarioFirmaID" class="">Funcionario</label>
+                        <select id="UsuarioFirmaID" name="UsuarioFirmaID" class="form-control mx-sm-3" data-default="">
+                            <option value="">@resources.GlobalResources.OptionInicial</option>
+                            @foreach (var item in DataForm.Usuario.Where(x => x.UsuarioID > 0))
+                            {
+                                bool existe = ListaFirmas.Any(x => x.UsuarioID == item.UsuarioID);
+                                if (!existe)
+                                {
+                                    <option value="@item.UsuarioID">@item.GetFullName()</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="OrdenFirma" class="">Órden</label>
+                        <input type="text" class="form-control mx-sm-2 IsInteger ac" id="OrdenFirma" placeholder="">
+                    </div>
+
+                    <button v-on:click="create" type="button" class="btn btn-default rel" style="top: -2px;">Agregar Responsable</button>
+                </div>
+
+                <table class="table table-striped table-sm table-bordered table-hover x-table allW" id="" style="margin-top:10px">
+                    <thead>
+                        <tr>
+                            <th class="ac" style="width:5%">@resources.GlobalResources.TH_Number</th>
+                            <th class="ac" style="text-align: left !important">Nombre</th>
+                            <th class="ac" style="width:20%">Órden</th>
+                            <th class="ac" style="width:10%">@resources.GlobalResources.TH_Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(f, index in lista">
+                            <td class="ac">{{index + 1}}</td>
+                            <td>{{ f.UsuarioName }}</td>
+                            <td class="ac">{{ f.Orden }}</td>
+                            <td class="ac">
+                                <a href='javascript:void(0)' v-on:click="borrar(index)"><i class='x-icon x-icon-delete'></i></a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+            </div>
+
+        </fieldset>
+    </form>
+
+    <div class="alert alert-danger ac" role="alert" style="margin-top:5px;">
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="checkDeclarar" value="1">
+            <label class="form-check-label" for="checkDeclarar">He adjuntado las firmas necesarias para el documento</label>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="modal-footer">
+
+    <button id="btSaveExpediente" class="btn btn-default" onclick="$('#frmGenerarPDF').submit()" type="button">
+        <i class="x-icon x-icon-save2 icon-in-button"></i> @resources.GlobalResources.BtnAceptar
+    </button>
+    <i class="x-icon-loader hide"></i>
+
+    <button class="btn btn-default" data-dismiss="modal" type="button">
+        <i class="x-icon x-icon-cancel2 icon-in-button"></i> @resources.GlobalResources.BtnCancelar
+    </button>
+
+</div>

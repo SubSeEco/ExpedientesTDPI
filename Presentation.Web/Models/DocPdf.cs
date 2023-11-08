@@ -13,6 +13,7 @@ using MigraDoc.Rendering;
 using MigraDoc.DocumentObjectModel.Tables;
 using DTO = Application.DTO;
 using Enums = Domain.Infrastructure;
+using System.Text;
 
 namespace Presentation.Web
 {
@@ -27,6 +28,7 @@ namespace Presentation.Web
         public DocPdf()
         {
             this.Causas = new List<DTO.Models.Causa>();
+            this.TipoParte = new List<DTO.Models.TipoParte>();
         }
 
         /// <summary>
@@ -61,6 +63,10 @@ namespace Presentation.Web
         /// 
         /// </summary>
         public IList<DTO.Models.Causa> Causas { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public IList<DTO.Models.TipoParte> TipoParte { get; set; }
         /// <summary>
         /// 
         /// </summary>
@@ -109,42 +115,6 @@ namespace Presentation.Web
 
 
         #region Private
-
-        private void SimpleTable()
-        {
-            //document.LastSection.AddParagraph("Simple Tables", "Heading2");
-
-            Table table = new Table();
-            table.Borders.Width = 0.75;
-
-            Column column = table.AddColumn(Unit.FromCentimeter(2));
-            column.Format.Alignment = ParagraphAlignment.Center;
-
-            table.AddColumn(Unit.FromCentimeter(5));
-
-            Row row = table.AddRow();
-            row.Shading.Color = Colors.PaleGoldenrod;
-            Cell cell = row.Cells[0];
-            cell.AddParagraph("Itemus");
-            cell = row.Cells[1];
-            cell.AddParagraph("Descriptum");
-
-            row = table.AddRow();
-            cell = row.Cells[0];
-            cell.AddParagraph("1");
-            cell = row.Cells[1];
-            cell.AddParagraph("asdfasdfsadfas");
-
-            row = table.AddRow();
-            cell = row.Cells[0];
-            cell.AddParagraph("2");
-            cell = row.Cells[1];
-            cell.AddParagraph("asdf asdf sadf asdf asf asf asdf sadf sadf sadf");
-
-            table.SetEdge(0, 0, 2, 3, Edge.Box, BorderStyle.Single, 1.5, Colors.Black);
-
-            document.LastSection.Add(table);
-        }
 
         private void DefineStyles()
         {
@@ -202,6 +172,14 @@ namespace Presentation.Web
             style.Font.Italic = false;
             style.ParagraphFormat.SpaceAfter = 6;
             style.ParagraphFormat.SpaceBefore = 3;
+
+            style = document.Styles["Heading6"];
+            style.Font.Size = 12;
+            style.Font.Bold = true;
+            style.Font.Italic = false;
+            style.ParagraphFormat.SpaceAfter = 5;
+            style.ParagraphFormat.SpaceBefore = 0;
+            style.ParagraphFormat.Alignment = ParagraphAlignment.Left;
 
 
             style = document.Styles[StyleNames.Header];
@@ -428,11 +406,36 @@ namespace Presentation.Web
             Unit bottomSpace = Unit.FromCentimeter(0.2);
             Unit bottomSpaceBreack = Unit.FromCentimeter(0.9);
 
+            var appCommon = new Application.Services.CommonAppServices();
+            
             int count = 1;
-            foreach (var item in Tabla.DetalleTabla.OrderBy(x => x.Orden))
+            foreach (var item in Tabla.DetalleTabla.Where(x=> x.Vigente).OrderBy(x => x.Orden))
             {
-                var ListaApelantes = item.Causa.Parte.Where(x => x.TipoParteID == (int)Enums.TipoParte.Apelante).ToList();
-                var ListaApelados = item.Causa.Parte.Where(x => x.TipoParteID == (int)Enums.TipoParte.Apelado).ToList();
+                IList<DTO.Models.Parte> ListaApelantes = new List<DTO.Models.Parte>();
+                IList<DTO.Models.Parte> ListaApelados = new List<DTO.Models.Parte>();
+
+                string lblTipoParte1 = string.Empty;
+                int TipoParteID1 = 0;
+                string lblTipoParte2 = string.Empty;
+                int TipoParteID2 = 0;
+
+                DTO.Models.ConfTipoCausa config = appCommon.GetConfTipoCausa(item.Causa.TipoCausaID);
+
+                var TipoParte1 = TipoParte.FirstOrDefault(x => x.TipoParteID == config.TipoParteID1);                
+                if (TipoParte1 != null)
+                {
+                    lblTipoParte1 = TipoParte1.Descripcion;
+                    TipoParteID1 = TipoParte1.TipoParteID;
+                    ListaApelantes = item.Causa.Parte.Where(x => x.TipoParteID == TipoParteID1).ToList();
+                }
+
+                var TipoParte2 = TipoParte.FirstOrDefault(x => x.TipoParteID == config.TipoParteID2);
+                if (TipoParte2 != null)
+                {
+                    lblTipoParte2 = TipoParte2.Descripcion;
+                    TipoParteID2 = TipoParte2.TipoParteID;
+                    ListaApelados = item.Causa.Parte.Where(x => x.TipoParteID == TipoParteID2).ToList();
+                }                
 
                 Row row = table.AddRow();
                 row.BottomPadding = bottomSpace;
@@ -481,7 +484,7 @@ namespace Presentation.Web
 
                 #endregion
 
-                #region Apelante
+                #region Apelante + lblTipoParte1
 
                 row = table.AddRow();
                 row.BottomPadding = bottomSpace;
@@ -491,7 +494,7 @@ namespace Presentation.Web
 
                 cell = row.Cells[1];
                 cell.Format.Font.Bold = true;
-                cell.AddParagraph("Apelante");
+                cell.AddParagraph(lblTipoParte1.Trim());
 
                 if (ListaApelantes.Count > 0)
                 {
@@ -523,7 +526,7 @@ namespace Presentation.Web
 
                 #endregion
 
-                #region Apelado
+                #region Apelado + lblTipoParte2
 
                 row = table.AddRow();
                 row.BottomPadding = bottomSpaceBreack;
@@ -533,7 +536,7 @@ namespace Presentation.Web
 
                 cell = row.Cells[1];
                 cell.Format.Font.Bold = true;
-                cell.AddParagraph("Apelado");
+                cell.AddParagraph(lblTipoParte2.Trim());
 
                 if (item.Causa.IsContencioso)
                 {
@@ -571,9 +574,10 @@ namespace Presentation.Web
 
             document.LastSection.Add(table);
 
-            string causas = (Tabla.DetalleTabla.Count == 1 ? "causa" : "causas");
+            int cantidad = Tabla.DetalleTabla.Where(x => x.Vigente).ToList().Count;
+            string causas = (cantidad == 1 ? "causa" : "causas");
 
-            AgregarParrafo("Certifico que la presente tabla consta de " + Tabla.DetalleTabla.Count + " " + causas, 
+            AgregarParrafo("Certifico que la presente tabla consta de " + cantidad + " " + causas, 
                 spaceAntes: 20, align: ParagraphAlignment.Left, spaceDespues: 40, leftIdent: 1, bold: true);
 
             #region Footer
@@ -800,12 +804,11 @@ namespace Presentation.Web
             var appCommon = new Application.Services.CommonAppServices();
 
             int TipoDocumentoCausa = (int)Enums.TipoDocumento.Causa;
+            int TipoDocumentoExpediente = (int)Enums.TipoDocumento.Expediente;
 
             DTO.Models.ConfTipoCausa config = appCommon.GetConfTipoCausa(Causa.TipoCausaID);
 
             #endregion
-
-            //document.LastSection.AddParagraph("");
 
             double PageWidth = document.DefaultPageSetup.PageWidth.Centimeter - 2.2;
 
@@ -815,7 +818,7 @@ namespace Presentation.Web
             table.AddColumn(Unit.FromCentimeter(PageWidth));
 
             Row row = table.AddRow();
-            row.Shading.Color = Color.FromRgb(230, 230, 230);// { Argb = "ASDFASD" }; Colors.LightGray;
+            row.Shading.Color = Color.FromRgb(230, 230, 230);
 
             Cell cell = row.Cells[0];
             cell.Format.Alignment = ParagraphAlignment.Left;
@@ -898,6 +901,16 @@ namespace Presentation.Web
             }
 
             //18.8
+            int sizeCell = 10;
+            double ancho1 = (PageWidth / 3);
+            double ancho2 = PageWidth - ancho1;
+
+            List<PdfRow> HeaderDocumento = new List<PdfRow>();
+            HeaderDocumento.Add(new PdfRow() { name = "#", width = Unit.FromCentimeter(.6) });
+            HeaderDocumento.Add(new PdfRow() { name = "Nombre Documento", width = Unit.FromCentimeter(5) });
+            HeaderDocumento.Add(new PdfRow() { name = "Descripción", width = Unit.FromCentimeter(6.1) });
+            HeaderDocumento.Add(new PdfRow() { name = "Fecha Carga", width = Unit.FromCentimeter(4) });
+            HeaderDocumento.Add(new PdfRow() { name = "Descarga", width = Unit.FromCentimeter(2.5) });
 
             if (Causa.DocumentoCausa.Count > 0)
             {
@@ -907,27 +920,21 @@ namespace Presentation.Web
                 _cell.AddParagraph("Documentos adjuntos");
                 _cell.MergeRight = 3;
 
-                List<PdfRow> Header = new List<PdfRow>();
-                Header.Add(new PdfRow() { name = "#", width = Unit.FromCentimeter(.6) });
-                Header.Add(new PdfRow() { name = "Nombre Documento", width = Unit.FromCentimeter(5) });
-                Header.Add(new PdfRow() { name = "Descripción", width = Unit.FromCentimeter(6.1) });
-                Header.Add(new PdfRow() { name = "Fecha Carga", width = Unit.FromCentimeter(4) });
-                Header.Add(new PdfRow() { name = "Descarga", width = Unit.FromCentimeter(2.5) });
+
 
                 Table _ti = new Table();
                 _ti.Borders.Width = .1;
                // _ti.Format.SpaceAfter = 30;
                 
-                int sizeCell = 10;
 
-                foreach (var item in Header)
+                foreach (var item in HeaderDocumento)
                 {
                     _ti.AddColumn(item.width);
                 }
 
                 Row _rowTi = _ti.AddRow();
 
-                foreach (var item in Header)
+                foreach (var item in HeaderDocumento)
                 {
                     Cell _cellTi = _rowTi.Cells[count];
                     _cellTi.Format.Font.Bold = true;
@@ -948,7 +955,7 @@ namespace Presentation.Web
 
                     _cellTi = _rowTi.Cells[1];
                     _cellTi.Format.Font.Size = sizeCell;
-                    _cellTi.AddParagraph(item.NombreArchivoFisico.Trim());
+                    _cellTi.AddParagraph(item.NombreArchivoFisico.Replace("_", " ").Trim());
 
                     _cellTi = _rowTi.Cells[2];
                     _cellTi.Format.Font.Size = sizeCell;
@@ -987,79 +994,522 @@ namespace Presentation.Web
                 _cell.MergeRight = 3;
             }
 
-
             row = table.AddRow();
             cell = row.Cells[0];
             cell.Elements.Add(_t);
 
+            document.LastSection.Add(table);
+            document.LastSection.AddParagraph("");
 
+            #region Partes
+            document.LastSection.AddParagraph("");
 
-            //cell.Elements.AddParagraph("Shading", "Heading3");
-            //Paragraph paragraph = new Paragraph();
-            //paragraph.Format.Shading.Color = Colors.LightCoral;
-            //paragraph.AddText(Causa.Denominacion.Trim());
-            //cell.Elements.Add(paragraph);
+            List<int> CausasSinConsignacion = new List<int>();
+            CausasSinConsignacion.Add((int)Enums.TipoCausa.VariedadVegetal);
+            CausasSinConsignacion.Add((int)Enums.TipoCausa.ProteccionSuplementaria);
+            CausasSinConsignacion.Add((int)Enums.TipoCausa.RecursoHechoMarca);
+            CausasSinConsignacion.Add((int)Enums.TipoCausa.RecursoHechoPatente);
 
-            //_cell.Borders.Top = new Border() { Width = 1 };
+            List<int> PartesSinConsignacion = new List<int>();
+            PartesSinConsignacion.Add((int)Enums.TipoParte.Recurrido);
+            PartesSinConsignacion.Add((int)Enums.TipoParte.Apelado);
+            PartesSinConsignacion.Add((int)Enums.TipoParte.Solicitante);
 
-            //row = table.AddRow();
-            //cell = row.Cells[0];
-            //cell.AddParagraph();
-            //cell = row.Cells[1];
-            //cell.AddParagraph(Causa.NumeroTicket);
+            table = new Table();
+            table.Borders.Width = 0.8;
 
+            table.AddColumn(Unit.FromCentimeter(PageWidth));
 
+            row = table.AddRow();
+            row.Shading.Color = Color.FromRgb(230, 230, 230);
 
-            //table.SetEdge(0, 0, 4, 1, Edge.Box, BorderStyle.Single, 1.5, Colors.Black);
+            cell = row.Cells[0];
+            cell.Format.Alignment = ParagraphAlignment.Left;
+            cell.Format.Font.Bold = true;
+            cell.Format.SpaceAfter = 3;
+            cell.Format.SpaceBefore = 3;
+            cell.Format.LeftIndent = 3;
+            cell.Format.Font.Size = 11;
+
+            Paragraph paragraph = cell.AddParagraph();
+            paragraph.AddFormattedText("PARTES");
 
             document.LastSection.Add(table);
             document.LastSection.AddParagraph("");
 
+            if (config.TipoParteID1 > 0)
+            {
+                var TipoParte1 = TipoParte.FirstOrDefault(x => x.TipoParteID == config.TipoParteID1);
+                var lblTipoParte = TipoParte1.Descripcion;
+                var TipoParteID = TipoParte1.TipoParteID;
 
-            //table = new Table();
-            //table.Borders.Width = 0.8;
+                var partes = Causa.Parte.Where(x => x.TipoParteID == TipoParteID).ToList();
 
-            //table.AddColumn(Unit.FromCentimeter(PageWidth));
+                count = 0;
 
-            //row = table.AddRow();
-            //row.Shading.Color = Colors.LightGray;
+                foreach (var parte in partes)
+                {
+                    table = new Table();
+                    table.Borders.Width = 0.8;
+                    table.Borders.Visible = true;
+                    table.TopPadding = 5;
+                    table.BottomPadding = 5;
 
-            //cell = row.Cells[0];
-            //cell.Format.Alignment = ParagraphAlignment.Left;
-            //cell.Format.Font.Bold = true;
-            //cell.Format.SpaceAfter = 3;
-            //cell.Format.SpaceBefore = 3;
-            //cell.Format.LeftIndent = 3;
-            //cell.AddParagraph("EXPEDIENTE => " + PageWidth);
+                    Column column = table.AddColumn(Unit.FromCentimeter(ancho1));
+                    column.Format.Alignment = ParagraphAlignment.Left;
+
+                    column = table.AddColumn(Unit.FromCentimeter(ancho2));
+                    column.Format.Alignment = ParagraphAlignment.Left;
+
+                    row = table.AddRow();
+                    cell = row.Cells[0];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.AddParagraph("Tipo");
+                    cell = row.Cells[1];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.Format.Font.Bold = true;
+                    cell.AddParagraph(lblTipoParte);
+
+                    row = table.AddRow();
+                    cell = row.Cells[0];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.AddParagraph("RUT " + lblTipoParte);
+                    cell = row.Cells[1];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.AddParagraph(parte.GetRutFormat(parte.Rut));
+
+                    row = table.AddRow();
+                    cell = row.Cells[0];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.AddParagraph("Nombre " + lblTipoParte);
+                    cell = row.Cells[1];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.AddParagraph(parte.Nombre.Trim());
+
+                    row = table.AddRow();
+                    cell = row.Cells[0];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.AddParagraph("País Nacionalidad ");
+                    cell = row.Cells[1];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.AddParagraph(parte.Pais.Descripcion);
+
+                    row = table.AddRow();
+                    cell = row.Cells[0];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.AddParagraph("RUT Representante");
+                    cell = row.Cells[1];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.AddParagraph(parte.GetRutFormat(parte.RutRepresentante));
+
+                    row = table.AddRow();
+                    cell = row.Cells[0];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.AddParagraph("Nombre Representante");
+                    cell = row.Cells[1];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.AddParagraph(parte.NombreRepresentante.Trim());
+
+                    row = table.AddRow();
+                    cell = row.Cells[0];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.AddParagraph("Nombre Abogado");
+                    cell = row.Cells[1];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.AddParagraph(parte.NombreAbogado.Trim());
+
+                    row = table.AddRow();
+                    cell = row.Cells[0];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.AddParagraph("Email Abogado");
+                    cell = row.Cells[1];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.AddParagraph(parte.EmailAbogado.Trim());
+
+                    row = table.AddRow();
+                    cell = row.Cells[0];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.AddParagraph("Nombre del Estudio Juridico");
+                    cell = row.Cells[1];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.AddParagraph(parte.NombreEstudioJuridico.Trim());
+
+                    if (config.IsConsignacion)
+                    {
+                        bool IsVisible = (!PartesSinConsignacion.Contains(TipoParteID) && !CausasSinConsignacion.Contains(config.TipoCausaID));
+
+                        if (IsVisible)
+                        {
+                            row = table.AddRow();
+                            cell = row.Cells[0];
+                            cell.Format.Font.Size = sizeCell;
+                            cell.AddParagraph("Folio Consignación");
+                            cell = row.Cells[1];
+                            cell.Format.Font.Size = sizeCell;
+                            cell.AddParagraph(parte.FolioConsignacion);
+
+                            if (parte.FechaConsignacion != null)
+                            {
+                                row = table.AddRow();
+                                cell = row.Cells[0];
+                                cell.Format.Font.Size = sizeCell;
+                                cell.AddParagraph("Fecha Consignación");
+                                cell = row.Cells[1];
+                                cell.Format.Font.Size = sizeCell;
+                                cell.AddParagraph(parte.FechaConsignacion.Value.ToString("dd-MM-yyyy"));
+                            }
+
+                            row = table.AddRow();
+                            cell = row.Cells[0];
+                            cell.Format.Font.Size = sizeCell;
+                            cell.AddParagraph("RUT Consignación");
+                            cell = row.Cells[1];
+                            cell.Format.Font.Size = sizeCell;
+                            cell.AddParagraph(parte.GetRutFormat(parte.RutConsignacion));
+
+                            row = table.AddRow();
+                            cell = row.Cells[0];
+                            cell.Format.Font.Size = sizeCell;
+                            cell.AddParagraph("Nombre Consignación");
+                            cell = row.Cells[1];
+                            cell.Format.Font.Size = sizeCell;
+                            cell.AddParagraph(parte.NombreConsignacion.Trim());
+                        }
+                    }
 
 
-            //tablaApleante = new Table();
-            //tablaApleante.Borders.Width = 0;
-            //tablaApleante.AddColumn(Unit.FromCentimeter(6.85));
-            //tablaApleante.AddColumn(Unit.FromCentimeter(6.85));
-            //tablaApleante.Format.SpaceAfter = 5;
-            //tablaApleante.Format.SpaceBefore = 5;
+                    document.LastSection.Add(table);
+                    document.LastSection.AddParagraph("");
 
-            //for (int i = 0; i < 5; i++)
-            //{
-            //    Row rowApelante = tablaApleante.AddRow();
-            //    Cell cellApelante = rowApelante.Cells[0];
-            //    cellApelante.AddParagraph("dfasdfasdfasd => " + i);
+                    count++;
+                }
+            }
 
-            //    cellApelante = rowApelante.Cells[1];
-            //    cellApelante.AddParagraph("NombreRepresentante=> " + i);
-            //}
 
-            //row = table.AddRow();
-            //cell = row.Cells[0];
-            //cell.Elements.Add(tablaApleante);
+            if (config.TipoParteID2 > 0 && Causa.IsContencioso)
+            {
+                var TipoParte2 = TipoParte.FirstOrDefault(x => x.TipoParteID == config.TipoParteID2);
+                var lblTipoParte = TipoParte2.Descripcion;
+                var TipoParteID = TipoParte2.TipoParteID;
 
-            //document.LastSection.Add(table);
-            //document.LastSection.AddParagraph("");
+                var partes = Causa.Parte.Where(x => x.TipoParteID == TipoParteID).ToList();
+
+                count = 0;
+
+                foreach (var parte in partes)
+                {
+                    table = new Table();
+                    table.Borders.Width = 0.8;
+                    table.Borders.Visible = true;
+                    table.TopPadding = 5;
+                    table.BottomPadding = 5;
+
+                    Column column = table.AddColumn(Unit.FromCentimeter(ancho1));
+                    column.Format.Alignment = ParagraphAlignment.Left;
+
+                    column = table.AddColumn(Unit.FromCentimeter(ancho2));
+                    column.Format.Alignment = ParagraphAlignment.Left;
+
+                    row = table.AddRow();
+                    cell = row.Cells[0];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.AddParagraph("Tipo");
+                    cell = row.Cells[1];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.Format.Font.Bold = true;
+                    cell.AddParagraph(lblTipoParte);
+
+                    row = table.AddRow();
+                    cell = row.Cells[0];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.AddParagraph("RUT " + lblTipoParte);
+                    cell = row.Cells[1];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.AddParagraph(parte.GetRutFormat(parte.Rut));
+
+                    row = table.AddRow();
+                    cell = row.Cells[0];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.AddParagraph("Nombre " + lblTipoParte);
+                    cell = row.Cells[1];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.AddParagraph(parte.Nombre.Trim());
+
+                    row = table.AddRow();
+                    cell = row.Cells[0];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.AddParagraph("País Nacionalidad ");
+                    cell = row.Cells[1];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.AddParagraph(parte.Pais.Descripcion);
+
+                    row = table.AddRow();
+                    cell = row.Cells[0];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.AddParagraph("RUT Representante");
+                    cell = row.Cells[1];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.AddParagraph(parte.GetRutFormat(parte.RutRepresentante));
+
+                    row = table.AddRow();
+                    cell = row.Cells[0];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.AddParagraph("Nombre Representante");
+                    cell = row.Cells[1];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.AddParagraph(parte.NombreRepresentante.Trim());
+
+                    row = table.AddRow();
+                    cell = row.Cells[0];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.AddParagraph("Nombre Abogado");
+                    cell = row.Cells[1];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.AddParagraph(parte.NombreAbogado.Trim());
+
+                    row = table.AddRow();
+                    cell = row.Cells[0];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.AddParagraph("Email Abogado");
+                    cell = row.Cells[1];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.AddParagraph(parte.EmailAbogado.Trim());
+
+                    row = table.AddRow();
+                    cell = row.Cells[0];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.AddParagraph("Nombre del Estudio Juridico");
+                    cell = row.Cells[1];
+                    cell.Format.Font.Size = sizeCell;
+                    cell.AddParagraph(parte.NombreEstudioJuridico.Trim());
+
+                    if (config.IsConsignacion)
+                    {
+                        bool IsVisible = (!PartesSinConsignacion.Contains(TipoParteID) && !CausasSinConsignacion.Contains(config.TipoCausaID));
+
+                        if (IsVisible)
+                        {
+                            row = table.AddRow();
+                            cell = row.Cells[0];
+                            cell.Format.Font.Size = sizeCell;
+                            cell.AddParagraph("Folio Consignación");
+                            cell = row.Cells[1];
+                            cell.Format.Font.Size = sizeCell;
+                            cell.AddParagraph(parte.FolioConsignacion);
+
+                            if (parte.FechaConsignacion != null)
+                            {
+                                row = table.AddRow();
+                                cell = row.Cells[0];
+                                cell.Format.Font.Size = sizeCell;
+                                cell.AddParagraph("Fecha Consignación");
+                                cell = row.Cells[1];
+                                cell.Format.Font.Size = sizeCell;
+                                cell.AddParagraph(parte.FechaConsignacion.Value.ToString("dd-MM-yyyy"));
+                            }
+
+                            row = table.AddRow();
+                            cell = row.Cells[0];
+                            cell.Format.Font.Size = sizeCell;
+                            cell.AddParagraph("RUT Consignación");
+                            cell = row.Cells[1];
+                            cell.Format.Font.Size = sizeCell;
+                            cell.AddParagraph(parte.GetRutFormat(parte.RutConsignacion));
+
+                            row = table.AddRow();
+                            cell = row.Cells[0];
+                            cell.Format.Font.Size = sizeCell;
+                            cell.AddParagraph("Nombre Consignación");
+                            cell = row.Cells[1];
+                            cell.Format.Font.Size = sizeCell;
+                            cell.AddParagraph(parte.NombreConsignacion.Trim());
+                        }
+                    }
+
+
+                    document.LastSection.Add(table);
+                    document.LastSection.AddParagraph("");
+
+                    count++;
+                }
+            }
+
+            #endregion
+
+            #region Expediente
+
+            table = new Table();
+            table.Borders.Width = 0.8;
+
+            table.AddColumn(Unit.FromCentimeter(PageWidth));
+
+            row = table.AddRow();
+            row.Shading.Color = Color.FromRgb(230, 230, 230);
+
+            cell = row.Cells[0];
+            cell.Format.Alignment = ParagraphAlignment.Left;
+            cell.Format.Font.Bold = true;
+            cell.Format.SpaceAfter = 3;
+            cell.Format.SpaceBefore = 3;
+            cell.Format.LeftIndent = 3;
+            cell.Format.Font.Size = 11;
+
+            paragraph = cell.AddParagraph();
+            paragraph.AddFormattedText("EXPEDIENTES");
+
+            document.LastSection.Add(table);
+            document.LastSection.AddParagraph("");
+
+            //Detalle
+
+            count = 0;
+
+            foreach (var exp in Causa.Expediente)
+            {
+                table = new Table();
+                table.Borders.Width = 0.8;
+                table.Borders.Visible = true;
+                table.TopPadding = 5;
+                table.BottomPadding = 5;
+
+                Column column = table.AddColumn(Unit.FromCentimeter(ancho1));
+                column.Format.Alignment = ParagraphAlignment.Left;
+
+                column = table.AddColumn(Unit.FromCentimeter(ancho2));
+                column.Format.Alignment = ParagraphAlignment.Left;
+
+                row = table.AddRow();
+                cell = row.Cells[0];
+                cell.Format.Font.Size = sizeCell;
+                cell.AddParagraph("Fecha");
+
+                cell = row.Cells[1];
+                cell.Format.Font.Size = sizeCell;
+                cell.AddParagraph(exp.FechaExpediente.ToString("dd-MM-yyyy"));
+
+                row = table.AddRow();
+                cell = row.Cells[0];
+                cell.Format.Font.Size = sizeCell;
+                cell.AddParagraph("Trámite");
+
+                cell = row.Cells[1];
+                cell.Format.Font.Size = sizeCell;
+                string descTramite = (exp.IsFinalizado && !exp.IsAdmisible) ? $"{exp.TipoTramite.Descripcion.Trim()} (Inadmisible)" : exp.TipoTramite.Descripcion.Trim();
+                cell.AddParagraph(descTramite);
+
+                row = table.AddRow();
+                cell = row.Cells[0];
+                cell.Format.Font.Size = sizeCell;
+                cell.AddParagraph("Descripción");
+
+                cell = row.Cells[1];
+                cell.Format.Font.Size = sizeCell;
+                cell.AddParagraph(exp.GetOpcionesTramite());
+
+                row = table.AddRow();
+                cell = row.Cells[0];
+                cell.Format.Font.Size = sizeCell;
+                cell.AddParagraph("Observación");
+
+                cell = row.Cells[1];
+                cell.Format.Font.Size = sizeCell;
+                cell.AddParagraph(exp.Observacion.Trim());
+
+                row = table.AddRow();
+                cell = row.Cells[0];
+                cell.Format.Font.Size = sizeCell;
+                cell.AddParagraph("N° de Oficio");
+
+                cell = row.Cells[1];
+                cell.Format.Font.Size = sizeCell;
+                cell.AddParagraph(exp.NumeroOficio);
+
+                if (exp.IsTieneDocumentos())
+                {
+                    row = table.AddRow();
+                    cell = row.Cells[0];
+                    cell.Format.Font.Bold = true;
+                    cell.AddParagraph("Documentos adjuntos");
+                    cell.Format.Borders.Bottom = new Border() { Width = 0, Visible = false };
+                    cell.MergeRight = 1;
+
+                    Table _ti = new Table();
+                    _ti.Borders.Width = .1;
+
+                    foreach (var item in HeaderDocumento)
+                    {
+                        _ti.AddColumn(item.width);
+                    }
+
+                    Row _rowTi = _ti.AddRow();
+
+                    int count2 = 0;
+                    foreach (var item in HeaderDocumento)
+                    {
+                        Cell _cellTi = _rowTi.Cells[count2];
+                        _cellTi.Format.Font.Bold = true;
+                        _cellTi.Format.Alignment = ParagraphAlignment.Center;
+                        _cellTi.Format.Font.Size = sizeCell;
+                        _cellTi.AddParagraph(item.name);
+                        count2++;
+                    }
+
+                    int countDoc = 0;
+                    foreach (var item in exp.AsocEscritoDocto)
+                    {
+                        var doc = item.AsocCausaDocumento.DocumentoCausa;
+
+                        _rowTi = _ti.AddRow();
+                        Cell _cellTi = _rowTi.Cells[0];
+                        _cellTi.Format.Alignment = ParagraphAlignment.Center;
+                        _cellTi.Format.Font.Size = sizeCell;
+                        _cellTi.AddParagraph((countDoc + 1).ToString());
+
+                        _cellTi = _rowTi.Cells[1];
+                        _cellTi.Format.Font.Size = sizeCell;
+                        _cellTi.AddParagraph(doc.NombreArchivoFisico.Replace("_", " ").Trim());
+
+                        _cellTi = _rowTi.Cells[2];
+                        _cellTi.Format.Font.Size = sizeCell;
+                        _cellTi.AddParagraph(doc.Descripcion.Trim());
+
+                        _cellTi = _rowTi.Cells[3];
+                        _cellTi.Format.Font.Size = sizeCell;
+                        _cellTi.Format.Alignment = ParagraphAlignment.Center;
+                        _cellTi.AddParagraph(doc.Fecha.Value.ToString("dd-MM-yyyy HH:mm"));
+
+                        _cellTi = _rowTi.Cells[4];
+                        _cellTi.Format.Font.Size = sizeCell;
+                        _cellTi.Format.Alignment = ParagraphAlignment.Center;
+
+                        Paragraph linkParagraph = _cellTi.AddParagraph();
+                        linkParagraph.Format.Font.Color = Colors.Blue;
+
+                        string SistemaPublicoURL = Domain.Infrastructure.WebConfigValues.SistemaPublicoURL;
+                        string HashUrlPass = System.Uri.EscapeDataString(doc.Hash.Trim());
+                        string DownloadURL = $"{SistemaPublicoURL}ES/Uploader/GetFile?vs={doc.VersionEncriptID}&hash={HashUrlPass}&td={TipoDocumentoExpediente}";
+
+                        var h = linkParagraph.AddHyperlink(DownloadURL, HyperlinkType.Web);
+                        h.AddFormattedText("Descarga");
+
+                        countDoc++;
+                    }
+
+                    row = table.AddRow();
+                    cell = row.Cells[0];
+                    cell.MergeRight = 1;
+                    cell.Elements.Add(_ti);
+                }
+
+                document.LastSection.Add(table);
+                document.LastSection.AddParagraph("");
+
+                count++;
+            }
+
+            #endregion
+
         }
-
-
-
     }
 
 

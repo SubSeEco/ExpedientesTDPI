@@ -21,6 +21,7 @@
                 <th class="ac" style="">Descripción</th>
                 <th class="ac" style="">Observación</th>
                 <th class="ac" style="">Usuario</th>
+                <th class="ac" style="">Firmas</th>
             </tr>
         </thead>
         <tbody>
@@ -35,6 +36,7 @@
                         <td>@Html.Raw(item.GetOpcionesTramite())</td>
                         <td>@item.Observacion</td>
                         <td>@item.Usuario.GetFullName()</td>
+                        <td class="ac" >@item.GetFirmas()</td>
                     </tr>
                     count++;
                 }

@@ -73,6 +73,8 @@
             },
             callback: function () {
                 GetListadoEstadoDiario();
+                showBlockUI(CloseDialog);
+                $("#btnBuscar").click();
             },
             alert: "alert-danger",
             txtBtn1: "Sí"
@@ -134,6 +136,23 @@
         });
     }
 
+    function GetPDF(TablaID) {
+
+        var opt = {
+            title: "Tabla PDF",
+            url: "@Url.Action("GetGenerarListadoTablaPDF", "Listados")",
+            params:  {
+            __RequestVerificationToken: getVToken(),
+            TablaID: TablaID
+            },
+            size: "modal-xl",
+            callback: function () {
+
+            }
+        };
+        GetModalContent(opt);
+    }
+
 </script>
 
 <div class="table-responsive-not">
@@ -146,6 +165,7 @@
                 <th class="ac " style="">Sala</th>
                 <th class="ac " style="">Tipo</th>
                 <th class="ac " style="">Estado</th>
+                <th class="ac " style="">Firmas</th>
                 <th class="ac" style="width:12%">@resources.GlobalResources.Seleccionar</th>
             </tr>
         </thead>
@@ -171,6 +191,7 @@
                     <td class="">@item.Sala.Descripcion</td>
                     <td class="">@item.TipoTabla.Descripcion</td>
                     <td class="">@item.EstadoTabla.Descripcion</td>
+                    <td class="ac">@item.GetFirmas()</td>
                     <td class="ac">
 
                         @if (PuedeEditar)
@@ -205,7 +226,8 @@
                         @if (PuedeGenerar)
                         {
                             <a class='x-title-l' style=''
-                               onclick="GetGenerarPDF(@item.TablaID, '@Fecha');"
+                               @*onclick="GetGenerarPDF(@item.TablaID, '@Fecha');"*@
+                               onclick="GetPDF(@item.TablaID);"                               
                                href='javascript:void(0);'
                                title='Generar PDF'><i class='x-icon x-icon-folder2'></i></a>
                         }

@@ -42,5 +42,36 @@ namespace Application.DTO.Models
         {
             return TipoEstadoDiarioID == (int)Domain.Infrastructure.EstadoTabla.Eliminado;
         }
+
+        public string GetFirmas()
+        {
+            if (DocumentoSistemaTabla != null && DocumentoSistemaTabla.Count > 0 && IsPublicado())
+            {
+                int total = 0;
+                int ok = 0;
+
+                foreach (var item in DocumentoSistemaTabla)
+                {
+                    if (item.AsocDocSistemaFirma != null && item.AsocDocSistemaFirma.Count > 0)
+                    {
+                        foreach (var asocFirma in item.AsocDocSistemaFirma)
+                        {
+                            total++;
+                            if (asocFirma.IsFirmado)
+                            {
+                                ok++;
+                            }
+                        }
+                    }                    
+                }
+
+                return (total == 0) ? "N/A" : $"{ok} de {total}";
+            }
+            else
+            {
+                return "N/A";
+            }
+        }
+
     }
 }

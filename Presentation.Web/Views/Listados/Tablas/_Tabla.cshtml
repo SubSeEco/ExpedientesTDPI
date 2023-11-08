@@ -85,7 +85,7 @@
             <div class="col-md-9">
                 <select id="UsuarioRelatorID" name="UsuarioRelatorID" class="custom-select verificar" data-default="">
                     <option value="">@resources.GlobalResources.OptionInicial</option>
-                    @foreach (var item in DataForm.Usuario.Where(x => x.UsuarioID > 0))
+                    @foreach (var item in DataForm.Usuario.Where(x => x.UsuarioID > 0 && x.IsTDPI()))
                     {
                         string selected = (item.UsuarioID == Model.UsuarioRelatorID) ? "selected='selected'" : "";
                         <option value="@item.UsuarioID" @selected>@item.GetFullName()</option>

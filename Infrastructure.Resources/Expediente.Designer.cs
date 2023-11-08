@@ -97,6 +97,24 @@ namespace Infrastructure.Resources {
         }
         
         /// <summary>
+        ///   Busca una cadena traducida similar a Escritorio Firmas.
+        /// </summary>
+        public static string MenuEscritorioFirmas {
+            get {
+                return ResourceManager.GetString("MenuEscritorioFirmas", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a Firmas.
+        /// </summary>
+        public static string MenuFirmas {
+            get {
+                return ResourceManager.GetString("MenuFirmas", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Busca una cadena traducida similar a Estados Diarios.
         /// </summary>
         public static string MenuListadoEstadosDiarios {
@@ -120,6 +138,15 @@ namespace Infrastructure.Resources {
         public static string MenuListadoTablas {
             get {
                 return ResourceManager.GetString("MenuListadoTablas", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a Mi Firma.
+        /// </summary>
+        public static string MenuMiFirma {
+            get {
+                return ResourceManager.GetString("MenuMiFirma", resourceCulture);
             }
         }
         

@@ -42,7 +42,9 @@ namespace Application.DTO.Models
                 return "";
             }else
             {
-                return rut.ToString();
+                //return rut.ToString();
+                Infrastructure.Utils.Mod11Validator mod11 = new Infrastructure.Utils.Mod11Validator(rut, "");
+                return rut.ToString().Trim() + "-" + mod11.CalcularDigitoVerificador(rut);
             }
         }
 

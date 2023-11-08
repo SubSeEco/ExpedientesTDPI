@@ -31,11 +31,16 @@ namespace Application.DTO.Models
         public string Nombres { get; set; }
         public string Apellidos { get; set; }
         public string Mail { get; set; }
+        public string Telefono { get; set; }
         public bool IsClaveUnica { get; set; }
         public System.DateTime FechaRegistro { get; set; }
         public System.DateTime FechaModificacion { get; set; }
         public int TipoGeneroID { get; set; }
+        public string Signer { get; set; }
+        public string SignerEncrypted { get; set; }
 
+
+        public virtual ICollection<AsocDocumentoUsuario> AsocDocumentoUsuario { get; set; }
         public virtual ICollection<AsocUsuarioPerfil> AsocUsuarioPerfil { get; set; }
         public virtual ICollection<Causa> Causa { get; set; }
         public virtual ICollection<Derivacion> Derivacion { get; set; }
@@ -121,5 +126,48 @@ namespace Application.DTO.Models
         {
             return AsocUsuarioPerfil.Any(x => x.PerfilID == (int)Domain.Infrastructure.Perfil.TDPI);
         }
+
+        public bool IsExterno()
+        {
+            return AsocUsuarioPerfil.Any(x => 
+            x.PerfilID == (int)Domain.Infrastructure.Perfil.INAPI || 
+            x.PerfilID == (int)Domain.Infrastructure.Perfil.INAPI);
+        }
+
+        public bool IsAbogado()
+        {
+            return AsocUsuarioPerfil.Any(x => x.PerfilID == (int)Domain.Infrastructure.Perfil.Abogado);
+        }
+
+        public string GetRUT()
+        {
+            int rut = Convert.ToInt32(this.Rut);
+            if (rut > 0)
+            {
+                Infrastructure.Utils.Mod11Validator mod11 = new Infrastructure.Utils.Mod11Validator(rut, "");
+                return rut.ToString().Trim() + "-" + mod11.CalcularDigitoVerificador(rut);
+            }
+            else
+            {
+                return "";
+            }
+        }
+
+        public string GetPerfilesParaEvento()
+        {
+            List<string> perfil = new List<string>();
+
+            foreach (var item in this.AsocUsuarioPerfil)
+            {
+                if (item.PerfilID != (int)Domain.Infrastructure.Perfil.Administrador)
+                {
+                    perfil.Add(item.Perfil.Descripcion);
+                }
+                
+            };
+
+            return string.Join(" &#183; ", perfil);
+        }
+
     }
 }

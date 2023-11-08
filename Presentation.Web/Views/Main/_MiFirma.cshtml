@@ -1,0 +1,55 @@
+﻿@model Application.DTO.Models.Usuario
+
+@using resources = Infrastructure.Resources;
+@using Enums = Domain.Infrastructure;
+
+@{
+//var RegionList = ViewBag.RegionList as IList<SIAC.Application.DTO.Models.SP_ListaRegion_Result>;
+}
+
+<script type="text/javascript">
+
+    ; (function ($) {
+        $(function () {
+
+            activateForm("btnSaveSigner", "frmSigner",
+               function () {
+
+                   return true;
+               },
+               function () {
+
+                   CloseDialog();
+                   showBlockUI(SelfRedirect());
+               });
+
+        });
+    })(jQuery);
+
+</script>
+
+
+<div class="modal-body" style="padding-top: 6px;">
+
+    <form class="" id="frmSigner" action="@Url.Action("SaveMiFirma", "Main")" method="POST">
+        @Html.AntiForgeryToken()
+
+        <div class="form-group" style="margin-top: 10px;">
+            <input type="text" class="form-control verificar" maxlength="70" id="SignerUserActive" name="SignerUserActive" value="@Model.SignerEncrypted">
+        </div>
+
+    </form>
+
+</div>
+
+<div class="modal-footer">
+
+    <button id="btnSaveSigner" class="btn btn-default" onclick="$('#frmSigner').submit()" type="button">
+        <i class="x-icon x-icon-save2 icon-in-button"></i> @resources.GlobalResources.BtnGuardar
+    </button>
+    <i class="x-icon-loader hide"></i>
+    <button class="btn btn-default" data-dismiss="modal" type="button">
+        <i class="x-icon x-icon-cancel2 icon-in-button"></i> @resources.GlobalResources.BtnCancelar
+    </button>
+
+</div>

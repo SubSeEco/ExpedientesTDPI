@@ -17,6 +17,7 @@ namespace Persistence.Repository
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
         public Usuario()
         {
+            this.AsocDocumentoUsuario = new HashSet<AsocDocumentoUsuario>();
             this.AsocUsuarioPerfil = new HashSet<AsocUsuarioPerfil>();
             this.Causa = new HashSet<Causa>();
             this.Derivacion = new HashSet<Derivacion>();
@@ -31,10 +32,14 @@ namespace Persistence.Repository
         public string Nombres { get; set; }
         public string Apellidos { get; set; }
         public string Mail { get; set; }
+        public string Telefono { get; set; }
         public bool IsClaveUnica { get; set; }
         public System.DateTime FechaRegistro { get; set; }
         public System.DateTime FechaModificacion { get; set; }
+        public string Signer { get; set; }
     
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<AsocDocumentoUsuario> AsocDocumentoUsuario { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<AsocUsuarioPerfil> AsocUsuarioPerfil { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]

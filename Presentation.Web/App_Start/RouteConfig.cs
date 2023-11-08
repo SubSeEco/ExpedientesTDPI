@@ -27,7 +27,6 @@ namespace Presentation.Web
                 {
                     language = "ES",
                     controller = "Main",
-                    //controller = "Account",
                     action = "Index",
                     id = UrlParameter.Optional,
                     id2 = UrlParameter.Optional
@@ -57,6 +56,18 @@ namespace Presentation.Web
                 name: "VistaPublicaDashboard",
                 url: "{language}/Main/Dashboard",
                 defaults: new { controller = "Main", action = "Dashboard" }
+            );
+
+            routes.MapRoute(
+                name: "ActionInitialAdmin",
+                url: "{language}/Administracion/Usuarios",
+                defaults: new { controller = "Administracion", action = "Usuarios" }
+            );
+
+            routes.MapRoute(
+                name: "LoginAnonymous",
+                url: "{language}/Account/LoginAnonymous",
+                defaults: new { controller = "Account", action = "LoginAnonymous" }
             );
 
         }

@@ -30,5 +30,8 @@ namespace Application.DTO.Models
         public virtual ICollection<AsocExpeFirma> AsocExpeFirma { get; set; }
         public virtual ICollection<AsocFirmaDocto> AsocFirmaDocto { get; set; }
         public virtual Usuario Usuario { get; set; }
+
+        //Custom
+        public int UsuarioFirmaID { get; set; }
     }
 }

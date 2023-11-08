@@ -373,6 +373,34 @@ namespace Persistence.Repository
 
             return lista;
         }
+
+        public void SaveAsocDocumentoUsuario(AsocDocumentoUsuario model)
+        {
+            if (model.AsocDocumentoUsuarioID == 0)
+            {
+                _context.Entry(model).State = EntityState.Added;
+            }
+            else
+            {
+                _context.Entry(model).State = EntityState.Modified;
+            }
+
+            try
+            {
+                _context.SaveChanges();
+            }
+            catch (DbEntityValidationException ex)
+            {
+                string exceptionMessage = EscribirLog(ex);
+                throw new DbEntityValidationException(exceptionMessage, ex.EntityValidationErrors);
+            }
+        }
+
+        public IList<AsocDocumentoUsuario> GetAsocDocumentoUsuario(int UsuarioID)
+        {
+            return _context.AsocDocumentoUsuario.Include("DocumentoSistema").Where(x => x.UsuarioID == UsuarioID).ToList();
+        }
+
         #endregion
 
         #region Tipo Notificacion
@@ -656,6 +684,47 @@ namespace Persistence.Repository
             _context.SaveChanges();
         }
 
+        public void DeleteDocumentoExpediente(int documentoID) {
+
+            DocumentoCausa model = _context
+                .DocumentoCausa
+                .Include("AsocCausaDocumento.AsocEscritoDocto")
+                .SingleOrDefault(x => x.DocumentoCausaID == documentoID);
+
+            #region Asoc
+            if (model.AsocCausaDocumento.Count > 0)
+            {
+                List<int> asocs = model.AsocCausaDocumento.Select(x => x.AsocCausaDocumentoID).ToList();
+
+                foreach (var x in asocs)
+                {
+                    AsocCausaDocumento d = _context.AsocCausaDocumento.Include("AsocEscritoDocto").FirstOrDefault(z=> z.AsocCausaDocumentoID == x);
+                    List<int> asocEscritoDcto = d.AsocEscritoDocto.Select(z => z.AsocEscritoDoctoID).ToList();
+
+                    foreach (var y in asocEscritoDcto)
+                    {
+                        AsocEscritoDocto e = _context.AsocEscritoDocto.Include("AsocFirmaDocto").FirstOrDefault(z=> z.AsocEscritoDoctoID == y);
+                        List<int> asocfirma = e.AsocFirmaDocto.Select(z => z.AsocFirmaDoctoID).ToList();
+
+                        foreach (var z in asocfirma)
+                        {
+                            AsocFirmaDocto a = _context.AsocFirmaDocto.Find(z);
+                            _context.Entry(a).State = EntityState.Deleted;
+                        }
+
+                        _context.Entry(e).State = EntityState.Deleted;
+                    }
+
+                    _context.Entry(d).State = EntityState.Deleted;
+                }
+            }
+            #endregion
+
+            _context.Entry(model).State = EntityState.Deleted;
+            _context.SaveChanges();
+
+        }
+
         public ConfTipoCausa GetConfTipoCausa(int tipoCausaID)
         {
             return _context.ConfTipoCausa.FirstOrDefault(x => x.TipoCausaID == tipoCausaID);
@@ -786,7 +855,7 @@ namespace Persistence.Repository
 
         public Usuario GetUsuarioByID(int usuarioID)
         {
-            return _context.Usuario
+            return _context.Usuario.AsNoTracking()
                 .Include("AsocUsuarioPerfil")
                 .Include("TipoGenero")
                 .FirstOrDefault(x => x.UsuarioID == usuarioID);
@@ -803,6 +872,15 @@ namespace Persistence.Repository
             }
 
             return lista;
+        }   
+        
+        public void SaveSigner(int usuarioActive, string signer)
+        {
+            Usuario model = _context.Usuario.Find(usuarioActive);
+            model.Signer = signer;
+
+            _context.Entry(model).State = EntityState.Modified;
+            _context.SaveChanges();
         }
     }
 }

@@ -27,6 +27,7 @@ namespace Application.DTO.Models
         public virtual ICollection<AsocDocSistemaFirma> AsocDocSistemaFirma { get; set; }
         public virtual ICollection<AsocDocumentoSistemaEstadoDiario> AsocDocumentoSistemaEstadoDiario { get; set; }
         public virtual ICollection<AsocDocumentoSistemaTabla> AsocDocumentoSistemaTabla { get; set; }
+        public virtual ICollection<AsocDocumentoUsuario> AsocDocumentoUsuario { get; set; }
 
         public string GetDiasTranscurridos()
         {

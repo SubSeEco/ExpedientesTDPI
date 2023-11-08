@@ -26,50 +26,108 @@
 
     if (Domain.Infrastructure.WebConfigValues.IsAccesoPublico)
     {
+        //if (DataForm.UserActive.IsClaveUnica)
+        //{
+        //    UrlVolver = Url.RouteUrl("VistaPublicaDashboard");
+        //}
+        //else
+        //{
+        //    UrlVolver = Url.RouteUrl("LoginAnonymous");
+        //}
         UrlVolver = Url.RouteUrl("VistaPublicaDashboard");
     }
     else
     {
         UrlVolver = Url.RouteUrl("EscritorioCausas");
     }
-}
 
+    #region Listas
+    List<int> CausasSinConsignacion = new List<int>();
+    CausasSinConsignacion.Add((int)Enums.TipoCausa.VariedadVegetal);
+    CausasSinConsignacion.Add((int)Enums.TipoCausa.ProteccionSuplementaria);
+    CausasSinConsignacion.Add((int)Enums.TipoCausa.RecursoHechoMarca);
+    CausasSinConsignacion.Add((int)Enums.TipoCausa.RecursoHechoPatente);
+
+    List<int> PartesSinConsignacion = new List<int>();
+    PartesSinConsignacion.Add((int)Enums.TipoParte.Recurrido);
+    PartesSinConsignacion.Add((int)Enums.TipoParte.Apelado);
+
+    List<int> TiposMarcas = new List<int>();
+    TiposMarcas.Add((int)Enums.TipoCausa.Marca);
+    TiposMarcas.Add((int)Enums.TipoCausa.RecursoHechoMarca);
+
+    #endregion
+
+}
 
 <script type="text/javascript">
 
     var appParte;
     var parteList = [];
-
+    var appParteSinConsignacion;
+    var parteListSinConsignacion = [];
 
     ; (function ($) {
         $(function () {
 
+            SetActionTipoContencioso();
+
             @foreach (var item in Model.Parte)
-            {<text>
-                parteList.push({
-                    ParteID: parseInt("@item.ParteID"),
-                    PaisID: parseInt("@item.PaisID"),
-                    Pais: "@Html.Raw(item.Pais.Descripcion.Trim())",
-                    CausaID: parseInt("@item.CausaID"),
-                    TipoParteID: parseInt("@item.TipoParteID"),
-                    TipoParte: "@Html.Raw(item.TipoParte.Descripcion.Trim())",
-                    Rut: parseInt("@item.Rut"),
-                    Nombre: "@Html.Raw(item.Nombre.Trim())",
-                    RutRepresentante: parseInt("@item.RutRepresentante"),
-                    NombreRepresentante: "@Html.Raw(item.NombreRepresentante.Trim())",
-                    NombreAbogado: "@Html.Raw(item.NombreAbogado.Trim())",
-                    EmailAbogado: "@Html.Raw(item.EmailAbogado.Trim())",
-                    NombreEstudioJuridico: "@Html.Raw(item.NombreEstudioJuridico.Trim())",
-                    FolioConsignacion: "@Html.Raw(item.FolioConsignacion.Trim())",
-                    FechaConsignacion: "@Html.DatetimeToString(item.FechaConsignacion)",
-                    RutConsignacion: parseInt("@item.RutConsignacion"),
-                    NombreConsignacion: "@Html.Raw(item.NombreConsignacion.Trim())",
-                    dato: 0
-                });
-            </text>
+            {
+                if (PartesSinConsignacion.Contains(item.TipoParteID))
+                {
+                    <text>
+                    parteListSinConsignacion.push({
+                        ParteID: parseInt("@item.ParteID"),
+                        PaisID: parseInt("@item.PaisID"),
+                        Pais: "@Html.Raw(item.Pais.Descripcion.Trim())",
+                        CausaID: parseInt("@item.CausaID"),
+                        TipoParteID: parseInt("@item.TipoParteID"),
+                        TipoParte: "@Html.Raw(item.TipoParte.Descripcion.Trim())",
+                        Rut: parseInt("@item.Rut"),
+                        Nombre: "@Html.Raw(item.Nombre.Trim())",
+                        RutRepresentante: parseInt("@item.RutRepresentante"),
+                        NombreRepresentante: "@Html.Raw(item.NombreRepresentante.Trim())",
+                        NombreAbogado: "@Html.Raw(item.NombreAbogado.Trim())",
+                        EmailAbogado: "@Html.Raw(item.EmailAbogado.Trim())",
+                        NombreEstudioJuridico: "@Html.Raw(item.NombreEstudioJuridico.Trim())",
+                        FolioConsignacion: "@Html.Raw(string.Empty)",
+                        FechaConsignacion: "@Html.Raw(string.Empty)",
+                        RutConsignacion: parseInt("0"),
+                        NombreConsignacion: "@Html.Raw(string.Empty)",
+                        dato: 0
+                    });
+                    </text>
+                }
+                else
+                {
+                     <text>
+                        parteList.push({
+                            ParteID: parseInt("@item.ParteID"),
+                            PaisID: parseInt("@item.PaisID"),
+                            Pais: "@Html.Raw(item.Pais.Descripcion.Trim())",
+                            CausaID: parseInt("@item.CausaID"),
+                            TipoParteID: parseInt("@item.TipoParteID"),
+                            TipoParte: "@Html.Raw(item.TipoParte.Descripcion.Trim())",
+                            Rut: parseInt("@item.Rut"),
+                            Nombre: "@Html.Raw(item.Nombre.Trim())",
+                            RutRepresentante: parseInt("@item.RutRepresentante"),
+                            NombreRepresentante: "@Html.Raw(item.NombreRepresentante.Trim())",
+                            NombreAbogado: "@Html.Raw(item.NombreAbogado.Trim())",
+                            EmailAbogado: "@Html.Raw(item.EmailAbogado.Trim())",
+                            NombreEstudioJuridico: "@Html.Raw(item.NombreEstudioJuridico.Trim())",
+                            FolioConsignacion: "@Html.Raw(item.FolioConsignacion.Trim())",
+                            FechaConsignacion: "@Html.DatetimeToString(item.FechaConsignacion)",
+                            RutConsignacion: parseInt("@item.RutConsignacion"),
+                            NombreConsignacion: "@Html.Raw(item.NombreConsignacion.Trim())",
+                            dato: 0
+                        });
+                    </text>
+                }
             }
 
             SetAppPartes();
+            SetAppPartes2();
 
             $("#UploadFileFrm #archivo").val("");
             TrimFormByID("#frmCausa");
@@ -83,11 +141,14 @@
                     {
                         $("#divTipoContencioso").show();
                         $("#fsTipo2").show();
+                        $("#divNumRegistro").show();
+                        $("#frmCausa #TipoContenciosoID").change();
                     }
                     else
                     {
                         $("#divTipoContencioso").hide();
                         $("#fsTipo2").hide();
+                        $("#divNumRegistro").hide();
                     }
                 }
             });
@@ -98,28 +159,45 @@
                 @:SetUploadForm();
             }
 
-                activateForm("btnGuardar", "frmCausa",
-                    function () {
+            activateForm("btnGuardar", "frmCausa",
+                function () {
 
-                        let IsCausaNew = "@IsNew".bool();
+                    let IsCausaNew = "@IsNew".bool();
 
-                        if (IsCausaNew) {
+                    if (IsCausaNew) {
 
-                            //if (!$("#frmCausa #IsContencioso").bootstrapSwitch("state")) {
-                            //    let fsTip2 = parseInt($("#frmCausa #fsTipo2").data("tipo")) || 0;
-                            //    appParte.deleteTipoParte(fsTip2);
-                            //}
+                        //if (!$("#frmCausa #IsContencioso").bootstrapSwitch("state")) {
+                        //    let fsTip2 = parseInt($("#frmCausa #fsTipo2").data("tipo")) || 0;
+                        //    appParte.deleteTipoParte(fsTip2);
+                        //}
 
-                            ParseDocsAdjuntos("frmCausa");
+                        ParseDocsAdjuntos("frmCausa");
 
-                            if (appParte.lista.length > 0) {
-                                $("#strPartes").val(JSON.stringify(appParte.lista));
-                            }
+                        if (appParte.lista.length > 0) {
+                            $("#strPartes").val(JSON.stringify(appParte.lista));
                         }
+                        if (appParteSinConsignacion.lista.length > 0) {
+                            $("#strPartes2").val(JSON.stringify(appParteSinConsignacion.lista));
+                        }
+                    }
+
+                    if ($("#tbTipoParte1").is(":visible") && $("#tbTipoParte1 > tbody > tr").length == 0) {
+                        if ($("#tbTipoParte2").is(":visible")) {
+                            showBlockUIError("Debe ingresar las Partes Involucradas.");
+                        } else {
+                            showBlockUIError("Debe ingresar la Parte Involucrada.");
+                        }
+                        return false;
+                    }
+
+                    if ($("#tbTipoParte2").is(":visible") && $("#tbTipoParte2 > tbody > tr").length == 0) {
+                        showBlockUIError("Debe ingresar las Partes Involucradas.");
+                        return false;
+                    }
 
                     return true;
                 },
-				function () {
+            function () {
 
                 if (xResultJsonData.result == ReturnJson.ErrorSharePoint) {
                     showBlockUIError("No es posible almacenar los archivos adjuntos, favor intente mas tarde.");
@@ -128,7 +206,7 @@
 
                 if (xResultJsonData.result == ReturnJson.ErrorCaptcha) {
                     showBlockUIError("El Código de Validación no corresponde");
-				        $("#SolicitudCaptcha").addError();
+                    $("#SolicitudCaptcha").addError();
                     return false;
                 }
 
@@ -162,7 +240,7 @@
                     }
 
 
-		        }
+                }
 
             }, function () {
 
@@ -181,12 +259,32 @@
             @if (!Model.IsContencioso)
             {
                 @:$("#frmCausa #fsTipo2").hide();
-            }
-
-            //CallSelect2("Anio");
+                                                            }
 
         });
     })(jQuery);
+
+    function SetActionTipoContencioso() {
+
+        $("#frmCausa #TipoContenciosoID").on("change", function (e) {
+            e.preventDefault();
+
+            $("#divNumRegistro").hide();
+
+            let _TipoContenciosoID = parseInt($(this).val()) || 0;
+
+            let IsNulidad = _TipoContenciosoID == parseInt("@Html.EnumToInt(Enums.TipoContencioso.Nulidad)");
+
+            if (IsNulidad) {
+                $("#divNumRegistro").show();
+            } else {
+                $("#divNumRegistro").hide();
+            }
+        });
+
+        $("#frmCausa #TipoContenciosoID").change();
+
+    }
 
     function SetUploadForm() {
 
@@ -392,6 +490,165 @@
         });
     }
 
+    function SetAppPartes2() {
+        appParteSinConsignacion = new Vue({
+            el: '#appPartes2',
+            data: {
+                lista: parteListSinConsignacion
+            },
+            computed: {
+                //totalUSD: function () {
+                //    var sum = 0;
+                //    this.lista.forEach(e => { sum += e.USD; });
+                //    return sum
+                //}
+            },
+            methods: {
+                getItems(tipo_id) {
+                    return _.where(this.lista, { TipoParteID: tipo_id });
+                },
+                getRutNombre(rut, nombre) {
+
+                    let datos = [];
+
+                    if (rut != 0) {
+                        let f = "<span class='azul'>" + rut + "-" + $.Rut.getDigito(rut.toString()) + "</span>";
+                        datos.push(f);
+                    }
+
+                    datos.push(nombre);
+
+                    return datos.join("<br>");
+                },
+                getParte(id, tipo, causa_id, tipoId, tipoCausaID, index) {
+                    GetParte2(id, tipo, causa_id, tipoId, tipoCausaID, index);
+                },
+                borrar: function (index) {
+                    this.lista.splice(index, 1);
+                },
+                deleteTipoParte: function (tipo_id) {
+
+                    let filter = [];
+
+                    $.each(this.lista, function (key, value) {
+
+                        if (value.TipoParteID != tipo_id) {
+                            filter.push(value);
+                        }
+                    })
+
+                    return filter;
+
+                },
+                createParte(obj) {
+
+                    let item = {
+                        ParteID: obj.ParteID,
+                        PaisID: obj.PaisID,
+                        Pais: obj.Pais,
+                        CausaID: obj.CausaID,
+                        TipoParteID: obj.TipoParteID,
+                        TipoParte: obj.TipoParte,
+                        Rut: obj.Rut,
+                        Nombre: obj.Nombre,
+                        RutRepresentante: obj.RutRepresentante,
+                        NombreRepresentante: obj.NombreRepresentante,
+                        NombreAbogado: obj.NombreAbogado,
+                        EmailAbogado: obj.EmailAbogado,
+                        NombreEstudioJuridico: obj.NombreEstudioJuridico,
+                        dato: 0
+                    }
+
+                    this.lista.push(item);
+
+                },
+                updateParteTemp(obj, index) {
+
+                    console.log("updateParteTemp");
+
+                    var item = this.lista[index];
+
+                    item.PaisID = obj.PaisID;
+                    item.Pais = obj.Pais;
+                    item.CausaID = obj.CausaID;
+                    item.TipoParteID = obj.TipoParteID;
+                    item.TipoParte = obj.TipoParte;
+                    item.Rut = obj.Rut;
+                    item.Nombre = obj.Nombre;
+                    item.RutRepresentante = obj.RutRepresentante;
+                    item.NombreRepresentante = obj.NombreRepresentante;
+                    item.NombreAbogado = obj.NombreAbogado;
+                    item.EmailAbogado = obj.EmailAbogado;
+                    item.NombreEstudioJuridico = obj.NombreEstudioJuridico;
+
+                },
+                updateParte(IsNew, result, obj) {
+
+                    if (result == ReturnJson.ActionSuccess) {
+                        if (IsNew) {
+                            console.log("new");
+
+                            let item = {
+                                ParteID: obj.ParteID,
+                                PaisID: obj.PaisID,
+                                Pais: obj.Pais,
+                                CausaID: obj.CausaID,
+                                TipoParteID: obj.TipoParteID,
+                                TipoParte: obj.TipoParte,
+                                Rut: obj.Rut,
+                                Nombre: obj.Nombre,
+                                RutRepresentante: obj.RutRepresentante,
+                                NombreRepresentante: obj.NombreRepresentante,
+                                NombreAbogado: obj.NombreAbogado,
+                                EmailAbogado: obj.EmailAbogado,
+                                NombreEstudioJuridico: obj.NombreEstudioJuridico,
+                                dato: 0
+                            }
+
+                            this.lista.push(item);
+                        }
+                        else {
+                            console.log("update");
+
+                            var item = this.lista.find(x => x.ParteID === obj.ParteID);
+                            item.PaisID = obj.PaisID;
+                            item.Pais = obj.Pais;
+                            item.CausaID = obj.CausaID;
+                            item.TipoParteID = obj.TipoParteID;
+                            item.TipoParte = obj.TipoParte;
+                            item.Rut = obj.Rut;
+                            item.Nombre = obj.Nombre;
+                            item.RutRepresentante = obj.RutRepresentante;
+                            item.NombreRepresentante = obj.NombreRepresentante;
+                            item.NombreAbogado = obj.NombreAbogado;
+                            item.EmailAbogado = obj.EmailAbogado;
+                            item.NombreEstudioJuridico = obj.NombreEstudioJuridico;
+                        }
+                    }
+                },
+                borrarDatabase(parteID) {
+                    var optBtn = {
+                        title: "Eliminar Parte",
+                        msg1: "@resources.GlobalResources.ConfirmaEliminar",
+                        msg2: "@resources.GlobalResources.RegistroEliminado",
+                        url: "@Url.Action("ActionExpediente", "Expedientes")",
+                        params: {
+                        __RequestVerificationToken: getVToken(),
+                        action: "@Enums.ActionSystem.EliminarParte",
+                        Identidad: parteID
+                        },
+                    callback: function () {
+                        SelfRedirect();
+                    },
+                    alert: "alert-danger",
+                    txtBtn1: "Sí"
+                }
+                xDialogConfirmAction(optBtn);
+            }
+            }
+        });
+    }
+
     function VolverAction() {
 
         var UrlVolver = '@UrlVolver';
@@ -450,6 +707,51 @@
         GetModalContent(opt);
     }
 
+    function GetParte2(ParteID, ParteNombre, CausaID, TipoParteID, TipoCausaID, index) {
+
+        var params = {
+            __RequestVerificationToken: getVToken(),
+            ParteID: ParteID,
+            CausaID: CausaID,
+            TipoParteID: TipoParteID,
+            TipoCausaID: TipoCausaID,
+            index: 0,
+            objTemp: ""
+        }
+
+        if (ParteID == -1) {
+
+            let listItems = appParteSinConsignacion.getItems(TipoParteID);
+            let item = listItems[index];
+            let endIndex = -1;
+
+            $.each(appParteSinConsignacion.lista, function (index, obj) {
+                if (obj === item) {
+                    endIndex = index;
+                }
+            })
+
+            console.log(endIndex);
+
+            if (endIndex != -1) {
+                params.objTemp = JSON.stringify(appParteSinConsignacion.lista[endIndex]);
+                params.index = endIndex;
+            }
+        }
+
+        var opt = {
+            title: (ParteID == 0) ? "Agregar " + ParteNombre : "Editar " + ParteNombre,
+            url: "@Url.Action("GetParte", "Expedientes")",
+            params: params,
+            size: "modal-lg",
+            callback: function () {
+                //goGrid();
+            }
+    }
+
+    GetModalContent(opt);
+    }
+
     function OnlyK(event, campo) {
 
         var v = $("#" + campo).val().replace(/[^kK0-9\,]/g, '');
@@ -475,11 +777,13 @@
                     <span class="badge badge-success">@Model.EstadoCausa.Descripcion</span>
                 </div>
             }
+
             <form action="@Url.Action("SaveCausa", "Expedientes")" enctype="multipart/form-data" method="POST" class="form-horizontal" id="frmCausa">
                 @Html.AntiForgeryToken()
                 @Html.HiddenFor(x => x.CausaID)
                 @Html.HiddenFor(x => x.TipoCausaID)
                 @Html.Hidden("strPartes", "")
+                @Html.Hidden("strPartes2", "")
 
                 @if (!IsNew)
                 {
@@ -526,7 +830,7 @@
                     <div class="form-group row" id="">
                         <label for="Denominacion" class="col-sm-2 col-form-label">Denominación <span class="span-obligatorio">*</span></label>
                         <div class="col-sm-10">
-                            <textarea class="notFilter verificar form-control " name="Denominacion" id="Denominacion" cols="4" rows="4" maxlength="4000">@Model.Denominacion</textarea>
+                            <textarea class="notFilter verificar form-control " name="Denominacion" id="Denominacion" cols="4" rows="4" maxlength="1000">@Model.Denominacion</textarea>
                             <span id="counter" class="db ar counter" style="margin-right: 8px;"></span>
                         </div>
                     </div>
@@ -573,7 +877,7 @@
                             </div>
 
                         </div>
-                     }
+                    }
 
 
                     @if (config.IsNumeroSolicitud || config.IsNumeroRegistro)
@@ -581,11 +885,13 @@
                         <div class="row">
                             @if (config.IsNumeroSolicitud)
                             {
+                                string NumeroPlaceHolder = (TiposMarcas.Contains(Model.TipoCausaID)) ? "1351680": "200500235";
+
                                 <div class="col-md-6">
                                     <div class="form-group row">
                                         <label for="Numero" class="col-sm-4 col-form-label">N° Solicitud <span class="span-obligatorio">*</span></label>
                                         <div class="col-sm-8">
-                                            @Html.TextBoxFor(x => x.Numero, new { @class = "form-control verificar", @style = "", @placeholder = "", @maxlength = "50" })
+                                            @Html.TextBoxFor(x => x.Numero, new { @class = "form-control verificar", @style = "", @placeholder = $"Ej. {NumeroPlaceHolder}", @maxlength = "50" })
                                         </div>
                                     </div>
                                 </div>
@@ -594,10 +900,10 @@
                             @if (config.IsNumeroRegistro)
                             {
                                 <div class="col-md-6">
-                                    <div class="form-group row">
+                                    <div class="form-group row" id="divNumRegistro">
                                         <label for="NumeroRegistro" class="col-sm-4 col-form-label">N° Registro </label>
                                         <div class="col-sm-8">
-                                            @Html.TextBoxFor(x => x.NumeroRegistro, new { @class = "form-control", @style = "", @placeholder = "", @maxlength = "50" })
+                                            @Html.TextBoxFor(x => x.NumeroRegistro, new { @class = "form-control", @style = "", @placeholder = "Ej. 56.789", @maxlength = "50" })
                                         </div>
                                     </div>
                                 </div>
@@ -626,7 +932,7 @@
                             </div>
 
                             <div class="table-responsive">
-                                <table class="table table-striped table-sm table-bordered table-hover x-table allW" id="" style="margin-top:10px">
+                                <table class="table table-striped table-sm table-bordered table-hover x-table allW" id="tbTipoParte1" style="margin-top:10px">
                                     <thead>
                                         <tr>
                                             <th class="ac" style="">@resources.GlobalResources.TH_Number</th>
@@ -650,9 +956,9 @@
 
                                                 <div v-if="parte.ParteID != 0">
                                                     <a class='x-title-t' style=''
-                                                       v-on:click="getParte(parte.ParteID, '@lblTipoParte', @Model.CausaID, @TipoParteID, @Model.TipoCausaID, 0)"
-                                                       href='javascript:void(0);'
-                                                       title='@resources.GlobalResources.Editar'><i class='x-icon x-icon-edit'></i></a>
+                                                        v-on:click="getParte(parte.ParteID, '@lblTipoParte', @Model.CausaID, @TipoParteID, @Model.TipoCausaID, 0)"
+                                                        href='javascript:void(0);'
+                                                        title='@resources.GlobalResources.Editar'><i class='x-icon x-icon-edit'></i></a>
 
                                                     <a href='javascript:void(0)' v-on:click="borrarDatabase(parte.ParteID)"><i class='x-icon x-icon-delete'></i></a>
                                                 </div>
@@ -669,8 +975,9 @@
                             </div>
                         </fieldset>
                     }
+                </div>
 
-
+                <div id="appPartes2">
                     @if (config.TipoParteID2 > 0)
                     {
                         var TipoParte2 = DataForm.TipoParte.FirstOrDefault(x => x.TipoParteID == config.TipoParteID2);
@@ -682,14 +989,14 @@
 
                             <div class="row">
                                 <div class="col text-right" id="btnAdd_@lblTipoParte">
-                                    <button type="button" id="" class="btn btn-default" onclick="GetParte(0, '@lblTipoParte', @Model.CausaID, @TipoParteID, @Model.TipoCausaID, 0)">
+                                    <button type="button" id="" class="btn btn-default" onclick="GetParte2(0, '@lblTipoParte', @Model.CausaID, @TipoParteID, @Model.TipoCausaID, 0)">
                                         <i class="x-icon x-icon-mas3 icon-in-button"></i> Agregar @lblTipoParte
                                     </button>
                                 </div>
                             </div>
 
                             <div class="table-responsive">
-                                <table class="table table-striped table-sm table-bordered table-hover x-table allW" id="" style="margin-top:10px">
+                                <table class="table table-striped table-sm table-bordered table-hover x-table allW" id="tbTipoParte2" style="margin-top:10px">
                                     <thead>
                                         <tr>
                                             <th class="ac" style="">@resources.GlobalResources.TH_Number</th>
@@ -713,9 +1020,9 @@
 
                                                 <div v-if="parte.ParteID != 0">
                                                     <a class='x-title-l' style=''
-                                                       v-on:click="getParte(parte.ParteID, '@lblTipoParte', @Model.CausaID, @TipoParteID, @Model.TipoCausaID, 0)"
-                                                       href='javascript:void(0);'
-                                                       title='@resources.GlobalResources.Editar'><i class='x-icon x-icon-edit'></i></a>
+                                                        v-on:click="getParte(parte.ParteID, '@lblTipoParte', @Model.CausaID, @TipoParteID, @Model.TipoCausaID, 0)"
+                                                        href='javascript:void(0);'
+                                                        title='@resources.GlobalResources.Editar'><i class='x-icon x-icon-edit'></i></a>
                                                     <a href='javascript:void(0)' v-on:click="borrarDatabase(parte.ParteID)"><i class='x-icon x-icon-delete'></i></a>
                                                 </div>
 
@@ -732,64 +1039,59 @@
                         </fieldset>
                     }
                 </div>
-
-
-
-
             </form>
 
-            @if (IsNew)
-            {
-                @Html.Partial("_UploadFileTemp", new ViewDataDictionary {
-                    { "FormatosPermitidos", DataForm.AsocTipoDocumentoAdjunto },
-                    { "TipoDocumentoEnum", Enums.TipoDocumento.Causa } })
-            }
-            else
-            {
-                int TipoDocumentoEnum = (int)Enums.TipoDocumento.Causa;
+        @if (IsNew)
+        {
+            @Html.Partial("_UploadFileTemp", new ViewDataDictionary {
+                        { "FormatosPermitidos", DataForm.AsocTipoDocumentoAdjunto },
+                        { "TipoDocumentoEnum", Enums.TipoDocumento.Causa } })
+        }
+        else
+        {
+            int TipoDocumentoEnum = (int)Enums.TipoDocumento.Causa;
 
-                <fieldset class="x-fieldset">
-                    <legend class="celeste bold">Documentos adjuntos</legend>
+            <fieldset class="x-fieldset">
+                <legend class="celeste bold">Documentos adjuntos</legend>
 
-                    <div class="alert alert-info" role="alert">
-                        Al seleccionar un archivo deberá indicar el contenido del mismo en el campo de texto
+                <div class="alert alert-info" role="alert">
+                    Al seleccionar un archivo deberá indicar el contenido del mismo en el campo de texto
+                </div>
+
+                <form class="" id="frmFileCausa" enctype="multipart/form-data" action="@Url.Action("SubirArchivo", "Uploader")" method="POST">
+                    @Html.AntiForgeryToken()
+
+                    @Html.Hidden("CausaID", Model.CausaID)
+
+                    <input type="hidden" id="_TipoDocumentoID" name="TipoDocumentoID" value="@TipoDocumentoEnum" />
+
+                    <div class="form-group row" id="divDescArchivo">
+                        <label for="Descripcion" id="" class="col-sm-3 col-form-label">Indique el contenido del archivo</label>
+                        <div class="col-sm-9">
+                            <input type="text" id="Descripcion" name="Descripcion" class="form-control notBlock" value="" />
+                        </div>
                     </div>
 
-                    <form class="" id="frmFileCausa" enctype="multipart/form-data" action="@Url.Action("SubirArchivo", "Uploader")" method="POST">
-                        @Html.AntiForgeryToken()
-
-                        @Html.Hidden("CausaID", Model.CausaID)
-
-                        <input type="hidden" id="_TipoDocumentoID" name="TipoDocumentoID" value="@TipoDocumentoEnum" />
-
-                        <div class="form-group row" id="divDescArchivo">
-                            <label for="Descripcion" id="" class="col-sm-3 col-form-label">Indique el contenido del archivo</label>
-                            <div class="col-sm-9">
-                                <input type="text" id="Descripcion" name="Descripcion" class="form-control notBlock" value="" />
+                    <div class="input-group">
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input notBlock" id="file" name="file">
+                            <label class="custom-file-label" for="file"
+                                   data-browse="@resources.UploadFiles.FileInput_changeText"
+                                   aria-describedby="inputGroupFileAddon">@resources.UploadFiles.FileInput_inputText</label>
+                            </div>
+                            <div class="input-group-append">
+                                <button class="btn btn-info btn-file" onclick='$("#frmFileCausa").submit();' type="button" id="inputGroupFileAddon">
+                                    <i class="x-icon x-icon-upload2 icon-in-upload"></i> @resources.UploadFiles.lblSubirArchivo
+                                </button>
                             </div>
                         </div>
+                        <small id="" class="form-text text-muted ac" style="margin-bottom: 10px;">
+                            @resources.GlobalResources.ExtensionesPermitidas: @Html.Raw(Html.GetExtensionesPermitidas(DataForm.AsocTipoDocumentoAdjunto, IncluyeTamanio: true))
+                        </small>
 
-                        <div class="input-group">
-                            <div class="custom-file">
-                                <input type="file" class="custom-file-input notBlock" id="file" name="file">
-                                <label class="custom-file-label" for="file"
-                                       data-browse="@resources.UploadFiles.FileInput_changeText"
-                                       aria-describedby="inputGroupFileAddon">@resources.UploadFiles.FileInput_inputText</label>
-                                </div>
-                                <div class="input-group-append">
-                                    <button class="btn btn-info btn-file" onclick='$("#frmFileCausa").submit();' type="button" id="inputGroupFileAddon">
-                                        <i class="x-icon x-icon-upload2 icon-in-upload"></i> @resources.UploadFiles.lblSubirArchivo
-                                    </button>
-                                </div>
-                            </div>
-                            <small id="" class="form-text text-muted ac" style="margin-bottom: 10px;">
-                                @resources.GlobalResources.ExtensionesPermitidas: @Html.Raw(Html.GetExtensionesPermitidas(DataForm.AsocTipoDocumentoAdjunto, IncluyeTamanio: true))
-                            </small>
-
-                        </form>
-
-
-                    <div class="table-responsive">
+                    </form>
+            
+                <div class="table-responsive">
 
                         <table class="@Html.GetBaseTableCSS()" id="">
                             <thead>
@@ -803,59 +1105,59 @@
                             </thead>
                             <tbody>
                                 @if (Model.DocumentoCausa.Count > 0)
-                                {
-                                    count = 1;
-
-                                    foreach (var item in Model.DocumentoCausa)
                                     {
-                                        <tr>
-                                            <td class="ac">@count</td>
-                                            <td class="">@item.NombreArchivoFisico</td>
-                                            <td style="max-width:200px" class="fixWord">@item.Descripcion</td>
-                                            <td class="ac">@Html.DatetimeToString(item.Fecha, "dd-MM-yyyy HH:mm")</td>
-                                            <td class="ac">
+                                        count = 1;
 
-                                                <a style="margin-right:2px" href="javascript:void(0)"
-                                                   onclick='getDownloadFile(@item.DocumentoCausaID, @Model.CausaID, "@item.Hash.Trim()", @TipoDocumentoEnum)'
-                                                   class="x-title-l" title="@resources.GlobalResources.BtnDescargar">
-                                                    <i class="x-icon @Html.GetCSS(item.NombreArchivoFisico)" style="cursor: pointer;"></i>
-                                                </a>
+                                        foreach (var item in Model.DocumentoCausa)
+                                        {
+                                    <tr>
+                                        <td class="ac">@count</td>
+                                        <td class="">@item.NombreArchivoFisico</td>
+                                        <td style="max-width:200px" class="fixWord">@item.Descripcion</td>
+                                        <td class="ac">@Html.DatetimeToString(item.Fecha, "dd-MM-yyyy HH:mm")</td>
+                                        <td class="ac">
 
-                                                @if (PuedeAgregarDocumentos)
-                                                {
+                                            <a style="margin-right:2px" href="javascript:void(0)"
+                                               onclick='getDownloadFile(@item.DocumentoCausaID, @Model.CausaID, "@item.Hash.Trim()", @TipoDocumentoEnum)'
+                                               class="x-title-l" title="@resources.GlobalResources.BtnDescargar">
+                                                <i class="x-icon @Html.GetCSS(item.NombreArchivoFisico)" style="cursor: pointer;"></i>
+                                            </a>
+
+                                            @if (PuedeAgregarDocumentos)
+                                                    {
                                                     <a href="javascript:void(0)"
                                                        onclick='getDeleteFile(@item.DocumentoCausaID, @TipoDocumentoEnum, @item.VersionEncriptID, "@item.Hash.Trim()", @Model.CausaID)'
                                                        class="x-title-l" title="@resources.GlobalResources.BtnEliminar">
                                                         <i class="x-icon x-icon-delete notRemove" style="cursor: pointer;"></i>
                                                     </a>
-                                                }
+                                                    }
 
-                                            </td>
-                                        </tr>
-                                        count++;
+                                        </td>
+                                    </tr>
+                                            count++;
+                                        }
                                     }
-                                }
-                                else
-                                {
+                                    else
+                                    {
                                     <tr>
                                         <td colspan="5" class="" style="padding:5px 10px;">No hay información para desplegar</td>
                                     </tr>
-                                }
+                                    }
                             </tbody>
                         </table>
 
                     </div>
+            </fieldset>
+        }
 
-                    </fieldset>
-            }
-
-
-
-
-
-
-
-
+        @if (Model.TipoCausaID == (int)Enums.TipoCausa.ProteccionSuplementaria)
+        {
+            <div class="ar">
+                <a href="@Domain.Infrastructure.WebConfigValues.FormularioComplementarioURL" target="_blank" class="btn-link">
+                    Link: Descargue formulario complementario
+                </a>
+            </div>
+        }
         </fieldset>
 
         <div class="form-actions ac">
@@ -864,7 +1166,7 @@
             <i class="x-icon-loader hide"></i>
 
             @if (DataForm.IsNew)
-            {
+                {
                 <button class="btn btn-default" onclick="SelfRedirect()" id="btnLimpiar" style="" type="button">
                     <i class="x-icon x-icon-limpiar icon-in-button"></i> @resources.GlobalResources.BtnLimpiar
                 </button>
@@ -876,8 +1178,8 @@
         </div>
 
     </div>
-</div>
 
+</div>
 
 <script type="text/javascript">
     ; (function ($) {

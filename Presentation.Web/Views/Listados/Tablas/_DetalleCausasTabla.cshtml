@@ -23,7 +23,7 @@
                 }
             }
 
-            generalGridParams.paging = true;
+            generalGridParams.paging = false;
             generalGridParams.pageLength = parseInt("@Domain.Infrastructure.WebConfigValues.CantidadResultadosGrilla");
 
             var allGridParams = $.extend({}, localGridParams, generalGridParams);
@@ -43,10 +43,18 @@
             params: {
                 __RequestVerificationToken: getVToken(),
                 action: "@Enums.ActionSystem.QuitarVigenciaDetalleTabla",
-                Identidad: DetalleTablaID
+                Identidad: DetalleTablaID,
+                TablaID: parseInt("@Model.TablaID")
             },
             callback: function () {
-                GetDetalleCausasTabla(@Model.TablaID);
+
+                $("#btnBuscar").click();
+
+                setTimeout(function () {
+                    GetDetalleCausasTabla(parseInt("@Model.TablaID"));
+                }, 1000);
+
+                @*GetDetalleCausasTabla(@Model.TablaID);*@
             },
             alert: "alert-danger",
             txtBtn1: "Sí"
@@ -74,10 +82,29 @@
         GetModalContent(opt);
     }
 
+    function GetEditarCausaTabla(TablaID, CausaID) {
+
+        var opt = {
+            title: "Editar Causa de Tabla",
+            url: "@Url.Action("GetEditarCausaTabla", "Listados")",
+            params:  {
+            __RequestVerificationToken: getVToken(),
+            TablaID: TablaID,
+            CausaID: CausaID
+            },
+        size: "modal-m",
+        callback: function () {
+
+        }
+    }
+    GetModalContent(opt);
+    }
+
+   
 </script>
 
 
-@if (Model.IsBorrador())
+@if (!Model.IsPublicado())
 {
     <div class="row">
         <div class="col text-right" id="">
@@ -117,12 +144,18 @@
                     <td class="nw">@item.Causa.EstadoCausa.Descripcion</td>
                     <td class="ac">
 
-                    @if (Model.IsBorrador())
+                    
+                    @if (!Model.IsPublicado())
                     {
                         <a class='x-title-t getDialog' style=''
-                           onclick="GetDeleteDetalleTabla(@item.DetalleTablaID)"
-                           href='javascript:void(0);'
-                           title='@resources.GlobalResources.BtnEliminar'><i class='x-icon x-icon-delete'></i></a>
+                            onclick="GetEditarCausaTabla(@item.TablaID, @item.CausaID)"
+                            href='javascript:void(0);'
+                            title='@resources.GlobalResources.BtnEditar'><i class='x-icon x-icon-edit'></i></a>
+                  
+                        <a class='x-title-t getDialog' style=''
+                            onclick="GetDeleteDetalleTabla(@item.DetalleTablaID)"
+                            href='javascript:void(0);'
+                            title='@resources.GlobalResources.BtnEliminar'><i class='x-icon x-icon-delete'></i></a>
                     }
 
                     </td>

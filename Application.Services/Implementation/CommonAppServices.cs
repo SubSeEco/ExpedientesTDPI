@@ -311,10 +311,12 @@ namespace Application.Services
                 dto.Nombres = item.Nombres.Trim();
                 dto.Apellidos = item.Apellidos.Trim();
                 dto.Mail = item.Mail.Trim();
+                dto.Telefono = item.Telefono.Trim();
                 dto.IsClaveUnica = item.IsClaveUnica;
                 dto.FechaRegistro = item.FechaRegistro;
                 dto.FechaModificacion = item.FechaModificacion;
                 dto.TipoGeneroID = item.TipoGeneroID;
+                dto.Signer = item.Signer;
 
                 dto.AsocUsuarioPerfil = new List<DTO.Models.AsocUsuarioPerfil>();
                 foreach (var asoc in item.AsocUsuarioPerfil)
@@ -432,13 +434,15 @@ namespace Application.Services
                 dto.UsuarioID = model.UsuarioID;
                 dto.AdID = model.AdID;
                 dto.Rut = model.Rut;
-                dto.Nombres = model.Nombres;
-                dto.Apellidos = model.Apellidos;
-                dto.Mail = model.Mail;
+                dto.Nombres = model.Nombres.Trim();
+                dto.Apellidos = model.Apellidos.Trim();
+                dto.Mail = model.Mail.Trim();
+                dto.Telefono = model.Telefono.Trim();
                 dto.IsClaveUnica = model.IsClaveUnica;
                 dto.FechaRegistro = model.FechaRegistro;
                 dto.FechaModificacion = model.FechaModificacion;
                 dto.TipoGeneroID = model.TipoGeneroID;
+                dto.Signer = model.Signer;
 
                 dto.AsocUsuarioPerfil = new List<DTO.Models.AsocUsuarioPerfil>();
                 foreach (var item in model.AsocUsuarioPerfil)
@@ -466,13 +470,15 @@ namespace Application.Services
             model.UsuarioID = dto.UsuarioID;
             model.AdID = dto.AdID;
             model.Rut = dto.Rut;
-            model.Nombres = dto.Nombres;
-            model.Apellidos = dto.Apellidos;
-            model.Mail = dto.Mail;
+            model.Nombres = dto.Nombres.Trim();
+            model.Apellidos = dto.Apellidos.Trim();
+            model.Mail = dto.Mail.Trim();
+            model.Telefono = dto.Telefono.Trim();
             model.IsClaveUnica = dto.IsClaveUnica;
             model.FechaRegistro = dto.FechaRegistro;
             model.FechaModificacion = dto.FechaModificacion;
             model.TipoGeneroID = dto.TipoGeneroID;
+            model.Signer = dto.Signer;
 
             return repo.SaveUser(model);
         }
@@ -497,6 +503,44 @@ namespace Application.Services
         public void DeleteUser(int UsuarioID, bool Acceso)
         {
             repo.DeleteUser(UsuarioID);
+        }
+
+        public void SaveAsocDocumentoUsuario(DTO.Models.AsocDocumentoUsuario dto)
+        {
+            AsocDocumentoUsuario model = new AsocDocumentoUsuario();
+            model.AsocDocumentoUsuarioID = dto.AsocDocumentoUsuarioID;
+            model.DocumentoSistemaID = dto.DocumentoSistemaID;
+            model.UsuarioID = dto.UsuarioID;
+
+            repo.SaveAsocDocumentoUsuario(model);
+        }
+
+        public IList<DTO.Models.AsocDocumentoUsuario> GetAsocDocumentoUsuario(int UsuarioID)
+        {
+            IList<DTO.Models.AsocDocumentoUsuario> listDTO = new List<DTO.Models.AsocDocumentoUsuario>();
+
+            IList<AsocDocumentoUsuario> repoList = repo.GetAsocDocumentoUsuario(UsuarioID);
+
+            foreach (var item in repoList)
+            {
+                DTO.Models.AsocDocumentoUsuario dto = new DTO.Models.AsocDocumentoUsuario();
+                dto.AsocDocumentoUsuarioID = item.AsocDocumentoUsuarioID;
+                dto.DocumentoSistemaID= item.DocumentoSistemaID;
+                dto.UsuarioID = item.UsuarioID;
+
+                dto.DocumentoSistema = new DTO.Models.DocumentoSistema();
+                dto.DocumentoSistema.DocumentoSistemaID = item.DocumentoSistema.DocumentoSistemaID;
+                dto.DocumentoSistema.VersionEncriptID = item.DocumentoSistema.VersionEncriptID;
+                dto.DocumentoSistema.TipoDocumentoID = item.DocumentoSistema.TipoDocumentoID;
+                dto.DocumentoSistema.Hash = item.DocumentoSistema.Hash;
+                dto.DocumentoSistema.NombreArchivoFisico = item.DocumentoSistema.NombreArchivoFisico;
+                dto.DocumentoSistema.Fecha = item.DocumentoSistema.Fecha;
+                dto.DocumentoSistema.Descripcion = item.DocumentoSistema.Descripcion;
+
+                listDTO.Add(dto);
+            }
+
+            return listDTO;
         }
 
         #endregion
@@ -630,6 +674,11 @@ namespace Application.Services
             if (tipoDocumento == Domain.Infrastructure.TipoDocumento.Causa)
             {
                 repo.DeleteDocumentoCausa(DocumentoID);
+            }
+
+            if (tipoDocumento == Domain.Infrastructure.TipoDocumento.Expediente)
+            {
+                repo.DeleteDocumentoExpediente(DocumentoID);
             }
         }
         #endregion
@@ -1194,6 +1243,11 @@ namespace Application.Services
             }
 
             return listDTO;
+        }
+
+        public void SaveSigner(int usuarioActive, string signer)
+        {
+            repo.SaveSigner(usuarioActive, signer);
         }
     }
 }

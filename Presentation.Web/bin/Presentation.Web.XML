@@ -6,13 +6,13 @@
     <members>
         <member name="T:Presentation.Web.ApiFeriado">
             <summary>
-            API FEriados, actualiza registros de BBDD 
+            API Feriados, actualiza registros de BBDD 
             </summary>
             <returns></returns>
         </member>
         <member name="M:Presentation.Web.ApiFeriado.Feriados">
             <summary>
-            API FEriados, actualiza registros de BBDD 
+            API Feriados, actualiza registros de BBDD 
             </summary>
             <returns></returns>
         </member>
@@ -517,15 +517,16 @@
             <param name="dto"></param>
             <returns></returns>
         </member>
-        <member name="M:Presentation.Web.Controllers.ExpedientesController.GetEstadoAplica(System.Int32,System.Int32)">
+        <member name="M:Presentation.Web.Controllers.ExpedientesController.GetEstadoAplica(System.Int32,System.Int32,System.Boolean)">
             <summary>
             GetEstadoAplica
             </summary>
             <param name="TipoTramiteID"></param>
             <param name="EstadoCausaID"></param>
+            <param name="IsTabla"></param>
             <returns></returns>
         </member>
-        <member name="M:Presentation.Web.Controllers.ExpedientesController.GetDetalleEvento(System.Int32,System.Int32,System.Int32,System.Int32)">
+        <member name="M:Presentation.Web.Controllers.ExpedientesController.GetDetalleEvento(System.Int32,System.Int32,System.Int32,System.Int32,System.Boolean)">
             <summary>
             GetDetalleEvento
             </summary>
@@ -533,6 +534,32 @@
             <param name="ExpedienteID"></param>
             <param name="EstadoCausaID"></param>
             <param name="OpcionesTramiteID"></param>
+            <param name="IsTabla"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Presentation.Web.Controllers.ExpedientesController.GetDerivarExpediente(System.Int32,System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="ExpedienteID"></param>
+            <param name="CausaID"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Presentation.Web.Controllers.ExpedientesController.SaveDerivar(Application.DTO.Models.Expediente,System.Int32,System.String)">
+            <summary>
+            SaveDerivar
+            </summary>
+            <param name="dto"></param>
+            <param name="UsuarioNewID"></param>
+            <param name="Comentario"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Presentation.Web.Controllers.ExpedientesController.GetAdmisibleExpediente(System.Int32,System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="ExpedienteID"></param>
+            <param name="CausaID"></param>
             <returns></returns>
         </member>
         <member name="M:Presentation.Web.Controllers.ExpedientesController.ActionExpediente(Domain.Infrastructure.ActionSystem,System.Int32)">
@@ -561,7 +588,7 @@
             <param name="filtros"></param>
             <returns></returns>
         </member>
-        <member name="M:Presentation.Web.Controllers.FirmasController.FirmarDocumento(System.Int32,System.Int32,System.Int32)">
+        <member name="M:Presentation.Web.Controllers.FirmasController.FirmarDocumentoExpediente(System.Int32,System.Int32,System.Int32,System.Int32)">
             <summary>
             
             </summary>
@@ -582,6 +609,19 @@
             <summary>
             Devuelve un response 403
             </summary>
+            <returns></returns>
+        </member>
+        <member name="T:Presentation.Web.Controllers.JsonController">
+            <summary>
+            Controller que devuelve datos Json
+            </summary>
+        </member>
+        <member name="M:Presentation.Web.Controllers.JsonController.FechaFinPlazo(System.String,System.Int32)">
+            <summary>
+            Fecha de Fin de Plazo
+            </summary>
+            <param name="FechaIngreso"></param>
+            <param name="PlazoDias"></param>
             <returns></returns>
         </member>
         <member name="T:Presentation.Web.Controllers.ListadosController">
@@ -673,11 +713,33 @@
             <param name="TablaID"></param>
             <returns></returns>
         </member>
+        <member name="M:Presentation.Web.Controllers.ListadosController.GetEditarCausaTabla(System.Int32,System.Int32)">
+            <summary>
+            GetEditarCausaTabla
+            </summary>
+            <param name="TablaID"></param>
+            <param name="CausaID"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Presentation.Web.Controllers.ListadosController.GetGenerarListadoTablaPDF(System.Int32)">
+            <summary>
+            GetTabla
+            </summary>
+            <param name="TablaID"></param>
+            <returns></returns>
+        </member>
         <member name="M:Presentation.Web.Controllers.ListadosController.GenerarListadoTablaPDF(System.Int32)">
             <summary>
             
             </summary>
             <param name="TablaID"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Presentation.Web.Controllers.ListadosController.GetGenerarListadoEstadoDiarioPDF(System.Int32)">
+            <summary>
+            GetTabla
+            </summary>
+            <param name="EstadoDiarioID"></param>
             <returns></returns>
         </member>
         <member name="M:Presentation.Web.Controllers.ListadosController.GenerarListadoEstadoDiarioPDF(System.Int32)">
@@ -761,18 +823,44 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:Presentation.Web.Controllers.MainController.CambiarEmail(System.String)">
+        <member name="M:Presentation.Web.Controllers.MainController.GetMiFirma">
+            <summary>
+            
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Presentation.Web.Controllers.MainController.SaveMiFirma(System.String)">
+            <summary>
+            SaveMiFirma
+            </summary>
+            <param name="SignerUserActive"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Presentation.Web.Controllers.MainController.MisDatos(System.String)">
             <summary>
             Cambiar email para ciudadnao Logueado.
             </summary>
             <returns></returns>
         </member>
-        <member name="M:Presentation.Web.Controllers.MainController.SaveCambiarEmail(System.String,System.String)">
+        <member name="M:Presentation.Web.Controllers.MainController.SaveMisDatos(System.String,System.String,System.String)">
             <summary>
             Actualizar Email
             </summary>
             <param name="email"></param>
             <param name="emailOld"></param>
+            <param name="telefono"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Presentation.Web.Controllers.MainController.RegistroAbogado">
+            <summary>
+            Cambiar email para ciudadnao Logueado.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Presentation.Web.Controllers.MainController.SolicitudRegistroAbogado">
+            <summary>
+            Actualizar Email
+            </summary>
             <returns></returns>
         </member>
         <member name="T:Presentation.Web.Controllers.RestController">
@@ -1338,6 +1426,11 @@
             
             </summary>
         </member>
+        <member name="P:Presentation.Web.DocPdf.TipoParte">
+            <summary>
+            
+            </summary>
+        </member>
         <member name="P:Presentation.Web.DocPdf.Tabla">
             <summary>
             
@@ -1615,6 +1708,97 @@
         <member name="P:Presentation.Web.name.apellidos">
             <summary>
             apellidos
+            </summary>
+        </member>
+        <member name="T:Presentation.Web.SignFile">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:Presentation.Web.SignFile.FileSignedBase64">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:Presentation.Web.SignFile.#ctor(System.String,System.String,System.String,Domain.Infrastructure.SignPageNumber,Domain.Infrastructure.SignPosition)">
+            <summary>
+            
+            </summary>
+            <param name="_filePath"></param>
+            <param name="_fileName"></param>
+            <param name="_signer"></param>
+            <param name="_pageNumber"></param>
+            <param name="_signPosition"></param>
+        </member>
+        <member name="M:Presentation.Web.SignFile.Sign">
+            <summary>
+            
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Presentation.Web.SignFile.ReplaceFile(System.DateTime)">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:Presentation.Web.ResponseSign">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:Presentation.Web.ResponseSign.Status">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:Presentation.Web.ResponseSign.Message">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:Presentation.Web.ResponseSign.SignedBase64EncodedString">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:Presentation.Web.SignPdf">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:Presentation.Web.SignPdf.inputfolder">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:Presentation.Web.SignPdf.location">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:Presentation.Web.SignPdf.page_number">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:Presentation.Web.SignPdf.sign_location">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:Presentation.Web.SignPdf.signer_name">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:Presentation.Web.SignPdf.username">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:Presentation.Web.SignPdf.password">
+            <summary>
+            
             </summary>
         </member>
         <member name="T:Presentation.Web.TokenAccess">

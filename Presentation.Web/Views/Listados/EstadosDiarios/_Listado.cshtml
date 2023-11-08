@@ -71,6 +71,8 @@
             },
             callback: function () {
                 GetListadoEstadoDiario();
+                showBlockUI(CloseDialog);
+                $("#btnBuscar").click();
             },
             alert: "alert-danger",
             txtBtn1: "Sí"
@@ -132,6 +134,22 @@
 
         });
     }
+    function GetPDF(EstadoDiarioID) {
+
+        var opt = {
+            title: "Estado Diario PDF",
+            url: "@Url.Action("GetGenerarListadoEstadoDiarioPDF", "Listados")",
+            params:  {
+            __RequestVerificationToken: getVToken(),
+            EstadoDiarioID: EstadoDiarioID
+            },
+            size: "modal-xl",
+            callback: function () {
+
+            }
+        };
+        GetModalContent(opt);
+    }
 
 </script>
 
@@ -142,6 +160,7 @@
                 <th class="ac" style="width:1%">@resources.GlobalResources.TH_Number</th>
                 <th class="ac nw" style="text-align: center !important">Fecha</th>
                 <th class="ac " style="">Estado</th>
+                <th class="ac " style="">Firmas</th>
                 <th class="ac" style="width:10%">@resources.GlobalResources.Seleccionar</th>
             </tr>
         </thead>
@@ -164,6 +183,7 @@
                     <td class="ac">@count</td>
                     <td class="ac nw">@Fecha</td>
                     <td class="">@item.TipoEstadoDiario.Descripcion</td>
+                    <td class="ac">@item.GetFirmas()</td>
                     <td class="ac">
 
                         @if (PuedeEditar)
@@ -198,7 +218,8 @@
                         @if (PuedeGenerar)
                         {
                             <a class='x-title-l' style=''
-                               onclick="GetGenerarPDF(@item.EstadoDiarioID, '@Fecha');"
+                               @*onclick="GetGenerarPDF(@item.EstadoDiarioID, '@Fecha');"*@
+                               onclick="GetPDF(@item.EstadoDiarioID);"                               
                                href='javascript:void(0);'
                                title='Generar PDF'><i class='x-icon x-icon-folder2'></i></a>
                         }

@@ -5,7 +5,9 @@
 
 $(document).ajaxStart(
         function () {
-            addAjaxBlock();
+            if (Config.IsBlock) {
+                addAjaxBlock();
+            }
         }).ajaxStop(
         function () {
             $("#ajax-block").remove();
@@ -2240,4 +2242,97 @@ function seleccionarTRGrid(parent, obj) {
     var tr = $(obj).parents("tr");
     $(tr).addClass("selected");
 
+}
+
+function ValidarTelefonos() {
+
+    //console.log("call ValidarTelefonos");
+
+    $("#TelefonoFijo").on("blur", function () {
+
+        var valor = $(this).val();
+
+        if (valor != "") {
+
+            var count = $(this).val().length;
+
+            if (count < 5) {
+                showBlockUIError("Debe indicar un Teléfono válido");
+                $(this).parent().addClass("error");
+                $(this).val("");
+                return false;
+            } else {
+                $(this).parent().removeClass("error");
+            }
+        } else {
+            $(this).parent().removeClass("error");
+        }
+
+    });
+
+    $("#TelefonoMovil").on("blur", function () {
+
+        var valor = $(this).val();
+
+        if (valor != "") {
+
+            var count = $(this).val().length;
+
+            if (count < 5) {
+                showBlockUIError("Debe indicar un Teléfono Móvil válido");
+                $(this).parent().addClass("error");
+                $(this).val("");
+                return false;
+            } else {
+                $(this).parent().removeClass("error");
+            }
+        } else {
+            $(this).parent().removeClass("error");
+        }
+
+    });
+
+    $("#Telefono").on("blur", function () {
+
+        var valor = $(this).val();
+
+        if (valor != "") {
+
+            var count = $(this).val().length;
+
+            if (count < 5) {
+                showBlockUIError("Debe indicar un Teléfono válido");
+                $(this).val("").addClass("is-invalid");
+                return false;
+            } else {
+
+                if ($(this).hasClass("is-invalid")) {
+                    $(this).removeClass("is-invalid").addClass("is-valid");
+                }
+            }
+        } else {
+            $(this).removeClass("is-invalid");
+        }
+
+    });
+
+}
+
+function getFechaFinPlazo(FechaIngreso, PlazoDias) {
+    var urlTimeServer = "/ES/Json/FechaFinPlazo";
+    var FechaTermino;
+
+    $.ajax({
+        url: urlTimeServer,
+        async: false,
+        type: "POST",
+        dataType: "json",
+        data: { __RequestVerificationToken: getVToken(), FechaIngreso: FechaIngreso, PlazoDias: PlazoDias },
+        success: function (data, status, xhr) {
+
+            FechaTermino = data.result;
+        }
+    });
+
+    return FechaTermino;
 }

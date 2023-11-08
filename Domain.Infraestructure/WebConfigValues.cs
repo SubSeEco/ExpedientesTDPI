@@ -110,7 +110,26 @@ namespace Domain.Infrastructure
         private const string _NombrePresidente = "NombrePresidente"; 
         private const string _SistemaPublicoURL = "SistemaPublicoURL";
         private const string _ActiveDirectoryHost = "ActiveDirectoryHost";
-        
+
+        private const string _SignService_URL = "SignService_URL";
+        private const string _SignService_User = "SignService_User";
+        private const string _SignService_Pass = "SignService_Pass";
+        private const string _SignService_Location = "SignService_Location";
+
+        private const string _FormularioComplementarioURL = "FormularioComplementarioURL";
+
+        private const string _IntervalMilliseconds = "IntervalMilliseconds";
+        private const string _AlarmasScheduledTime = "AlarmasScheduledTime";
+        private const string _FeriadosScheduledTime = "FeriadosScheduledTime";
+        private const string _IsEnableServicio_Alarmas = "IsEnableServicio_Alarmas";
+        private const string _IsEnableServicio_Feriados = "IsEnableServicio_Feriados";
+
+
+        private const string _SignService_Identity = "SignService_Identity";
+        private const string _PlazoMasDiasVisualizarEA = "PlazoMasDiasVisualizarEA";
+
+
+
 
         #region Mails
 
@@ -165,6 +184,34 @@ namespace Domain.Infrastructure
 
 
         #region Strings
+        public static string FeriadosScheduledTime
+        {
+            get { return GetStrintConfigData(_FeriadosScheduledTime); }
+        }
+        public static string AlarmasScheduledTime
+        {
+            get { return GetStrintConfigData(_AlarmasScheduledTime); }
+        }
+        public static string FormularioComplementarioURL
+        {
+            get { return GetStrintConfigData(_FormularioComplementarioURL); }
+        }
+        public static string SignService_URL
+        {
+            get { return GetStrintConfigData(_SignService_URL); }
+        }
+        public static string SignService_User
+        {
+            get { return GetStrintConfigData(_SignService_User); }
+        }
+        public static string SignService_Pass
+        {
+            get { return GetStrintConfigData(_SignService_Pass); }
+        }
+        public static string SignService_Location
+        {
+            get { return GetStrintConfigData(_SignService_Location); }
+        }
         public static string ActiveDirectoryHost
         {
             get { return GetStrintConfigData(_ActiveDirectoryHost); }
@@ -389,6 +436,20 @@ namespace Domain.Infrastructure
 
 
         #region Int
+        public static int PlazoMasDiasVisualizarEA
+        {
+            get { return GetIntConfigData(_PlazoMasDiasVisualizarEA); }
+        }
+
+        public static int SignService_Identity
+        {
+            get { return GetIntConfigData(_SignService_Identity); }
+        }
+
+        public static int IntervalMilliseconds
+        {
+            get { return GetIntConfigData(_IntervalMilliseconds); }
+        }
 
         public static int AnioInicial
         {
@@ -433,6 +494,14 @@ namespace Domain.Infrastructure
 
 
         #region Boolean
+        public static bool IsEnableServicio_Feriados
+        {
+            get { return GetBooleanConfigData(_IsEnableServicio_Feriados); }
+        }
+        public static bool IsEnableServicio_Alarmas
+        {
+            get { return GetBooleanConfigData(_IsEnableServicio_Alarmas); }
+        }
         public static bool IsAmbienteTest
         {
             get { return GetBooleanConfigData(_IsAmbienteTest); }

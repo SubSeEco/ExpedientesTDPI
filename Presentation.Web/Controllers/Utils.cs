@@ -80,7 +80,36 @@ namespace Presentation.Web.Controllers
 
             return lista;
         }
-        
+
+
+        internal IList<DTO.Models.Feriado> GetFeriados(bool notCache = false)
+        {
+            string nameCache = "FeriadosList";
+            IList<DTO.Models.Feriado> lista;
+
+            if (notCache)
+            {
+                lista = app.GetAllFeriados();
+            }
+            else
+            {
+                ObjectCache cache = MemoryCache.Default;
+
+                lista = (IList<DTO.Models.Feriado>)cache.Get(nameCache);
+
+                if (lista == null)
+                {
+                    lista = app.GetAllFeriados();
+
+                    CacheItemPolicy policy = new CacheItemPolicy();
+                    policy.AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(ExpirationCacheInMinutes);
+                    cache.Add(nameCache, lista, policy);
+                }
+            }
+
+            return lista;
+        }
+
         #endregion
 
         #region Get Form Variables
@@ -163,12 +192,13 @@ namespace Presentation.Web.Controllers
             {
                 DTO.Models.Expediente dto = new DTO.Models.Expediente();
                 dto.ExpedienteID = 0;
+                dto.TipoCanalID = (int)Enums.TipoCanal.Presencial;
                 dto.TipoTramiteID = tipoTramiteID;
                 dto.CausaID = causaID;
                 dto.UsuarioID = UsuarioActiveID;
                 dto.UsuarioResponsableID = UsuarioActiveID;
                 dto.FechaExpediente = fecha;
-                dto.IsAdmisible = false;
+                dto.IsAdmisible = true;
                 dto.Observacion = "";
                 dto.Comentario = "";
                 dto.NumeroOficio = "";
@@ -176,6 +206,7 @@ namespace Presentation.Web.Controllers
                 dto.IsHabil = asoc.IsDiasHabiles;
                 dto.IsTabla = asoc.IsTabla;
                 dto.IsFinalizado = true;
+                dto.NumeroTicket = string.Empty;
 
                 dto.ExpedienteID = appExpediente.SaveExpediente(dto);
 
@@ -295,6 +326,11 @@ namespace Presentation.Web.Controllers
             return (HttpContext.Current.Session[variable] == null) ? "" : HttpContext.Current.Session[variable].ToString();
         }
 
+        internal bool IsExistSessionVar(string variable)
+        {
+            return (HttpContext.Current.Session[variable] != null);
+        }
+
 
         #endregion
 
@@ -396,6 +432,209 @@ namespace Presentation.Web.Controllers
                 return false;
             }
         }
+
+        #region Perfiles
+
+        internal List<int> GetTipoCausaIngreso(Enums.Perfil perfil)
+        {
+            List<int> tipos = new List<int>();
+
+            if (perfil == Perfil.INAPI)
+            {
+                tipos = new List<int>();
+                tipos.Add((int)Enums.TipoCausa.Marca);
+                tipos.Add((int)Enums.TipoCausa.RecursoHechoMarca);
+                tipos.Add((int)Enums.TipoCausa.RecursoHechoPatente);
+                tipos.Add((int)Enums.TipoCausa.Patente);
+            }
+
+            if (perfil == Perfil.SAG)
+            {
+                tipos = new List<int>();
+                tipos.Add((int)Enums.TipoCausa.VariedadVegetal);
+            }
+
+            //if (perfil == Perfil.ClaveUnicaSinPerfil || perfil == Perfil.Abogado)
+            //{
+            //    tipos = new List<int>();
+            //    tipos.Add((int)Enums.TipoCausa.RecursoHechoMarca);
+            //    tipos.Add((int)Enums.TipoCausa.RecursoHechoPatente);
+            //    tipos.Add((int)Enums.TipoCausa.ProteccionSuplementaria);
+            //}
+
+            if (perfil == Perfil.Abogado)
+            {
+                tipos = new List<int>();
+                tipos.Add((int)Enums.TipoCausa.RecursoHechoMarca);
+                tipos.Add((int)Enums.TipoCausa.RecursoHechoPatente);
+                tipos.Add((int)Enums.TipoCausa.ProteccionSuplementaria);
+            }
+
+            return tipos;
+        }
+
+
+        internal IList<DTO.Models.TipoCausa> GetTipoCausaByUserActive(IList<DTO.Models.TipoCausa> tipoCausa, SsoActionResult sso)
+        {
+            List<DTO.Models.TipoCausa> TipoCausaFilter = new List<DTO.Models.TipoCausa>();
+
+            List<int> TiposPermitidosINAPI = GetTipoCausaIngreso(Enums.Perfil.INAPI);
+            List<int> TiposPermitidosSAG = GetTipoCausaIngreso(Enums.Perfil.SAG);
+            List<int> TiposPermitidosAbogado = GetTipoCausaIngreso(Enums.Perfil.Abogado);
+            //List<int> TiposClaveUnicaSinPerfil = GetTipoCausaIngreso(Enums.Perfil.ClaveUnicaSinPerfil);
+
+            if (WebConfigValues.IsAccesoPublico)
+            {
+                //if (sso.UserActive.IsClaveUnica && (sso.IsSinPerfil() || sso.IsAbogado()))
+                //{
+                //    TipoCausaFilter = tipoCausa.Where(x => x.Vigente && TiposClaveUnicaSinPerfil.Contains(x.TipoCausaID))
+                //        .OrderBy(x => x.Descripcion).ToList();
+                //}
+
+                if (sso.UserActive.IsClaveUnica && sso.IsAbogado())
+                {
+                    TipoCausaFilter = tipoCausa.Where(x => x.Vigente && TiposPermitidosAbogado.Contains(x.TipoCausaID))
+                        .OrderBy(x => x.Descripcion).ToList();
+                }
+
+                if (sso.IsSAG())
+                {
+                    TipoCausaFilter = tipoCausa.Where(x => x.Vigente && TiposPermitidosSAG.Contains(x.TipoCausaID)).ToList();
+                }
+
+                if (sso.IsINAPI())
+                {
+                    TipoCausaFilter = tipoCausa.Where(x => x.Vigente && TiposPermitidosINAPI.Contains(x.TipoCausaID)).ToList();
+                }
+            }
+            else
+            {
+                TipoCausaFilter = tipoCausa.Where(x => x.Vigente && x.IsInterno).OrderBy(x => x.Descripcion).ToList();
+            }
+
+            return TipoCausaFilter;
+        }
+
+        internal bool IsPuedeIngresarCausa(SsoActionResult sso)
+        {
+            bool puede = false;
+
+            if (WebConfigValues.IsAccesoPublico)
+            {
+                if (sso.UserActive.IsClaveUnica && sso.IsSinPerfil())
+                {
+                    puede = false;
+
+                }
+                else
+                {
+                    puede = sso.IsSAG() || sso.IsINAPI() || sso.IsAbogado();
+                }
+            }
+            else
+            {
+                puede = sso.IsTDPI();
+            }
+
+            return puede;
+        }
+
+        internal List<int> GetTipoTramiteIngreso(Enums.Perfil perfil)
+        {
+            List<int> tipos = new List<int>();
+
+            if (perfil == Perfil.TDPI)
+            {
+                tipos = new List<int>();
+                tipos.Add((int)Enums.TipoTramite.Actuacion);
+                tipos.Add((int)Enums.TipoTramite.Resolucion);
+                tipos.Add((int)Enums.TipoTramite.Escrito);
+                tipos.Add((int)Enums.TipoTramite.Oficio);
+            }
+
+            if (perfil == Perfil.SAG || perfil == Perfil.INAPI)
+            {
+                tipos = new List<int>();
+                tipos.Add((int)Enums.TipoTramite.Oficio);
+            }
+
+            if (perfil == Perfil.ClaveUnicaSinPerfil)
+            {
+                tipos = new List<int>();
+                tipos.Add((int)Enums.TipoTramite.Escrito);
+            }
+
+            return tipos;
+        }
+
+        internal List<DTO.Models.TipoTramite> GetTipoTramiteByUserActive(IList<DTO.Models.TipoTramite> tipoTramite, SsoActionResult sso)
+        {
+            List<DTO.Models.TipoTramite> filter = new List<DTO.Models.TipoTramite>();
+
+            List<int> TiposTdpi = GetTipoTramiteIngreso(Enums.Perfil.TDPI);
+            List<int> TiposInapi = GetTipoTramiteIngreso(Enums.Perfil.INAPI);
+            List<int> TiposSag = GetTipoTramiteIngreso(Enums.Perfil.SAG);
+            List<int> TiposClaveUnicaSinPerfil = GetTipoTramiteIngreso(Enums.Perfil.ClaveUnicaSinPerfil);
+
+            if (WebConfigValues.IsAccesoPublico)
+            {
+                if (sso.UserActive.IsClaveUnica && (sso.IsSinPerfil() || sso.IsAbogado()))
+                {
+                    filter = tipoTramite.Where(x => x.Vigente && TiposClaveUnicaSinPerfil.Contains(x.TipoTramiteID)).ToList();
+                }
+
+                if (sso.IsSAG())
+                {
+                    filter = tipoTramite.Where(x => x.Vigente && TiposSag.Contains(x.TipoTramiteID)).ToList();
+                }
+
+                if (sso.IsINAPI())
+                {
+                    filter = tipoTramite.Where(x => x.Vigente && TiposInapi.Contains(x.TipoTramiteID)).ToList();
+                }
+
+                if (sso.IsTDPI())
+                {
+                    filter = tipoTramite.Where(x => x.Vigente && TiposTdpi.Contains(x.TipoTramiteID)).ToList();
+                }
+            }
+            else
+            {
+                filter = tipoTramite.Where(x => x.Vigente && TiposTdpi.Contains(x.TipoTramiteID)).ToList();
+            }
+
+            return filter.OrderBy(x => x.Descripcion).ToList();
+        }
+
+        internal bool IsPuedeExpediente(SsoActionResult sso)
+        {
+            bool puede = false;
+
+            if (WebConfigValues.IsAccesoPublico)
+            {
+                if (sso.UserActive.IsClaveUnica && sso.IsSinPerfil())
+                {
+                    puede = false;
+
+                }
+                else
+                {
+                    puede = sso.IsINAPI() || sso.IsAbogado();
+                }
+            }
+            else
+            {
+                puede = sso.IsTDPI();
+            }
+
+            return puede;
+        }
+
+        #endregion
+
+
+
+
     }
 
     /// <summary>
@@ -610,7 +849,7 @@ namespace Presentation.Web.Controllers
 
 
             log.ExpedienteID = ExpedienteID;
-            log.UsuarioID = this.UsuarioID;
+            log.UsuarioID = UsuarioID;
 
             log.Parametros = (IncluyeParametros) ? GetFormValues() : string.Empty;
             log.Tipo = TipoLog.ToString();

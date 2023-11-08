@@ -31,6 +31,8 @@ namespace Persistence.Repository
         public int TablaID { get; set; }
         public bool IsSoloEscritos { get; set; }
         public bool IsSoloMisEscritos { get; set; }
+        public int EstadoFirma { get; set; } // Firmas
+        public int TipoDocumentoID { get; set; } // Firmas
 
         public int[] ListaID { get; set; }
     }
@@ -63,5 +65,17 @@ namespace Persistence.Repository
         public string organismo { get; set; }
         public decimal pagoCLP { get; set; }
         public decimal pagoUSD { get; set; }
+    }
+
+    public class ItemDocumentoMigracion
+    {
+        public int TempID { get; set; }
+        public int Identidad { get; set; }
+        public int Tipo { get; set; }
+        public int Anio { get; set; }
+        public string RutaArchivo { get; set; }
+        public string NombreArchivo { get; set; }
+        public bool Migrado { get; set; }
+        public string Comentario { get; set; }
     }
 }

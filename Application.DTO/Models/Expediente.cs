@@ -10,6 +10,7 @@
 namespace Application.DTO.Models
 {
     using System;
+    using System.Linq;
     using System.Collections.Generic;
     
     public partial class Expediente
@@ -28,7 +29,7 @@ namespace Application.DTO.Models
         public int CausaID { get; set; }
         public int UsuarioID { get; set; }
         public int UsuarioResponsableID { get; set; }
-        public Nullable<System.DateTime> FechaExpediente { get; set; }
+        public System.DateTime FechaExpediente { get; set; }
         public bool IsAdmisible { get; set; }
         public string Observacion { get; set; }
         public string Comentario { get; set; }
@@ -37,6 +38,9 @@ namespace Application.DTO.Models
         public bool IsHabil { get; set; }
         public bool IsTabla { get; set; }
         public bool IsFinalizado { get; set; }
+        public Nullable<int> TablaID { get; set; }
+        public int TipoCanalID { get; set; }
+        public string NumeroTicket { get; set; }
 
         public virtual ICollection<AsocEscritoDocto> AsocEscritoDocto { get; set; }
         public virtual ICollection<AsocExpedienteOpcion> AsocExpedienteOpcion { get; set; }
@@ -46,8 +50,11 @@ namespace Application.DTO.Models
         public virtual ICollection<DetalleEstadoDiario> DetalleEstadoDiario { get; set; }
         public virtual TipoTramite TipoTramite { get; set; }
         public virtual Usuario Usuario { get; set; }
+        public virtual Tabla Tabla { get; set; }
+        public virtual TipoCanal TipoCanal { get; set; }
 
         //Custom
+        public string UsuarioResponsableName { get; set; }
         public bool IsPuedeEditar()
         {
             return !IsFinalizado;
@@ -55,7 +62,7 @@ namespace Application.DTO.Models
 
         public string GetDiasTranscurridos()
         {
-            TimeSpan difference = DateTime.Now - FechaExpediente.Value;
+            TimeSpan difference = DateTime.Now - FechaExpediente;
 
             //int dias = difference.Days == 0 ? 1 : difference.Days;
 
@@ -85,35 +92,76 @@ namespace Application.DTO.Models
 
         public string GetFirmas()
         {
-            return "--falta--";
+            if (AsocExpeFirma.Count > 0)
+            {
+                int total = AsocExpeFirma.Count;
+                int ok = 0;
 
-            //if (Firma.Count > 0)
-            //{
-            //    int total = Firma.Count;
-            //    int ok = 0;
+                foreach (var item in AsocExpeFirma)
+                {
+                    int firmaid = item.FirmaID;
+                    
+                    if (item.Firma.AsocFirmaDocto.Count > 0 && item.Firma.AsocFirmaDocto != null)
+                    {
+                        bool pendientes = item.Firma.AsocFirmaDocto.Any(x => !x.IsFirmado);
 
-            //    foreach (var item in Firma)
-            //    {
-            //        if (item.AsocFirmaDocto.Count > 0 && item.AsocFirmaDocto != null)
-            //        {
-            //            foreach (var asoc in item.AsocFirmaDocto)
-            //            {
-            //                if (asoc.IsFirmado)
-            //                {
-            //                    ok++;
-            //                }                            
-            //            }
+                        //foreach (var asoc in item.Firma.AsocFirmaDocto)
+                        //{
+                        //    if (asoc.IsFirmado)
+                        //    {
+                        //        ok++;
+                        //    }
+                        //}
+                        if (!pendientes)
+                        {
+                            ok++;
+                        }
 
-            //        }
-            //    }
+                    }
+                }
 
 
-            //    return $"{ok} de {total}";
-            //}
-            //else
-            //{
-            //    return "N/A";
-            //}
+                return $"{ok} de {total}";
+            }
+            else
+            {
+                return "N/A";
+            }
+        }
+
+        public string GetFirmasUsuario(int UsuarioID)
+        {
+            var thisAsoc = AsocExpeFirma.Where(x => x.Firma.UsuarioID == UsuarioID).ToList();
+            if (thisAsoc.Count > 0)
+            {
+                int total = 0;
+                int ok = 0;
+
+                foreach (var item in thisAsoc)
+                {
+                    int firmaid = item.FirmaID;
+
+                    if (item.Firma.AsocFirmaDocto.Count > 0 && item.Firma.AsocFirmaDocto != null)
+                    {
+                        foreach (var asoc in item.Firma.AsocFirmaDocto)
+                        {
+                            total++;
+
+                            if (asoc.IsFirmado)
+                            {
+                                ok++;
+                            }
+                        }                        
+                    }
+                }
+
+
+                return $"{ok} de {total}";
+            }
+            else
+            {
+                return "N/A";
+            }
         }
 
         public bool IsResolucion()
@@ -123,8 +171,22 @@ namespace Application.DTO.Models
 
         public bool IsDisponibleResolucion(DateTime FechaEstadoDiario)
         {
-            return IsResolucion() && FechaEstadoDiario.Date == FechaExpediente.Value.Date;
+            return IsResolucion() && FechaEstadoDiario.Date == FechaExpediente.Date;
         }
 
+        public bool IsOficio()
+        {
+            return TipoTramiteID == (int)Domain.Infrastructure.TipoTramite.Oficio;
+        }
+
+        public bool IsEscrito()
+        {
+            return TipoTramiteID == (int)Domain.Infrastructure.TipoTramite.Escrito;
+        }
+
+        public bool IsActuacion()
+        {
+            return TipoTramiteID == (int)Domain.Infrastructure.TipoTramite.Actuacion;
+        }
     }
 }

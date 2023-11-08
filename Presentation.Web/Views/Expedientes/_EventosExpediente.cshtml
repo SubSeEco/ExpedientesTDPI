@@ -8,12 +8,12 @@
     int count = 1;
     var DataForm = ViewBag.DataForm as Application.DTO.DataForm;
 
+    bool IsPuedeExpediente = (bool)ViewBag.IsPuedeExpediente;
 }
 
 <h4>N° Rol: @Model.NumeroTicket</h4>
 
 <script type="text/javascript">
-
     var oTableEvento;
 
     ; (function ($) {
@@ -45,6 +45,8 @@
 
             var allGridParams = $.extend({}, localGridParams, generalGridParams);
             oTableEvento = $('#grillaExpediente').dataTable(allGridParams);
+
+            SetComportamientoPlazoGrid();
         });
     })(jQuery);
 
@@ -57,7 +59,7 @@
                 ExpedienteID: ExpedienteID,
                 CausaID: CausaID
             },
-            size: "modal-lg",
+            size: "modal-xl",
             callback: function () {
                 //goGrid();
             }
@@ -85,8 +87,25 @@
         GetModalContent(opt);
     }
 
-    function GetFinalizarExpediente(ExpedienteID, CausaID) {
+    function GetDerivarExpediente(ExpedienteID, CausaID) {
+        var opt = {
+            title: "Derivar",
+            url: "@Url.Action("GetDerivarExpediente", "Expedientes")",
+            params: {
+                __RequestVerificationToken: getVToken(),
+                ExpedienteID: ExpedienteID,
+                CausaID: CausaID
+            },
+            size: "modal-lg",
+            callback: function () {
+                //goGrid();
+            }
+        }
 
+        GetModalContent(opt);
+    }
+
+    function GetFinalizarExpediente(ExpedienteID, CausaID) {
         var optBtn = {
             title: "Finalizar Expediente",
             msg1: "¿Confirma finalizar Expediente?",
@@ -110,9 +129,58 @@
         }
 
         xDialogConfirmAction(optBtn);
+    }
+
+    function SetComportamientoPlazoGrid() {
+
+        $(".spanPlazo").each(function() {
+
+            let valorFechaIngreso = $(this).data("date");
+            let valorPlazoDias = parseInt($(this).data("dias")) || 0;
+            let valorIsHabil = $(this).data("habil").toString().bool();
+
+
+            if (valorFechaIngreso != "" && valorPlazoDias > 0) {
+
+                let startdate = moment(valorFechaIngreso, "DD-MM-YYYY");
+                let newDate;
+                if (valorIsHabil)
+                {
+                    //newDate = moment(startdate, "DD-MM-YYYY").businessAdd(valorPlazoDias, 'days');
+                    newDate = getFechaFinPlazo(valorFechaIngreso, valorPlazoDias);
+                    $(this).html(newDate);
+
+                }
+                else
+                {
+                    newDate = moment(startdate, "DD-MM-YYYY").add(valorPlazoDias, 'days');
+                    $(this).html(newDate.format("DD-MM-YYYY"));
+                }
+
+            }
+
+        })
 
     }
 
+    function GetExpedienteInadmisible(ExpedienteID, CausaID) 
+    {
+            var opt = {
+                title: "Eliminar",
+                url: "@Url.Action("GetAdmisibleExpediente", "Expedientes")",
+                params: {
+                __RequestVerificationToken: getVToken(),
+                ExpedienteID: ExpedienteID,
+                CausaID: CausaID
+                },
+            size: "modal-lg",
+            callback: function () {
+                //goGrid();
+            }
+        }
+
+        GetModalContent(opt);
+    }
 </script>
 
 
@@ -124,7 +192,7 @@
     </ul>
     <div id="tab1">
 
-        @if (!DataForm.PerfilActive.IsInvitado)
+        @if (IsPuedeExpediente)
         {
             <div class="row">
                 <div class="col text-right" id="">
@@ -146,14 +214,19 @@
                         <th class="ac" style="">Descripción</th>
                         <th class="ac" style="">Observación</th>
                         <th class="ac" style="">N° de Oficio</th>
-                        <th class="ac" style="">Usuario</th>
-                        <th class="ac" style="">Días Transcurridos</th>
-                        <th class="ac" style="">Firmas</th>
+                        @if (!Domain.Infrastructure.WebConfigValues.IsAccesoPublico)
+                        {
+                            <th class="ac" style="">Usuario</th>
+                            <th class="ac" style="">Responsable</th>
+                            <th class="ac" style="">Días Transcurridos</th>
+                            <th class="ac" style="">Días Plazo<br />Fecha</th>
+                            <th class="ac" style="">Firmas</th>
+                        }
                         <th class="ac" style="">@resources.GlobalResources.TH_Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var item in Model.Expediente.OrderBy(x => x.FechaExpediente).ThenBy(c => c.ExpedienteID))
+                    @foreach (var item in Model.Expediente.OrderBy(x => x.FechaExpediente)) //.ThenBy(c => c.ExpedienteID)
                     {
                         string iconVer = item.IsPuedeEditar() ? "edit" : "zoom1";
                         string stringVer = item.IsPuedeEditar() ? resources.GlobalResources.Editar : resources.GlobalResources.BtnVer;
@@ -161,38 +234,74 @@
                         var AsocExpedienteOpcion = item.AsocExpedienteOpcion.FirstOrDefault();
                         int status1 = 0;
                         int status2 = 0;
+                        int idAsoc = 0;
 
-                        bool IsPuedeFinalizar = !item.IsFinalizado;
+                        bool IsPuedeFinalizar = (!item.IsFinalizado && item.UsuarioResponsableID == DataForm.UserActive.UsuarioID);
+                        bool IsPuedeDerivar = (!item.IsFinalizado && (item.UsuarioResponsableID == 0 || item.UsuarioResponsableID == DataForm.UserActive.UsuarioID));
+                        bool IsPuedeAdmitir = (!item.IsFinalizado /*&& item.TipoCanalID == (int)Enums.TipoCanal.PaginaWeb */&& item.UsuarioResponsableID == DataForm.UserActive.UsuarioID);
 
                         if (AsocExpedienteOpcion != null)
                         {
                             var AsocTipoTramiteOpciones = item.TipoTramite
-                                .AsocTipoTramiteOpciones.FirstOrDefault(x => x.OpcionesTramiteID == AsocExpedienteOpcion.OpcionesTramiteID);
+                                .AsocTipoTramiteOpciones.FirstOrDefault(x => x.OpcionesTramiteID == AsocExpedienteOpcion.OpcionesTramiteID && x.IsTabla == item.IsTabla);
 
                             if (AsocTipoTramiteOpciones != null)
                             {
                                 status1 = AsocTipoTramiteOpciones.Status1;
                                 status2 = AsocTipoTramiteOpciones.Status2;
+                                idAsoc = AsocTipoTramiteOpciones.AsocTipoTramiteOpcionesID;
                             }
                         }
+
+                        string descTramite = (item.IsFinalizado && !item.IsAdmisible) ? $"{item.TipoTramite.Descripcion.Trim()} <span class='rojo'>(Eliminado)</span>" : item.TipoTramite.Descripcion.Trim();
 
                         <tr id="trEx_@item.ExpedienteID">
                             <td class="ac">@count</td>
                             <td class="ac nw">@Html.DatetimeToString(item.FechaExpediente)</td>
-                            <td>@item.TipoTramite.Descripcion</td>
-                            <td>@Html.Raw(item.GetOpcionesTramite())</td>
-                            <td>@item.Observacion</td>
-                            <td class="nw">@item.NumeroOficio</td>
-                            <td>@item.Usuario.GetFullName()</td>
-                            @if (item.IsFinalizado)
+                            @if (item.IsEscrito())
                             {
-                                <td></td>
+                                <td>@Html.Raw(descTramite + " " + item.NumeroTicket.Trim())</td>
                             }
                             else
                             {
-                                <td class="ac diasTrans" data-dias="@item.GetDiasTranscurridos()" data-status1="@status1" data-status2="@status2"></td>
+                                <td>@Html.Raw(descTramite)</td>
                             }
-                            <td class="ac">@item.GetFirmas()</td>
+
+                            <td>@Html.Raw(item.GetOpcionesTramite())</td>
+                            <td>@item.Observacion</td>
+                            <td class="nw">@item.NumeroOficio</td>
+                            @if (!Domain.Infrastructure.WebConfigValues.IsAccesoPublico)
+                            {
+                                string usuarioPerfil = $"{item.Usuario.GetFullName().Trim()} - <span class='azul'>{item.Usuario.GetPerfilesParaEvento().Trim()}</span>";
+
+                                <td>@Html.Raw(usuarioPerfil)</td>
+                                <td>@item.UsuarioResponsableName</td>
+
+                                if (item.IsFinalizado)
+                                {
+                                    <td></td>
+                                }
+                                else
+                                {
+                                    <td class="ac diasTrans" data-dias="@item.GetDiasTranscurridos()" data-id="@idAsoc" data-status1="@status1" data-status2="@status2"></td>
+                                }
+
+                                if (item.PlazoDias > 0)
+                                {
+                                    string di = item.PlazoDias == 1 ? "día" : "días";
+                                    <td class="ac">
+                                        <span class="ib">@item.PlazoDias @di</span>
+                                        <span class="ib spanPlazo nw celeste" data-habil="@item.IsHabil" data-dias="@item.PlazoDias" data-date="@Html.DatetimeToString(item.FechaExpediente)"></span>
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td></td>
+                                }
+
+                                <td class="ac">@item.GetFirmas()</td>
+                            }
+
                             <td class="ac">
 
                                 @if (!item.IsFinalizado)
@@ -203,8 +312,6 @@
                                        title='@stringVer'><i class='x-icon x-icon-@iconVer'></i></a>
                                 }
 
-
-
                                 @if (item.IsTieneDocumentos())
                                 {
                                     <a class='x-title-t' style='margin-left:3px'
@@ -213,12 +320,29 @@
                                        title='Ver documentos'><i class='x-icon x-icon-folder'></i></a>
                                 }
 
+
+                                @if (IsPuedeDerivar)
+                                {
+                                    <a class='x-title-t' style=''
+                                       onclick="GetDerivarExpediente(@item.ExpedienteID, @item.CausaID)"
+                                       href='javascript:void(0);'
+                                       title='Derivar'><i class='x-icon x-icon-refresh'></i></a>
+                                }
+
                                 @if (IsPuedeFinalizar)
                                 {
                                     <a class='x-title-t' style=''
                                        onclick="GetFinalizarExpediente(@item.ExpedienteID, @item.CausaID)"
                                        href='javascript:void(0);'
                                        title='@resources.GlobalResources.Finalizar'><i class='x-icon x-icon-ended'></i></a>
+                                }
+
+                                @if (IsPuedeAdmitir)
+                                {
+                                    <a class='x-title-t ' style=''
+                                       onclick="GetExpedienteInadmisible(@item.ExpedienteID, @item.CausaID)"
+                                       href='javascript:void(0);'
+                                       title='Eliminar'><i class='x-icon x-icon-error'></i></a>
                                 }
 
 

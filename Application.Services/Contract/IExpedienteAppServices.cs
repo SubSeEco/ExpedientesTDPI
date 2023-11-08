@@ -39,9 +39,12 @@ namespace Application.Services
         int SaveAsocExpedienteOpcion(AsocExpedienteOpcion dto);
         IList<AsocEscritoDocto> GetAsocEscritoDocto(int expedienteID);
         void BorrarFirmasExpediente(int expedienteID);
+        void BorrarFirmaByFirmaID(int FirmaID);
+        void BorrarFirmaByAsocDocSistema(int AsocDocSistemaFirmaID);
         int SaveFirma(Firma dto);
         int SaveAsocFirmaDocto(AsocFirmaDocto dto);
         AsocDocSistemaFirma GetAsocDocSistemaFirmaByFirmaDocto(int FirmaID, int DocumentoSistemaID);
+        IList<AsocDocSistemaFirma> GetAsocDocSistemaFirmaByDocto(int DocumentoSistemaID);
         int SaveAsocDocSistemaFirma(AsocDocSistemaFirma dto);
         void DeleteParteByID(int parteID);
         void SetVigenciaDetalleTabla(int detalleTablaID, bool vigencia);
@@ -53,7 +56,11 @@ namespace Application.Services
         IList<DetalleTabla> GetDetalleTablaByCausa(int causaID);
         int SaveDetalleTabla(DetalleTabla dto, bool SetLastOrder);
         int SaveAsocDocumentoSistemaTabla(AsocDocumentoSistemaTabla dto);
+        IList<AsocDocumentoSistemaTabla> GetAsocDocumentoSistemaTabla(int TablaID);
+
         int SaveAsocDocumentoSistemaEstadoDiario(AsocDocumentoSistemaEstadoDiario dto);
+        IList<AsocDocumentoSistemaEstadoDiario> GetAsocDocumentoSistemaEstadoDiario(int EstadoDiarioID);
+
         IList<DocumentoSistema> GetAsocDocumentoSistema(int Identidad, Enums.TipoDocumento tipoDoc);
 
         int SaveEstadoDiario(EstadoDiario dto);
@@ -64,5 +71,10 @@ namespace Application.Services
         int SaveDetalleEstadoDiario(DetalleEstadoDiario dto);
         IList<DetalleEstadoDiario> GetDetalleEstadoDiarioByExpediente(int expedienteID);
         void SetExpedienteFinalizado(int expedienteID, bool finalizar);
+        void SetExpedienteInadmisible(int expedienteID);
+        IList<AsocExpeFirma> GetAsocExpeFirmaByExpedienteID(int expedienteID);
+        int SaveAsocExpeFirma(AsocExpeFirma dto);
+        void UpdateResponsable(int expedienteID, int usuarioID);
+        int SaveDerivacion(DTO.Models.Derivacion dto);
     }
 }

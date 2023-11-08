@@ -41,7 +41,7 @@ namespace Presentation.Web.Extension
         /// <returns></returns>
         public static string GetAbenis(this HtmlHelper helper)
         {
-            string abenis = "<a target='blank' class='byAbenis' href='javascript:void(0)'>by Abenis</a>";
+            string abenis = "<a class='byAbenis' href='javascript:void(0)'>by Abenis</a>";
             return abenis;
         }
 

@@ -22,7 +22,7 @@ namespace Application.Services
 
         private readonly bool IsDesarrollo = WebConfigValues.isEmailDesarrollo;
         private static string TipoUploadChar = "{#}";
-        
+
         //Notificacion ListadoIngresoDiario
         public List<string> ListadoIngresoDiario(string Hash)
         {
@@ -65,8 +65,8 @@ namespace Application.Services
             tm.MailConCopia.Remove(tm.EmailInstitucional);
             concopia.Add(tm.EmailInstitucional);
 
-            MyMail _mail = new MyMail();            
-            _mail.Asunto = tm.ModelTipoNotificacion.Asunto;            
+            MyMail _mail = new MyMail();
+            _mail.Asunto = $"{tm.ModelTipoNotificacion.Asunto} - Rol: {tm.NumeroTicket}";
             _mail.Body = bodyMail;
 
             #region Envio Externo
@@ -81,6 +81,233 @@ namespace Application.Services
 
         }
 
+        #region Expediente
+        public void NotificacionDerivacion(int CausaID, int UsuarioID, int UsuarioActive, string ComentariosDerivacion)
+        {
+            TemplateMail tm = GetTemplate(Enums.TipoNotificacion.Derivacion, CausaID);
+            List<string> concopia = new List<string>();
+
+            #region Usuarios
+            IList<DTO.Models.Usuario> usuarios = appCommon.GetUsuarios();
+
+            DTO.Models.Usuario UsuarioResponsable = usuarios.FirstOrDefault(x => x.UsuarioID == UsuarioID);
+            tm.NombreResponsable = UsuarioResponsable.GetFullName();
+
+            DTO.Models.Usuario UsuarioConectado = usuarios.FirstOrDefault(x => x.UsuarioID == UsuarioActive);
+            tm.UsuarioConectado = UsuarioConectado.GetFullName();
+            #endregion
+
+            tm.ComentariosDerivacion = ComentariosDerivacion;
+
+            string bodyMail = tm.Render(tm.ModelTipoNotificacion.Mensaje);
+
+            tm.MailConCopia.Remove(tm.EmailInstitucional);
+            concopia.Add(tm.EmailInstitucional);
+
+            MyMail _mail = new MyMail();
+            _mail.Asunto = tm.ModelTipoNotificacion.Asunto;
+            _mail.Body = bodyMail;
+
+            #region Envio
+            _mail.Destinatario = UsuarioResponsable.Mail.Trim();
+
+            if (IsDesarrollo) SaveLogNotifica(TipoNotificacion.Derivacion, _mail, true);
+
+            _mail.Enviar();
+
+            if (!IsDesarrollo) SaveLogNotifica(TipoNotificacion.Derivacion, _mail, true);
+            #endregion
+        }
+
+        public void NotificacionAdmisibilidad(DTO.Models.Expediente expediente, int UsuarioID, string Comentarios)
+        {
+            TemplateMail tm = GetTemplate(Enums.TipoNotificacion.Admisibilidad, expediente.CausaID);
+            List<string> concopia = new List<string>();
+
+            #region Usuario
+            IList<DTO.Models.Usuario> usuarios = appCommon.GetUsuarios();
+
+            DTO.Models.Usuario UsuarioResponsable = usuarios.FirstOrDefault(x => x.UsuarioID == UsuarioID);
+            tm.NombreResponsable = UsuarioResponsable.GetFullName();
+
+            #endregion
+
+            tm.ComentariosDerivacion = Comentarios;
+
+            tm.SetExpediente(expediente);
+
+            string bodyMail = tm.Render(tm.ModelTipoNotificacion.Mensaje);
+
+            tm.MailConCopia.Remove(tm.EmailInstitucional);
+            concopia.Add(tm.EmailInstitucional);
+
+            MyMail _mail = new MyMail();
+            _mail.Asunto = $"{tm.ModelTipoNotificacion.Asunto} - Rol: {tm.NumeroTicket}";
+            _mail.Body = bodyMail;
+            _mail.Destinatario = UsuarioResponsable.Mail.Trim();
+
+            #region Envio
+            if (IsDesarrollo) SaveLogNotifica(TipoNotificacion.Derivacion, _mail, true);
+
+            _mail.Enviar();
+
+            if (!IsDesarrollo) SaveLogNotifica(TipoNotificacion.Derivacion, _mail, true);
+            #endregion
+
+        }
+
+        public void IngresoExpediente(int CausaID, int UsuarioID, string strTipoTramite)
+        {
+            DTO.Models.Usuario user = appCommon.GetUsuarioByID(UsuarioID);
+
+            TemplateMail tm = GetTemplate(Enums.TipoNotificacion.IngresoExpediente, CausaID);
+            List<string> concopia = new List<string>();
+
+            tm.NombreCiudadano = user.GetFullName();
+            tm.TipoTramite = strTipoTramite.Trim();
+
+            string bodyMail = tm.Render(tm.ModelTipoNotificacion.Mensaje);
+
+            tm.MailConCopia.Remove(tm.EmailInstitucional);
+            concopia.Add(tm.EmailInstitucional);
+
+            MyMail _mail = new MyMail();
+            _mail.Asunto = $"{tm.ModelTipoNotificacion.Asunto} - Rol: {tm.NumeroTicket}";
+            _mail.Body = bodyMail;
+
+            #region Envio
+            _mail.Destinatario = user.Mail.Trim();
+
+            if (IsDesarrollo) SaveLogNotifica(TipoNotificacion.IngresoExpediente, _mail, true);
+
+            _mail.Enviar();
+
+            if (!IsDesarrollo) SaveLogNotifica(TipoNotificacion.IngresoExpediente, _mail, true);
+            #endregion
+        }
+        #endregion
+        
+        #region Abogado
+
+        public void RegistroAbogado(int UsuarioID)
+        {
+            DTO.Models.Usuario user = appCommon.GetUsuarioByID(UsuarioID);
+
+            TemplateMail tm = GetTemplate(Enums.TipoNotificacion.RegistroAbogado, 0);
+
+            tm.NombreCiudadano = user.GetFullName();
+
+            string bodyMail = tm.Render(tm.ModelTipoNotificacion.Mensaje);
+
+            tm.MailConCopia.Remove(tm.EmailInstitucional);
+
+            MyMail _mail = new MyMail();
+            _mail.Asunto = tm.ModelTipoNotificacion.Asunto;
+            _mail.Body = bodyMail;
+
+            #region Envio
+            _mail.Destinatario = user.Mail.Trim();
+
+            if (IsDesarrollo) SaveLogNotifica(TipoNotificacion.IngresoExpediente, _mail, true);
+
+            _mail.Enviar();
+
+            if (!IsDesarrollo) SaveLogNotifica(TipoNotificacion.IngresoExpediente, _mail, true);
+            #endregion
+
+        }
+        public void SolicitudRegistroAbogado(int UsuarioID, string Hash)
+        {
+            DTO.Models.Usuario user = appCommon.GetUsuarioByID(UsuarioID);
+
+            TemplateMail tm = GetTemplate(Enums.TipoNotificacion.SolicitudRegistroAbogado, 0);
+
+            tm.NombreCiudadano = user.GetFullName();
+            tm.RutCiudadano = user.GetRUT();
+
+            string bodyMail = tm.Render(tm.ModelTipoNotificacion.Mensaje);
+
+            tm.MailConCopia.Remove(tm.EmailInstitucional);
+
+            MyMail _mail = new MyMail();
+            _mail.Asunto = $"{tm.ModelTipoNotificacion.Asunto} - Rut: {tm.RutCiudadano}";
+            _mail.Body = bodyMail;
+            _mail.Destinatario = String.Join(",", tm.MailConCopia);
+            _mail.Attachments = GetAdjuntos(TipoDocumento.CertificadoTituloAbogado, Hash.Trim());
+
+            #region Envio
+
+            if (IsDesarrollo) SaveLogNotifica(TipoNotificacion.SolicitudRegistroAbogado, _mail, true);
+
+            _mail.Enviar();
+
+            if (!IsDesarrollo) SaveLogNotifica(TipoNotificacion.SolicitudRegistroAbogado, _mail, true);
+            #endregion
+
+
+        }
+
+        #endregion
+
+        #region Alarmas
+        public void SendAlarmaInterna(DTO.Models.SP_Alarmas_Result alarma)
+        {            
+            TemplateMail tm = GetTemplate(Enums.TipoNotificacion.RecordatorioAtraso, alarma.CausaID);
+            tm.NumeroTicket = alarma.NumeroTicket.Trim();
+
+            tm.NombreResponsable = alarma.NombreResponsable.Trim();
+            tm.Fecha = alarma.Fecha;
+            tm.FechaVencimiento = alarma.FechaVencimiento;
+
+            DTO.Models.Expediente expediente = appExpediente.GetExpediente(alarma.ExpedienteID);
+
+            tm.SetExpediente(expediente);
+
+            string bodyMail = tm.Render(tm.ModelTipoNotificacion.Mensaje);
+
+            MyMail _mail = new MyMail();
+            _mail.Asunto = tm.ModelTipoNotificacion.Asunto;
+            _mail.Asunto += " - " + tm.NumeroTicket;
+            _mail.Destinatario = alarma.MailResponsable.Trim();
+            _mail.Body = bodyMail;
+            _mail.Enviar();
+
+            SaveLogNotifica(TipoNotificacion.RecordatorioAtraso, _mail, true);
+        }
+
+        public void SendAlarmaSinAsignar(List<string> Roles)
+        {
+            MyMail _mail = new MyMail();
+
+            TemplateMail tm = GetTemplate(Enums.TipoNotificacion.ExpedientesSinAsignar, 0);
+
+            string bodyMail = tm.Render(tm.ModelTipoNotificacion.Mensaje);
+
+            #region Expedientes Sin Asignar
+            StringBuilder sb = new StringBuilder(bodyMail);
+
+            string busca = "{ExpedientesNoAsignados}";
+            string valor = string.Join("<br/>", Roles.ToArray());
+
+            if (valor == null)
+                valor = string.Empty;
+
+            sb.Replace(busca, valor);
+            #endregion
+
+            bodyMail = sb.ToString();
+
+            _mail.Asunto = tm.ModelTipoNotificacion.Asunto;
+            _mail.Destinatario = String.Join(",", tm.MailConCopia);
+            _mail.Body = bodyMail;
+            //_mail.ForzarEnvioOriginal = true;
+            
+            _mail.Enviar();
+
+            SaveLogNotifica(TipoNotificacion.ExpedientesSinAsignar, _mail, true);
+        }
+        #endregion
+
         #region Helpers
         private TemplateMail GetTemplate(Enums.TipoNotificacion TipoNotificacion, int CausaID = 0)
         {
@@ -92,24 +319,31 @@ namespace Application.Services
             tm.ModelTipoNotificacion = notificacion;
             tm.MailConCopia = new List<string>();
 
-            if (TipoNotificacion == Enums.TipoNotificacion.IngresoNuevaCausa)
+            if (TipoNotificacion == Enums.TipoNotificacion.IngresoNuevaCausa 
+                || TipoNotificacion == Enums.TipoNotificacion.Derivacion
+                || TipoNotificacion == Enums.TipoNotificacion.IngresoExpediente
+                || TipoNotificacion == Enums.TipoNotificacion.Admisibilidad)
             {
                 DTO.Models.Causa causa = appExpediente.GetCausa(CausaID);
                 tm.SetCausa(causa);
             }
-
+            
             foreach (var item in notificacion.AsocTipoNotificacionPerfil)
             {
                 IList<DTO.Models.Usuario> usuarios = userList.Where(x => x.AsocUsuarioPerfil.Any(z => z.PerfilID == item.PerfilID)).ToList();
 
                 foreach (var user in usuarios)
                 {
-                    tm.MailConCopia.Add(user.Mail);
+                    if (!tm.MailConCopia.Contains(user.Mail.Trim()))
+                    {
+                        tm.MailConCopia.Add(user.Mail.Trim());
+                    }
+                    
                 }
             }
 
-            tm.EmailInstitucional = (notificacion.ConCopia.Trim() != "") ? notificacion.ConCopia.Trim() : string.Empty;
-
+            tm.EmailInstitucional = (!string.IsNullOrEmpty(notificacion.ConCopia.Trim())) ? notificacion.ConCopia.Trim() : string.Empty;
+            
             return tm;
         }
 
@@ -118,7 +352,8 @@ namespace Application.Services
             List<string> adjuntos = new List<string>();
 
             #region Ingreso
-            if (tipoDocumento == TipoDocumento.Ingreso)
+            if (tipoDocumento == TipoDocumento.Ingreso || 
+                tipoDocumento == TipoDocumento.CertificadoTituloAbogado)
             {
                 DTO.DownloadFile archivo = appExpediente.GetDownloadFileByHash(tipoDocumento, Hash.Trim(), CausaID: 0);
 

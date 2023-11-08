@@ -20,6 +20,7 @@ namespace Persistence.Repository
             this.AsocDocSistemaFirma = new HashSet<AsocDocSistemaFirma>();
             this.AsocDocumentoSistemaEstadoDiario = new HashSet<AsocDocumentoSistemaEstadoDiario>();
             this.AsocDocumentoSistemaTabla = new HashSet<AsocDocumentoSistemaTabla>();
+            this.AsocDocumentoUsuario = new HashSet<AsocDocumentoUsuario>();
         }
     
         public int DocumentoSistemaID { get; set; }
@@ -38,5 +39,7 @@ namespace Persistence.Repository
         public virtual ICollection<AsocDocumentoSistemaTabla> AsocDocumentoSistemaTabla { get; set; }
         public virtual TipoDocumento TipoDocumento { get; set; }
         public virtual VersionEncript VersionEncript { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<AsocDocumentoUsuario> AsocDocumentoUsuario { get; set; }
     }
 }

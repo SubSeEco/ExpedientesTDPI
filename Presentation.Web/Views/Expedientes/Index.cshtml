@@ -7,21 +7,13 @@
     Application.DTO.FiltrosEscritorio FiltrosEscritorio = ViewBag.FiltrosEscritorio;
     var DataForm = ViewBag.DataForm as Application.DTO.DataForm;
 
-    bool PuedeIngresar = DataForm.PerfilActive.IsTDPI;
+    bool PuedeIngresar = (bool)ViewBag.PuedeIngresarCausa;// DataForm.PerfilActive.IsTDPI;
 
     PageTitle = (Domain.Infrastructure.WebConfigValues.IsAccesoPublico) ? "Buscador de Causas" : PageTitle;
     ViewBag.Title = PageTitle;
 
-    IList<Application.DTO.Models.TipoCausa> TipoCausa = new List<Application.DTO.Models.TipoCausa>();
+    var TipoCausa = ViewBag.TipoCausaFilter as IList<Application.DTO.Models.TipoCausa>;
 
-    if (Domain.Infrastructure.WebConfigValues.IsAccesoPublico)
-    {
-        TipoCausa = FiltrosEscritorio.TipoCausa.Where(x => x.Vigente && x.IsPublico).OrderBy(x => x.Descripcion).ToList();
-    }
-    else
-    {
-        TipoCausa = FiltrosEscritorio.TipoCausa.Where(x => x.Vigente && x.IsInterno).OrderBy(x => x.Descripcion).ToList();
-    }
 }
 
 <script type="text/javascript">
@@ -65,6 +57,29 @@
                 return false;
             }
         }
+
+        var ckeck = $("#radio4").is(":checked");
+        if (ckeck) {
+
+            var anio = $("#Anio").val();
+
+            if (anio == 0) {
+
+                var ticket = $.trim($("#NumeroRegistro").val());
+                var Denominacion = $.trim($("#Denominacion").val());
+                var Apelante = $.trim($("#Apelante").val());
+                var FechaIngreso = $.trim($("#FechaIngreso").val());
+                var Apelado = $.trim($("#Apelado").val());
+                var EstadoCausaID = $("#EstadoCausaID").val();
+                var TipoCausaID = $("#TipoCausaID").val();
+                var CheckEscritos = $('#IsSoloEscritos').is(':checked');
+
+                if (ticket == "" && Denominacion == "" && Apelante == "" && FechaIngreso == "" && Apelado == "" && EstadoCausaID == 0 && TipoCausaID == 0 && !CheckEscritos) {
+                    showBlockUIError("Debe Ingresar al menos un filtro");
+                    return false;
+                }
+            }
+        }       
 
         var xBtn = $("#btnBuscar");
         blockPageUI();
@@ -238,6 +253,31 @@
             });
     }
 
+    function GetDeshabilitarExpediente(CausaID) {
+        var optBtn = {
+            title: "Eliminar Expediente",
+            msg1: "¿Confirma la eliminación del Expediente?",
+            msg2: "",
+            url: "@Url.Action("ActionExpediente", "Expedientes")",
+            params: {
+            __RequestVerificationToken: getVToken(),
+            action: "@Enums.ActionSystem.EliminarExpediente",
+                Identidad: CausaID,
+            },
+        callback: function () {
+
+            showBlockUI(CloseDialog);
+            $("#btnBuscar").click();
+
+            //$("#grilla tr.selected a:last i.x-icon-org").click();
+        },
+        alert: "alert-danger",
+        txtBtn1: "Sí"
+    }
+
+    xDialogConfirmAction(optBtn);
+    }
+
 
 
 
@@ -267,7 +307,7 @@
 
             <div class="row">
                 <div class="col text-right" id="btnsCreateExpediente">
-                    @if (PuedeIngresar)
+                    @if (PuedeIngresar && !Domain.Infrastructure.WebConfigValues.IsAccesoPublico)
                     {
                         <button type="button" id="" class="btn btn-default"
                                 onclick="CreateExpediente(true)">
@@ -308,16 +348,20 @@
     </div>
 </div>
 
-<div id="btnsAddExpediente" style="display:none">
-    <fieldset class="x-fieldset">
-        <legend class="celeste bold">Tipo Expediente</legend>
+@if (PuedeIngresar)
+{
+    <div id="btnsAddExpediente" style="display:none">
+        <fieldset class="x-fieldset">
+            <legend class="celeste bold">Tipo Expediente</legend>
 
-        @foreach (var item in TipoCausa)
-        {
-            string url = Url.Action("Registro", "Expedientes", new { @id = 0, @id2 = item.TipoCausaID });
+            @foreach (var item in TipoCausa)
+            {
+                string url = Url.Action("Registro", "Expedientes", new { @id = 0, @id2 = item.TipoCausaID });
 
-            <button type="button" id="" class="btn btn-default btn-lg btn-block btnVI" onclick="LinkRedirect('@url')">@item.Descripcion</button>
-        }
+                <button type="button" id="" class="btn btn-default btn-lg btn-block btnVI" onclick="LinkRedirect('@url')">@item.Descripcion</button>
+            }
 
-    </fieldset>
-</div>
+        </fieldset>
+    </div>
+}
+

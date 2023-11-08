@@ -35,6 +35,9 @@ namespace Application.Services
 
         IList<AsocUsuarioPerfil> GetAsocUsuarioPerfil();
         IList<Perfil> PerfilesFuncionario(int FuncionarioID);
+        void SaveAsocDocumentoUsuario(DTO.Models.AsocDocumentoUsuario dto);
+
+        IList<AsocDocumentoUsuario> GetAsocDocumentoUsuario(int UsuarioID);
         #endregion
 
         #region Mantenedor de MimeTypes
@@ -99,5 +102,6 @@ namespace Application.Services
 
         IList<TipoGenero> GetTipoGenero(bool SoloVigente = false);
         IList<Perfil> GetPerfilUsuario(int UsuarioID);
+        void SaveSigner(int usuarioActive, string signer);
     }
 }

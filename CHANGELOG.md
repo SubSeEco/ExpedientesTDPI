@@ -3,6 +3,12 @@
 Este archivo esta basado en el formato Keep a Changelog(https://keepachangelog.com/es-ES/1.0.0/)
 Junto con lo indicado por Semantic Versioning para las versiones (https://semver.org)
 
+## [2.0.0.4 - SGDE] - 08-11-2023
+
+### Added
+
+- Se actualiza proyecto completo con lo ultimo entregado por Abenis
+
 ## [2.0.0.4 - SGDE] - 05-09-2023
 
 ### Added

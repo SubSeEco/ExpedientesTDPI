@@ -19,8 +19,19 @@
 
 		    var LSname = "SGDE_@NamePage";
 
+		    $('#IsSoloMisEscritos').attr("disabled", true);
+
 		    $("#btnBuscar, #btnGenerar").on("click", function () {
 		        SaveItemsLS(LSname);
+		    });
+
+		    $('#IsSoloEscritos').change(function () {
+		        if (!this.checked) {
+		            $('#IsSoloMisEscritos').attr("disabled", true);
+		        } else {
+		            $('#IsSoloMisEscritos').removeAttr("disabled");
+		        }
+		       
 		    });
 
 		    $(".radioBuscax").on("click", function () {
@@ -276,8 +287,10 @@
         store.set("SGDE_@NamePage", []);
 
         if (from == 0) {
-            $("#frmFiltrosEscritorio").reset();
+            $("#frmFiltrosEscritorio").reset();          
             $(".radioBuscax:eq(3)").trigger("click");
+            $("#Anio").val("0");
+            $("#Anio").change();
         }
 
         if (from == 1) {
@@ -300,7 +313,7 @@
                 <div class="col-md-12">
                     <div class="form-group row align-items-center mb0">
                         <label for="" class="col-sm-2 col-form-label"><i>Buscar por</i></label>
-                        <div class="col-sm-10" style="">
+                        <div class="col-sm-6" style="">
 
                             <label class="custom-control custom-radio custom-control-inline">
                                 <input type="radio" id="radio1" class="radioBuscax custom-control-input" name="BuscaX" value="1">
@@ -320,6 +333,20 @@
                             </label>
 
                         </div>
+
+                        <div class="col-sm-4 ar">
+                            @if (!Domain.Infrastructure.WebConfigValues.IsAccesoPublico)
+                            {
+                                <div class="custom-control custom-radio custom-control-inline">
+                                    <input class="form-check-input" type="checkbox" id="IsSoloEscritos" name="IsSoloEscritos" value="true">
+                                    <label class="form-check-label" for="IsSoloEscritos">Solo Escritos</label>
+                                </div>
+                                <div class="custom-control custom-radio custom-control-inline">
+                                    <input class="form-check-input" type="checkbox" id="IsSoloMisEscritos" name="IsSoloMisEscritos" value="true">
+                                    <label class="form-check-label" for="IsSoloMisEscritos">Solo mis Escritos</label>
+                                </div>
+                            }                    
+                        </div>
                     </div>
                 </div>
 
@@ -330,15 +357,16 @@
                     <div class="form-group row">
                         <label for="NumeroTicket" class="col-sm-4 col-form-label" id="lblNumeroTicket">Rol</label>
                         <div class="col-sm-8">
-                            @Html.TextBoxFor(x => x.NumeroTicket, new { @class = "form-control", @style = "", @placeholder = "", @maxlength = "20" })
+                            @Html.TextBoxFor(x => x.NumeroTicket, new { @class = "form-control", @style = "", @placeholder = "Ejemplo: 000200-2020", @maxlength = "20" })
                         </div>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="form-group row">
-                        <label for="Anio" class="col-sm-4 col-form-label">Año <span class="span-obligatorio">*</span></label>
+                        <label for="Anio" class="col-sm-4 col-form-label">Año </label>
                         <div class="col-sm-8 col-lg-5">
                             <select style="" name="Anio" id="Anio" class="custom-select" data-default="@AnioActual">
+                                <option value="0">@OptionInitial</option>
                                 @for (int i = AnioFin; i >= AnioInicio; i--)
                                 {
                                     string selected = (i == AnioActual) ? "selected='selected'" : "";

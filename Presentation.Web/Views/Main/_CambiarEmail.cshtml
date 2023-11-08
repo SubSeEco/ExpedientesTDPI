@@ -14,23 +14,41 @@
 
             $("#newEmail").on('blur', function () { IsEmailValidate($(this)); });
 
+             @if (Model.Mail != "")
+            {
+                @:ValidarTelefonos();
+            }
+
         });
     })(jQuery);
         
-    function saveEmail() {
+    function saveMisDatos() {
+
         var newEmail = $.trim($("#newEmail").val());
         var ReingreseEmail = $.trim($("#ReingreseEmail").val());
+        var telefono = $.trim($("#Telefono").val()) || "";
+
+        @if (Model.Mail != "")
+        {
+            <text>
+                if (telefono == "" ) {
+                    showBlockUIError("Debe Ingresar Télefono");
+                    return false;
+                }
+            </text>
+        }
 
         if (newEmail == "" || ReingreseEmail == "") {
             showBlockUIError("Debe completar los datos de Email");
             return false;
         }
 
-        xJsonObj("@Url.Action("SaveCambiarEmail", "Main")",
+        xJsonObj("@Url.Action("SaveMisDatos", "Main")",
         {
             __RequestVerificationToken: getVToken(),
             email: newEmail,
             emailOld: $.trim("@Model.Mail"),
+            telefono: telefono
             },
             $.noop, function ()
             {
@@ -79,28 +97,38 @@
                     </div>
                 </div>
 
-                <script>
-                    $(document).ready(function () {
-                        $('#newEmail,#ReingreseEmail').on("cut copy paste", function (e) {
-                            e.preventDefault();
-                        });
-
-                        $('#ReingreseEmail').on("blur", function (e) {
-                            e.preventDefault();
-                            var e1 = $.trim($("#newEmail").val());
-                            var e2 = $.trim($("#ReingreseEmail").val());
-
-                            if (e1 != "" && e2 != "") {
-                                if (e1 != e2) {
-                                    showBlockUIError("El Correo electrónico no coincide");
-                                    $("#newEmail,#ReingreseEmail").removeClass("is-valid").addClass("is-invalid");
-                                    return false;
-                                }
-                            }
-                        });
-
+            <script>
+                $(document).ready(function () {
+                    $('#newEmail,#ReingreseEmail').on("cut copy paste", function (e) {
+                        e.preventDefault();
                     });
-                </script>
+
+                    $('#ReingreseEmail').on("blur", function (e) {
+                        e.preventDefault();
+                        var e1 = $.trim($("#newEmail").val());
+                        var e2 = $.trim($("#ReingreseEmail").val());
+
+                        if (e1 != "" && e2 != "") {
+                            if (e1 != e2) {
+                                showBlockUIError("El Correo electrónico no coincide");
+                                $("#newEmail,#ReingreseEmail").removeClass("is-valid").addClass("is-invalid");
+                                return false;
+                            }
+                        }
+                    });
+
+                });
+            </script>
+
+            @if (Model.Mail != "")
+            {
+                <div class="form-group row align-items-center">
+                    <label for="" class="col-md-4 col-form-label">Teléfono <span class="span-obligatorio">*</span></label>
+                    <div class="col-md-8">
+                        @Html.TextBoxFor(x => x.Telefono, new { @class = "form-control", @style = "", @placeholder = "Ej. 56987654321", @maxlength = "20" })
+                    </div>
+                </div>
+            }
 
         </div>
     }
@@ -120,7 +148,7 @@
     }
     else
     {
-        <button id="btnUpdateEmail" class="btn btn-default" onclick="saveEmail()" type="button">                       
+        <button id="btnUpdateEmail" class="btn btn-default" onclick="saveMisDatos()" type="button">                       
                 <i class="x-icon x-icon-save2 icon-in-button"></i> @resources.GlobalResources.BtnActualizar
             </button>
 

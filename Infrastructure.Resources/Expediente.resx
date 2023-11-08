@@ -141,4 +141,13 @@
   <data name="MenuListadoTablas" xml:space="preserve">
     <value>Tablas</value>
   </data>
+  <data name="MenuEscritorioFirmas" xml:space="preserve">
+    <value>Escritorio Firmas</value>
+  </data>
+  <data name="MenuFirmas" xml:space="preserve">
+    <value>Firmas</value>
+  </data>
+  <data name="MenuMiFirma" xml:space="preserve">
+    <value>Mi Firma</value>
+  </data>
 </root>

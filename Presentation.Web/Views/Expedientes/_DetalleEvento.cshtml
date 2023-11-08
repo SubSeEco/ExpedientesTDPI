@@ -5,8 +5,13 @@
 
 @{
     var DataForm = ViewBag.DataForm as Application.DTO.DataForm;
+    int TipoTramiteID = (int)ViewBag.TipoTramiteID;
+    bool IsEscrito = TipoTramiteID == (int)Enums.TipoTramite.Escrito;
 
-    bool IsIngresoPlazoDias = DataForm.EstadosAplica.AsocTipoTramiteOpciones.PlazoDias > 0;
+    bool IsView = (bool)ViewBag.IsView;
+
+    bool IsIngresoPlazoDias = DataForm.EstadosAplica.AsocTipoTramiteOpciones.PlazoDias > 0 && !Enums.WebConfigValues.IsAccesoPublico;
+
     bool IsPermiteFechaAnterior = DataForm.EstadosAplica.AsocTipoTramiteOpciones.IsPermiteFechaAnterior;
 
     int PlazoDias = 0;
@@ -35,12 +40,15 @@
 
     var paramsEvento = {
         IsDiasHabiles: "@DataForm.EstadosAplica.AsocTipoTramiteOpciones.IsDiasHabiles".bool(),
-        IsPermiteFechaAnterior: "@IsPermiteFechaAnterior".bool()
+        IsPermiteFechaAnterior: "@IsPermiteFechaAnterior".bool(),
+        IsAccesoPublico: "@Domain.Infrastructure.WebConfigValues.IsAccesoPublico".bool(),
+        NumeroFirmas: parseInt("@NumeroFirmas"),
+        asoc: parseInt("@DataForm.EstadosAplica.AsocTipoTramiteOpciones.AsocTipoTramiteOpcionesID"),
     }
 
     ; (function ($) {
         $(function () {
-
+            
             @if (NumeroFirmas > 0)
             {
                 @:$("#fsFirmasExpediente").show();
@@ -66,10 +74,23 @@
             SetComportamientoPlazo();
 
 
+            @if (IsView)
+            {
+                @:$("#frmExpediente :input").attr("disabled", true);
+                        }
+
+
         });
     })(jQuery);
 
     function SetCalendar() {
+
+        let _TipoTramiteID = parseInt($("#frmExpediente #TipoTramiteID").val()) || 0;
+        let IsEscrito = _TipoTramiteID == parseInt("@Html.EnumToInt(Enums.TipoTramite.Escrito)");
+
+        if (IsEscrito && paramsEvento.IsAccesoPublico) {
+            return false;
+        }
 
         let elemento = "#frmExpediente #FechaExpediente";
 
@@ -117,18 +138,17 @@
                 let newDate;
                 if (paramsEvento.IsDiasHabiles)
                 {
-                    newDate = moment(startdate, "DD-MM-YYYY").businessAdd(valorPlazoDias, 'days');
+                    //newDate = moment(startdate, "DD-MM-YYYY").businessAdd(valorPlazoDias, 'days');
+                    newDate = getFechaFinPlazo(valorFechaIngreso, valorPlazoDias);
                     console.log("solo Días habiles");
+                    $_campoFechaCalculada.val(newDate);
                 }
                 else
                 {
                     newDate = moment(startdate, "DD-MM-YYYY").add(valorPlazoDias, 'days');
                     console.log("Días corridos");
-                }
-
-
-
-                $_campoFechaCalculada.val(newDate.format("DD-MM-YYYY"));
+                    $_campoFechaCalculada.val(newDate.format("DD-MM-YYYY"));
+                }                
 
             } else {
 
@@ -143,7 +163,7 @@
 
 
 <div class="form-group row align-items-center">
-    <label for="FechaIngreso" class="col-md-3 col-form-label" id="">Fecha Ingreso <span class="span-obligatorio">*</span></label>
+    <label for="FechaExpediente" class="col-md-3 col-form-label" id="">Fecha Ingreso <span class="span-obligatorio">*</span></label>
     <div class="col-md-4">
         <div class="input-group">
             @{
@@ -194,6 +214,23 @@
         </div>
     </div>
 }
+@if ((Model.TipoTramiteID == (int)Enums.TipoTramite.Escrito))
+{
+    <div class="form-group row" id="">
+        <label for="Observacion" class="col-sm-3 col-form-label">Observación</label>
+        <div class="col-sm-9">
+            <textarea class="notFilter form-control " name="Observacion" id="Observacion" cols="2" placeholder="Agregue Suma del Escrito, Ejemplo: EN LO PRINCIPAL: RECURSO DE APELACIÓN; PRIMER OTROSÍ: SE TENGA PRESENTE; SEGUNDO OTROSÍ: ASUME PATROCINIO." rows="2" maxlength="300">@Model.Observacion</textarea>
+        </div>
+    </div>
+}
+else
+{
+    <div class="form-group row" id="">
+        <label for="Observacion" class="col-sm-3 col-form-label">Observación</label>
+        <div class="col-sm-9">
+            <textarea class="notFilter form-control " name="Observacion" id="Observacion" cols="2" rows="2" maxlength="300">@Model.Observacion</textarea>
+        </div>
+    </div>
 
-
+}
 

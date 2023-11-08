@@ -25,7 +25,7 @@ namespace Persistence.Repository
 
             Type type = typeof(System.Data.Entity.SqlServer.SqlProviderServices);
         }
-
+    
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             throw new UnintentionalCodeFirstException();
@@ -85,9 +85,10 @@ namespace Persistence.Repository
         public virtual DbSet<TipoTabla> TipoTabla { get; set; }
         public virtual DbSet<TipoTramite> TipoTramite { get; set; }
         public virtual DbSet<TipoVentana> TipoVentana { get; set; }
-        public virtual DbSet<Usuario> Usuario { get; set; }
         public virtual DbSet<Ventana> Ventana { get; set; }
         public virtual DbSet<VersionEncript> VersionEncript { get; set; }
+        public virtual DbSet<AsocDocumentoUsuario> AsocDocumentoUsuario { get; set; }
+        public virtual DbSet<Usuario> Usuario { get; set; }
     
         public virtual ObjectResult<SP_FlujoEstado_Result> SP_FlujoEstado(Nullable<int> tipoTramiteID)
         {
@@ -153,6 +154,15 @@ namespace Persistence.Repository
                 new ObjectParameter("IsSoloMisEscritos", typeof(bool));
     
             return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction<SP_Causas_Result>("SP_Causas", usuarioIDParameter, numeroTicketParameter, anioParameter, tipoCausaIDParameter, numeroRegistroParameter, denominacionParameter, apelanteParameter, fechaIngresoParameter, apeladoParameter, estadoCausaIDParameter, numeroSolicitudParameter, isSoloEscritosParameter, isSoloMisEscritosParameter);
+        }
+    
+        public virtual ObjectResult<SP_Alarmas_Result> SP_Alarmas(Nullable<int> usuarioID)
+        {
+            var usuarioIDParameter = usuarioID.HasValue ?
+                new ObjectParameter("UsuarioID", usuarioID) :
+                new ObjectParameter("UsuarioID", typeof(int));
+    
+            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction<SP_Alarmas_Result>("SP_Alarmas", usuarioIDParameter);
         }
     }
 }

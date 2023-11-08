@@ -43,8 +43,8 @@
 
             ; (function ($) {
                 $(function () {
-                
-                   
+
+
                 });
             })(jQuery);
 
@@ -67,7 +67,7 @@
                 _aceptar: "@resources.GlobalResources.BtnAceptar",
                 _cancelar: "@resources.GlobalResources.BtnCancelar",
             }
-            
+
 
             var Config = {
                 SeparadorDecimales: ",",
@@ -124,6 +124,16 @@
 
                 blockPageUI();
 
+                var urlLogout = "https://accounts.claveunica.gob.cl/api/v1/accounts/app/logout?redirect=";
+                var urlFinal = urlLogout + "@Uri.EscapeDataString(WebConfig.Url_MenuSistemas + Url.Action("LoginCU", "Account"))";
+
+                LinkRedirect(urlFinal);
+            }
+
+            @*function GetLoginCU() {
+
+                blockPageUI();
+
                 window.location.href = "https://api.claveunica.gob.cl/api/v1/accounts/app/logout";
                 setTimeout(function () {
 
@@ -131,7 +141,7 @@
                     LinkRedirect(Url);
 
                 }, 1000);
-            }
+            }*@
 
     </script>
 
