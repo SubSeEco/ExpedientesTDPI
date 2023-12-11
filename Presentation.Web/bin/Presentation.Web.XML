@@ -980,6 +980,21 @@
             Método para descarga de archivos adjuntos.
             </summary>
         </member>
+        <member name="M:Presentation.Web.Controllers.UploaderController.DownloadFilePdf">
+            <summary>
+            Método para descarga de archivos adjuntos.
+            </summary>
+        </member>
+        <member name="M:Presentation.Web.Controllers.UploaderController.TraeUrlDocumentoFirma(System.Int32,System.Int32,System.Int32,System.String)">
+            <summary>
+            Método para traer url de archivos adjuntos.
+            </summary>
+        </member>
+        <member name="M:Presentation.Web.Controllers.UploaderController.ValidaTomaFirma(System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Método para Validar si el usuario tiene tomado el documento para firmar
+            </summary>
+        </member>
         <member name="M:Presentation.Web.Controllers.UploaderController.RenderPartialViewToString(System.String,System.String)">
             <summary>
             Devuelve una vista parcial cuando no se puede descargar el archivo.

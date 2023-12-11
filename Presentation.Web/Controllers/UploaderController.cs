@@ -819,6 +819,338 @@ namespace Presentation.Web.Controllers
         }
 
         /// <summary>
+        /// Método para descarga de archivos adjuntos.
+        /// </summary>
+        [HttpPost, ValidateAntiForgeryToken]
+        public void DownloadFilePdf()
+        {
+            SsoActionResult sso = new SsoActionResult();
+            sso.ExecuteResult(ControllerContext);
+
+            var frm = Request.Form;
+
+            int DocumentoID = active.GetIntValueForm(frm["ObjID1"]);
+            int CausaID = active.GetIntValueForm(frm["ObjID2"]);
+            int TipoDoc = active.GetIntValueForm(frm["TipoDoc"]);
+            string Hash = active.GetStringValueForm(frm["Hash"]);
+
+            string CadenaDec = string.Empty;
+            string EndFileName = string.Empty;
+
+            TipoDocumento td = TipoDocumento.Causa;
+
+            if (TipoDoc == (int)Enums.TipoDocumento.Temporal)
+            {
+                var DocumentoTmp = appCommon.GetDocumentoTmp(DocumentoID);
+                CadenaDec = DocumentoTmp.VersionEncript.Cadena.Trim();
+                EndFileName = Hash;
+                Hash = DocumentoTmp.Hash.Trim();
+            }
+            else if (TipoDoc == (int)Enums.TipoDocumento.Causa ||
+                TipoDoc == (int)Enums.TipoDocumento.Ingreso ||
+                TipoDoc == (int)Enums.TipoDocumento.Tabla ||
+                TipoDoc == (int)Enums.TipoDocumento.ExpedienteElectronicoPDF ||
+                TipoDoc == (int)Enums.TipoDocumento.EstadoDiario ||
+                TipoDoc == (int)Enums.TipoDocumento.Expediente ||
+                TipoDoc == (int)Enums.TipoDocumento.CertificadoTituloAbogado)
+            {
+                int DocID = DocumentoID;
+
+                DTO.DownloadFile file = appExpediente.GetDownloadFileByHash((TipoDocumento)TipoDoc, Hash, CausaID, 0, DocID);
+                CadenaDec = file.CadenaVersionEncript;
+                EndFileName = file.NombreArchivoFisico;
+            }
+            else
+            {
+                DTO.DownloadFile file = appExpediente.GetDownloadFileByHash(td, Hash, CausaID);
+                CadenaDec = file.CadenaVersionEncript;
+                EndFileName = file.NombreArchivoFisico;
+            }
+
+            TheHash xEncode = new TheHash(CadenaDec.Trim());
+            string pathFisico = "";
+
+            string EndPathFile = string.Empty;
+
+            try
+            {
+                string pathFisicoTemp = xEncode.DecryptData(Hash);
+
+                string[] HashDecode = pathFisicoTemp.Split(new string[] { TipoUploadChar }, StringSplitOptions.None);
+
+                bool IsLocalRepository = bool.Parse(HashDecode[0]);
+
+                if (IsLocalRepository)
+                {
+                    pathFisico = HashDecode[1];
+
+                    EndPathFile = WebConfigValues.PathBaseRepository + pathFisico;
+                }
+                else
+                {
+                    Logger.Execute().Info("Enable IsLocalRepository");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Execute().Error(ex);
+            }
+
+
+            if (System.IO.File.Exists(EndPathFile))
+            {
+                Response.Buffer = true;
+                Response.Clear();
+                Response.AppendHeader("Cache-Control", "no-cache"); //private
+                Response.AddHeader("content-disposition", "attachment; filename=" + EndFileName);
+                Response.AddHeader("Content-Type", "application/pdf ");
+                Response.WriteFile(EndPathFile);
+                Response.End();
+            }
+            else
+            {
+                string template = RenderPartialViewToString("NoExiste", EndFileName);
+
+                Response.Buffer = true;
+                Response.Clear();
+                Response.Write(template);
+                Response.End();
+            }
+        }
+
+        /// <summary>
+        /// Método para traer url de archivos adjuntos.
+        /// </summary>
+        [HttpGet]
+        public string TraeUrlDocumentoFirma(int DocumentoID, int CausaID, int TipoDoc, string Hash)
+        {
+            SsoActionResult sso = new SsoActionResult();
+            sso.ExecuteResult(ControllerContext);
+            string CadenaDec = string.Empty;
+            string EndFileName = string.Empty;
+
+            TipoDocumento td = TipoDocumento.Causa;
+
+            if (TipoDoc == (int)Enums.TipoDocumento.Temporal)
+            {
+                var DocumentoTmp = appCommon.GetDocumentoTmp(DocumentoID);
+                CadenaDec = DocumentoTmp.VersionEncript.Cadena.Trim();
+                EndFileName = Hash;
+                Hash = DocumentoTmp.Hash.Trim();
+            }
+            else if (TipoDoc == (int)Enums.TipoDocumento.Causa ||
+                TipoDoc == (int)Enums.TipoDocumento.Ingreso ||
+                TipoDoc == (int)Enums.TipoDocumento.Tabla ||
+                TipoDoc == (int)Enums.TipoDocumento.ExpedienteElectronicoPDF ||
+                TipoDoc == (int)Enums.TipoDocumento.EstadoDiario ||
+                TipoDoc == (int)Enums.TipoDocumento.Expediente ||
+                TipoDoc == (int)Enums.TipoDocumento.CertificadoTituloAbogado)
+            {
+                int DocID = DocumentoID;
+
+                DTO.DownloadFile file = appExpediente.GetDownloadFileByHash((TipoDocumento)TipoDoc, Hash, CausaID, 0, DocID);
+                CadenaDec = file.CadenaVersionEncript;
+                EndFileName = file.NombreArchivoFisico;
+            }
+            else
+            {
+                DTO.DownloadFile file = appExpediente.GetDownloadFileByHash(td, Hash, CausaID);
+                CadenaDec = file.CadenaVersionEncript;
+                EndFileName = file.NombreArchivoFisico;
+            }
+
+            TheHash xEncode = new TheHash(CadenaDec.Trim());
+            string pathFisico = "";
+
+            string EndPathFile = string.Empty;
+
+            try
+            {
+                string pathFisicoTemp = xEncode.DecryptData(Hash);
+
+                string[] HashDecode = pathFisicoTemp.Split(new string[] { TipoUploadChar }, StringSplitOptions.None);
+
+                bool IsLocalRepository = bool.Parse(HashDecode[0]);
+
+                if (IsLocalRepository)
+                {
+                    pathFisico = HashDecode[1];
+
+                    EndPathFile = WebConfigValues.PathBaseRepository + pathFisico;
+                }
+                else
+                {
+                    Logger.Execute().Info("Enable IsLocalRepository");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Execute().Error(ex);
+            }
+
+            var oUrlRetorna = string.Empty;
+
+            if (System.IO.File.Exists(EndPathFile))
+            {
+                byte[] bytes22 = System.IO.File.ReadAllBytes(EndPathFile);
+                var rutaTemporal = Server.MapPath("~/TempPdf/" + EndFileName);
+                if (System.IO.File.Exists(rutaTemporal)) { System.IO.File.Delete(rutaTemporal); }
+                System.IO.File.WriteAllBytes(rutaTemporal, bytes22);
+
+                var oUrl = HttpContext.Request.Url.AbsoluteUri.Split('E')[0];
+                oUrlRetorna = string.Format("{0}{1}", oUrl, "TempPdf/" + EndFileName);
+            }
+
+            return oUrlRetorna;
+        }
+
+        /// <summary>
+        /// Método para Validar si el usuario tiene tomado el documento para firmar
+        /// </summary>
+        [HttpGet]
+        public string ValidaTomaFirma(int l_expedienteID, int l_usuarioID, int l_iTipoTramite)
+        {
+            string sRetorna = "0|El documento esta siendo firmado por otro usuario.";
+
+            if (l_iTipoTramite != (int)Enums.TipoTramite.Resolucion)
+            {
+                sRetorna = "1|El documento está listo para firmar.";
+                return sRetorna;
+            }
+
+            SsoActionResult sso = new SsoActionResult();
+            sso.ExecuteResult(ControllerContext);
+
+            int UsuarioActive = sso.GetUsuarioActivoID();
+            if (l_usuarioID != UsuarioActive) { return sRetorna; }
+
+            //Entity Firmante
+            var entityActualFirmanteTemp = appExpediente.GetAsocFirmaDoctoGS(l_expedienteID, l_usuarioID);
+            if (entityActualFirmanteTemp == null) { return sRetorna; }
+
+
+            //Validar si esta tomado hasta  5 min mas de la fecha marcada
+            var oListFirmantes = appExpediente.GetListAsocFirmaDoctoGS(l_expedienteID);
+            if (oListFirmantes.Count > 0)
+            {
+                #region [Validacion para cuarto firmante]
+
+                if (entityActualFirmanteTemp.Firma.Orden == 4)
+                {
+                    var iCantidadNoFirmas = oListFirmantes.Where(q => q.IsFirmado != true).Count();
+                    var iCantidadFirmas = oListFirmantes.Where(q => q.IsFirmado == true).Count();
+                    if (iCantidadFirmas == 3)
+                    {
+                        sRetorna = "1|El documento está listo para firmar.";
+                        return sRetorna;
+                    }
+                    else
+                    {
+
+                        sRetorna = string.Format("0|Está pendiente la firma de {0} usuario(s).", iCantidadNoFirmas - 1);
+                        return sRetorna;
+                    }
+                }
+
+                #endregion
+
+
+                #region [Validacion para usuarios que no sea el ultimo firmante]
+                //Traer el registros tomado con la fecha mas reciente
+                var oListTomadoMasReciente = oListFirmantes.Where(x => x.IsTomado == true && x.FechaTomado != null).ToList(); //.OderByDescending(q => q.fecha).FirstOrDefault();
+                if (oListTomadoMasReciente.Count > 0)
+                {
+                    var entityTomado = oListTomadoMasReciente.OrderByDescending(q => q.FechaTomado).FirstOrDefault();
+                    if (entityTomado != null)
+                    {
+                        var dtNow = DateTime.Now;
+                        DateTime dtFechaIngreso = Convert.ToDateTime(entityTomado.FechaTomado);
+                        DateTime dtingresoMas = dtFechaIngreso.AddMinutes(5);
+
+                        int result = DateTime.Compare(dtNow, dtingresoMas);
+                        if (result < 0)
+                        {
+                            var entityUsuario = entityTomado.Firma != null && entityTomado.Firma.Usuario != null ? entityTomado.Firma.Usuario : null;
+
+                            var idUserrrrr = entityUsuario != null ? entityUsuario.UsuarioID : 0;
+
+                            //Aun estaActivo
+                            sRetorna = idUserrrrr == l_usuarioID ? "1|El documento está listo para firmar." : string.Format("0|El documento esta siendo firmado por {0}.", entityUsuario != null ? entityUsuario.Nombres + " " + entityUsuario.Apellidos : "usuario no encontrado");
+                            return sRetorna;
+                        }
+                        else
+                        {
+                            #region [Actualiza Registros anteriores]
+                            foreach (var item in oListTomadoMasReciente)
+                            {
+                                if (item.AsocFirmaDoctoID != entityActualFirmanteTemp.AsocFirmaDoctoID)
+                                {
+
+                                    var entityActiva = new DTO.Models.AsocFirmaDocto
+                                    {
+                                        AsocFirmaDoctoID = item.AsocFirmaDoctoID,
+                                        FirmaID = item.FirmaID,
+                                        AsocEscritoDoctoID = item.AsocEscritoDoctoID,
+                                        IsFirmado = item.IsFirmado,
+                                        IsTomado = false,
+                                        FechaTomado = null
+                                    };
+                                    appExpediente.SaveAsocFirmaDocto(entityActiva);
+                                }
+                            }
+                            #endregion
+
+
+                            #region[Registrar nuevo registro de toma]
+                            //iRetorna = 1;
+                            sRetorna = "1|El documento está listo para firmar.";
+
+                            if (entityActualFirmanteTemp != null)
+                            {
+                                var entityActiva = new DTO.Models.AsocFirmaDocto
+                                {
+                                    AsocFirmaDoctoID = entityActualFirmanteTemp.AsocFirmaDoctoID,
+                                    FirmaID = entityActualFirmanteTemp.FirmaID,
+                                    AsocEscritoDoctoID = entityActualFirmanteTemp.AsocEscritoDoctoID,
+                                    IsFirmado = entityActualFirmanteTemp.IsFirmado,
+                                    IsTomado = true,
+                                    FechaTomado = DateTime.Now
+                                };
+                                appExpediente.SaveAsocFirmaDocto(entityActiva);
+                            }
+                            #endregion
+                        }
+                    }
+                }
+                else
+                {
+                    #region[Registrar nuevo registro de toma]
+                    //iRetorna = 1;
+                    sRetorna = "1|El documento está listo para firmar.";
+
+                    if (entityActualFirmanteTemp != null)
+                    {
+                        var entityActiva = new DTO.Models.AsocFirmaDocto
+                        {
+                            AsocFirmaDoctoID = entityActualFirmanteTemp.AsocFirmaDoctoID,
+                            FirmaID = entityActualFirmanteTemp.FirmaID,
+                            AsocEscritoDoctoID = entityActualFirmanteTemp.AsocEscritoDoctoID,
+                            IsFirmado = entityActualFirmanteTemp.IsFirmado,
+                            IsTomado = true,
+                            FechaTomado = DateTime.Now
+                        };
+                        appExpediente.SaveAsocFirmaDocto(entityActiva);
+                    }
+                    #endregion
+                }
+                #endregion
+            }
+
+            return sRetorna;
+
+        }
+
+        /// <summary>
         /// Devuelve una vista parcial cuando no se puede descargar el archivo.
         /// </summary>
         /// <param name="viewName"></param>

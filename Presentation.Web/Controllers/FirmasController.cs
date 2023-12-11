@@ -102,14 +102,19 @@ namespace Presentation.Web.Controllers
 
                     foreach (var asoc in item.AsocFirmaDocto)
                     {
+                        var iTipoTramite = asoc.AsocEscritoDocto.Expediente.TipoTramite.TipoTramiteID;
+                        var oEsResolucion = iTipoTramite == (int)Enums.TipoTramite.Resolucion;
                         #region Responsable Actual
                         DTO.Models.AsocFirmaDocto asocSiguiente = new DTO.Models.AsocFirmaDocto();
                         int DoctoFirma = asoc.AsocEscritoDoctoID;
                         var firmas = asoc.AsocEscritoDocto.Expediente.AsocExpeFirma;
                         foreach (var f in firmas.OrderBy(x => x.Firma.Orden))
                         {
-                            if (asocSiguiente.AsocFirmaDoctoID > 0) continue;
-
+                            //if (asocSiguiente.AsocFirmaDoctoID > 0) continue; GS:28112023
+                            if (!oEsResolucion)
+                            {
+                                if (asocSiguiente.AsocFirmaDoctoID > 0) continue;
+                            }
                             foreach (var _asoc in f.Firma.AsocFirmaDocto.Where(x=> x.AsocEscritoDoctoID == DoctoFirma))
                             {
                                 if (!_asoc.IsFirmado)
@@ -117,11 +122,13 @@ namespace Presentation.Web.Controllers
                                     asocSiguiente.AsocFirmaDoctoID = _asoc.AsocFirmaDoctoID;
                                     asocSiguiente.Firma = new DTO.Models.Firma();
                                     asocSiguiente.Firma.UsuarioID = _asoc.Firma.UsuarioID;
+                                    //GS:28112023
+                                    strResponsableActual = (asocSiguiente.AsocFirmaDoctoID > 0) ? strResponsableActual + usuarios.FirstOrDefault(x => x.UsuarioID == asocSiguiente.Firma.UsuarioID).GetFullName()+"<br>" : strResponsableActual + string.Empty;
                                 }
                             }
                         }
-
-                        strResponsableActual = (asocSiguiente.AsocFirmaDoctoID > 0) ? usuarios.FirstOrDefault(x => x.UsuarioID == asocSiguiente.Firma.UsuarioID).GetFullName() : string.Empty;
+                        //GS:28112023
+                        //strResponsableActual = (asocSiguiente.AsocFirmaDoctoID > 0) ? usuarios.FirstOrDefault(x => x.UsuarioID == asocSiguiente.Firma.UsuarioID).GetFullName() : string.Empty;
                         #endregion
 
                         Link a = new Link();
@@ -139,7 +146,8 @@ namespace Presentation.Web.Controllers
 
                         #endregion
 
-                        bool PuedeFirmar = (asocSiguiente.Firma != null && asocSiguiente.Firma.UsuarioID == UsuarioActive);
+                        //bool PuedeFirmar = true; //GS: (asocSiguiente.Firma != null && asocSiguiente.Firma.UsuarioID == UsuarioActive);
+                        bool PuedeFirmar = oEsResolucion ? true : (asocSiguiente.Firma != null && asocSiguiente.Firma.UsuarioID == UsuarioActive);
 
                         #region bt1: Descargar Documento
                         a._class = "";
@@ -158,10 +166,14 @@ namespace Presentation.Web.Controllers
                         a.title = "Firmar";
                         a.xicon = "x-icon-vcard";
                         a.style = "margin-left:5px";
-                        a.click = "FirmarDocumento(" + asoc.AsocEscritoDocto.ExpedienteID
+                        a.click = "FirmarDocumentoShowPdf(" + asoc.AsocEscritoDocto.ExpedienteID
                                                     + "," + asoc.AsocFirmaDoctoID
+                                                    + "," + asoc.AsocEscritoDocto.AsocCausaDocumento.DocumentoCausa.CausaID
+                                                    + ",\"" + asoc.AsocEscritoDocto.AsocCausaDocumento.DocumentoCausa.Hash.Trim() + "\""
                                                     + "," + asoc.AsocEscritoDocto.AsocCausaDocumento.DocumentoCausaID
-                                                    + "," + UsuarioActive + ")";
+                                                    + "," + (int)Enums.TipoDocumento.Expediente
+                                                    + "," + UsuarioActive
+                                                    + "," + iTipoTramite + ")";
                         a.href = "javascript:void(0);";
                         string bt2 = a.Generate(false);
                         #endregion

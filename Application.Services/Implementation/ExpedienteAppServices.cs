@@ -1246,12 +1246,121 @@ namespace Application.Services
         public int SaveAsocFirmaDocto(DTO.Models.AsocFirmaDocto dto)
         {
             AsocFirmaDocto model = new AsocFirmaDocto();
-            model.AsocFirmaDoctoID= dto.AsocFirmaDoctoID;
+            model.AsocFirmaDoctoID = dto.AsocFirmaDoctoID;
             model.FirmaID = dto.FirmaID;
             model.AsocEscritoDoctoID = dto.AsocEscritoDoctoID;
             model.IsFirmado = dto.IsFirmado;
+            model.IsTomado = dto.IsTomado;
+            model.FechaTomado = dto.FechaTomado;
 
             return repo.SaveAsocFirmaDocto(model);
+        }
+        public int SaveAsocFirmaDoctoMarcarToma(DTO.Models.AsocFirmaDocto dto)
+        {
+            AsocFirmaDocto model = new AsocFirmaDocto();
+            model.AsocFirmaDoctoID = dto.AsocFirmaDoctoID;
+            model.IsTomado = dto.IsTomado;
+            model.FechaTomado = dto.FechaTomado;
+
+            return repo.SaveAsocFirmaDoctoMarcarToma(model);
+        }
+
+
+        public DTO.Models.AsocFirmaDocto GetAsocFirmaDoctoGS(int expedienteID, int UsuarioID)
+        {
+            AsocFirmaDocto model = repo.GetAsocFirmaDoctoGS(expedienteID, UsuarioID);
+            DTO.Models.AsocFirmaDocto dto = new DTO.Models.AsocFirmaDocto();
+
+            if (model.AsocFirmaDoctoID > 0)
+            {
+                dto.AsocFirmaDoctoID = model.AsocFirmaDoctoID;
+                dto.FirmaID = model.FirmaID;
+                dto.AsocEscritoDoctoID = model.AsocEscritoDoctoID;
+                dto.IsFirmado = model.IsFirmado;
+                dto.IsTomado = model.IsTomado;
+                dto.FechaTomado = model.FechaTomado;
+
+
+                #region AsocEscritoDocto
+                dto.AsocEscritoDocto = new DTO.Models.AsocEscritoDocto();
+                dto.AsocEscritoDocto.AsocEscritoDoctoID = model.AsocEscritoDocto.AsocEscritoDoctoID;
+                dto.AsocEscritoDocto.AsocCausaDocumentoID = model.AsocEscritoDocto.AsocCausaDocumentoID;
+                dto.AsocEscritoDocto.ExpedienteID = model.AsocEscritoDocto.ExpedienteID;
+                dto.AsocEscritoDocto.OpcionesTramiteID = model.AsocEscritoDocto.OpcionesTramiteID;
+
+                #endregion
+
+                dto.Firma = new DTO.Models.Firma();
+                dto.Firma.FirmaID = model.Firma.FirmaID;
+                dto.Firma.UsuarioID = model.Firma.UsuarioID;
+                dto.Firma.Orden = model.Firma.Orden;
+
+                #region Usuario
+                dto.Firma.Usuario = new DTO.Models.Usuario();
+                dto.Firma.Usuario.UsuarioID = model.Firma.Usuario.UsuarioID;
+                dto.Firma.Usuario.AdID = model.Firma.Usuario.AdID;
+                dto.Firma.Usuario.Rut = model.Firma.Usuario.Rut;
+                dto.Firma.Usuario.Nombres = model.Firma.Usuario.Nombres;
+                dto.Firma.Usuario.Apellidos = model.Firma.Usuario.Apellidos;
+                dto.Firma.Usuario.Mail = model.Firma.Usuario.Mail;
+                dto.Firma.Usuario.Telefono = model.Firma.Usuario.Telefono;
+                dto.Firma.Usuario.IsClaveUnica = model.Firma.Usuario.IsClaveUnica;
+                dto.Firma.Usuario.FechaRegistro = model.Firma.Usuario.FechaRegistro;
+                dto.Firma.Usuario.FechaModificacion = model.Firma.Usuario.FechaModificacion;
+                #endregion
+            }
+
+            return dto;
+        }
+
+        public IList<DTO.Models.AsocFirmaDocto> GetListAsocFirmaDoctoGS(int expedienteID)
+        {
+            IList<AsocFirmaDocto> repoList = repo.GetListAsocFirmaDoctoGS(expedienteID);
+            IList<DTO.Models.AsocFirmaDocto> listDTO = new List<DTO.Models.AsocFirmaDocto>();
+
+            foreach (var item in repoList)
+            {
+                DTO.Models.AsocFirmaDocto dto = new DTO.Models.AsocFirmaDocto();
+
+                dto.AsocFirmaDoctoID = item.AsocFirmaDoctoID;
+                dto.FirmaID = item.FirmaID;
+                dto.AsocEscritoDoctoID = item.AsocEscritoDoctoID;
+                dto.IsFirmado = item.IsFirmado;
+                dto.IsTomado = item.IsTomado;
+                dto.FechaTomado = item.FechaTomado;
+
+                #region AsocEscritoDocto
+                dto.AsocEscritoDocto = new DTO.Models.AsocEscritoDocto();
+                dto.AsocEscritoDocto.AsocEscritoDoctoID = item.AsocEscritoDocto.AsocEscritoDoctoID;
+                dto.AsocEscritoDocto.AsocCausaDocumentoID = item.AsocEscritoDocto.AsocCausaDocumentoID;
+                dto.AsocEscritoDocto.ExpedienteID = item.AsocEscritoDocto.ExpedienteID;
+                dto.AsocEscritoDocto.OpcionesTramiteID = item.AsocEscritoDocto.OpcionesTramiteID;
+                #endregion
+
+                dto.Firma = new DTO.Models.Firma();
+                dto.Firma.FirmaID = item.Firma.FirmaID;
+                dto.Firma.UsuarioID = item.Firma.UsuarioID;
+                dto.Firma.Orden = item.Firma.Orden;
+
+                #region Usuario
+                dto.Firma.Usuario = new DTO.Models.Usuario();
+                dto.Firma.Usuario.UsuarioID = item.Firma.Usuario.UsuarioID;
+                dto.Firma.Usuario.AdID = item.Firma.Usuario.AdID;
+                dto.Firma.Usuario.Rut = item.Firma.Usuario.Rut;
+                dto.Firma.Usuario.Nombres = item.Firma.Usuario.Nombres;
+                dto.Firma.Usuario.Apellidos = item.Firma.Usuario.Apellidos;
+                dto.Firma.Usuario.Mail = item.Firma.Usuario.Mail;
+                dto.Firma.Usuario.Telefono = item.Firma.Usuario.Telefono;
+                dto.Firma.Usuario.IsClaveUnica = item.Firma.Usuario.IsClaveUnica;
+                dto.Firma.Usuario.FechaRegistro = item.Firma.Usuario.FechaRegistro;
+                dto.Firma.Usuario.FechaModificacion = item.Firma.Usuario.FechaModificacion;
+                #endregion
+
+
+                listDTO.Add(dto);
+            }
+
+            return listDTO;
         }
 
         public DTO.Models.AsocDocSistemaFirma GetAsocDocSistemaFirmaByFirmaDocto(int FirmaID, int DocumentoSistemaID)

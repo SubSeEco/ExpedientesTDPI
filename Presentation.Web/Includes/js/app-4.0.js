@@ -681,7 +681,7 @@ function xDialogConfirmAction(options) {
     //UrlAction = UrlAction || 0;
     //params = params || function () { };
     //callback = callback || SelfRedirect;
-
+   
     options.txtBtn1 = options.txtBtn1 || Labels._aceptar;
     options.txtBtn2 = options.txtBtn2 || Labels._cancelar;
     options.iconBtn1 = options.iconBtn1 || "ok";//"accept6";
@@ -1028,6 +1028,153 @@ function GetModalContent(options) {
         //console.log("hidden.bs.modal");
 
         $("." + options.xclass).remove();
+
+        if (IsEdit) {
+            SelfRedirect();
+        }
+    })
+}
+
+function GetModalContentShowPdf(options, pDocumentoCausaID, pCausaID, pHash, pTipoDoc, l_expedienteID, l_usuarioID, iTipoTramite) {
+
+    //width = width || 450;msg2
+    //UrlAction = UrlAction || 0;
+    //params = params || function () { };
+    //callback = callback || SelfRedirect;
+
+    var cadenaADividir = getValidaSiDocumentoEstaTomado(l_expedienteID, l_usuarioID, iTipoTramite);
+    var arrayDeCadenasValidaMuestraBotonFirma = cadenaADividir.split('|');
+    var oValidaMuestraBotonFirma = arrayDeCadenasValidaMuestraBotonFirma[0] == '1';
+    var smensajeRetorna = arrayDeCadenasValidaMuestraBotonFirma[1];
+
+    options.txtBtn1 = options.txtBtn1 || Labels._aceptar;
+    options.txtBtn2 = options.txtBtn2 || Labels._cancelar;
+    options.iconBtn1 = options.iconBtn1 || "ok";//"accept6";
+    options.alert = options.alert || "alert-primary";
+    options.cssMsg = options.cssMsg || "";
+    options.styleMsg = options.styleMsg || "";
+    options.onOpen = options.onOpen || $.noop;
+    options.id = options.id || "myModalConfirm";
+    options.xclass = options.xclass || "modalSite";
+
+    if (options.hasOwnProperty("closeInAccept")) {
+        options.closeInAccept = options.closeInAccept;
+    } else {
+        options.closeInAccept = true;
+    }
+
+    if (options.hasOwnProperty("IsHideMessageEnd")) {
+        options.IsHideMessageEnd = options.IsHideMessageEnd;
+    } else {
+        options.IsHideMessageEnd = false;
+    }
+    var sHtmlButonFirma = oValidaMuestraBotonFirma == true ? '<button type="button" class="btn btn-default btnAceptar"><i class="x-icon x-icon-' + options.iconBtn1 + ' icon-in-button"></i> ' + options.txtBtn1 + '</button><i class="x-icon-loader hide"></i>' : '';
+    var sMensaje1 = oValidaMuestraBotonFirma == true ? options.msg1 : smensajeRetorna;
+    var oUrlDocPdf = getDownloadFileUrl(pDocumentoCausaID, pCausaID, pHash, pTipoDoc);
+
+    var html = '<div class="' + options.xclass + '" id="" ><div class="modal fade  ' + top + '" id="' + options.id + '" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">' +
+                  '<div class="modal-dialog modal-dialog-scrollable modal-dialog-centered ' + options.size + '" role="document">' +
+                    '<div class="modal-content">' +
+                      '<div class="modal-header  ' + options.alert + '">' +
+                        '<h5 class="modal-title" id="modalLabel">' + options.title + '</h5>' +
+                        '<button type="button" class="close" data-dismiss="modal" aria-label="Close">' +
+                          '<span aria-hidden="true">&times;</span>' +
+                        '</button>' +
+                      '</div>' +
+                      '<div class="modal-body">' +
+                       // '<p>' + options.msg1 + '</p>' + //class="' + options.cssMsg + '" style="' + options.styleMsg + '"
+                        '<p>' + sMensaje1 + '</p>' +
+                        '<p>' +
+                            '<embed src="' + oUrlDocPdf + '" id="pdfEmbed" type="application/pdf" width="100%" height="450px" />' +
+                        '</p>' +
+
+                     '</div>' +
+                      '<div class="modal-footer">' +
+                         sHtmlButonFirma
+                        //'<button type="button" class="btn btn-default btnAceptar"><i class="x-icon x-icon-' + options.iconBtn1 + ' icon-in-button"></i> ' + options.txtBtn1 + '</button><i class="x-icon-loader hide"></i>'
+                        +
+                        '<button class="btn btn-default" data-dismiss="modal" type="button"><i class="x-icon x-icon-cancel2 icon-in-button"></i> ' + options.txtBtn2 + '</button>' +
+                      '</div>' +
+                    '</div>' +
+                  '</div>' +
+                '</div></div>';
+
+    $('body').append(html);
+    var $divModal = $("#" + options.id);
+
+    $divModal.modal({
+        keyboard: false,
+        backdrop: 'static'
+    })
+
+
+    $divModal.on('shown.bs.modal', function (e) {
+
+        options.onOpen.apply();
+
+        if (options.replaceParrafo) {
+            $divModal.find(".modal-body").html(options.msg1);
+        }
+
+        if (options.btn1Hide) {
+            $divModal.find(".btnAceptar").remove();
+        }
+        else {
+            var btnAceptar = $divModal.find(".btnAceptar");
+
+            btnAceptar.on("click", function () {
+
+                if (options.closeInAccept) {
+                    CloseDialog();
+                }
+
+                if (options.url == null) {
+
+                    if ($.isFunction(options.callback)) {
+                        options.callback.apply();
+                    }
+
+                } else {
+
+                    blockPageUI();
+
+                    xJsonObj(options.url, options.params, function () {
+                        //before
+                    }, function () {
+
+                        //callback
+
+                        blockPageUIclose();
+
+                        if (options.IsHideMessageEnd) {
+
+                            if ($.isFunction(options.callback)) {
+                                options.callback.apply();
+                            }
+
+                        } else {
+                            showBlockUI(function () {
+                                if ($.isFunction(options.callback)) {
+                                    options.callback.apply();
+                                }
+                            });
+                        }
+
+
+
+                    })
+                }
+            })
+        }
+
+
+    })
+
+    $divModal.on('hidden.bs.modal', function (e) {
+        // do something...
+        //console.log("hidden.bs.modal");
+
+        $(".modalSiteConfirm").remove();
 
         if (IsEdit) {
             SelfRedirect();

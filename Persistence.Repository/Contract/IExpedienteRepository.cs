@@ -42,7 +42,11 @@ namespace Persistence.Repository
         void BorrarFirmaByFirmaID(int FirmaID);
         void BorrarFirmaByAsocDocSistema(int AsocDocSistemaFirmaID);
         int SaveFirma(Firma model);
+        //int SaveAsocFirmaDocto(AsocFirmaDocto model);
         int SaveAsocFirmaDocto(AsocFirmaDocto model);
+        int SaveAsocFirmaDoctoMarcarToma(AsocFirmaDocto model);
+        AsocFirmaDocto GetAsocFirmaDoctoGS(int expedienteID, int UsuarioID);
+        IList<AsocFirmaDocto> GetListAsocFirmaDoctoGS(int expedienteID);
         AsocDocSistemaFirma GetAsocDocSistemaFirma(int FirmaID, int DocumentoSistemaID);
         IList<AsocDocSistemaFirma> GetAsocDocSistemaFirmaByDocto(int DocumentoSistemaID);
         int SaveAsocDocSistemaFirma(AsocDocSistemaFirma model);

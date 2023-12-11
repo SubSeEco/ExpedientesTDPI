@@ -42,7 +42,11 @@ namespace Application.Services
         void BorrarFirmaByFirmaID(int FirmaID);
         void BorrarFirmaByAsocDocSistema(int AsocDocSistemaFirmaID);
         int SaveFirma(Firma dto);
+        //int SaveAsocFirmaDocto(AsocFirmaDocto dto);
         int SaveAsocFirmaDocto(AsocFirmaDocto dto);
+        int SaveAsocFirmaDoctoMarcarToma(AsocFirmaDocto dto);
+        AsocFirmaDocto GetAsocFirmaDoctoGS(int expedienteID, int UsuarioID);
+        IList<AsocFirmaDocto> GetListAsocFirmaDoctoGS(int expedienteID);
         AsocDocSistemaFirma GetAsocDocSistemaFirmaByFirmaDocto(int FirmaID, int DocumentoSistemaID);
         IList<AsocDocSistemaFirma> GetAsocDocSistemaFirmaByDocto(int DocumentoSistemaID);
         int SaveAsocDocSistemaFirma(AsocDocSistemaFirma dto);

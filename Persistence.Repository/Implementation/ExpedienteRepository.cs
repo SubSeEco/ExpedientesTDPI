@@ -676,6 +676,49 @@ namespace Persistence.Repository
             }
         }
 
+        public int SaveAsocFirmaDoctoMarcarToma(AsocFirmaDocto model)
+        {
+            if (model.AsocFirmaDoctoID == 0)
+            {
+                _context.Entry(model).State = EntityState.Added;
+            }
+            else
+            {
+                _context.Entry(model).State = EntityState.Modified;
+            }
+
+            try
+            {
+                _context.SaveChanges();
+                return model.AsocFirmaDoctoID;
+            }
+            catch (DbEntityValidationException ex)
+            {
+                string exceptionMessage = EscribirLog(ex);
+                throw new DbEntityValidationException(exceptionMessage, ex.EntityValidationErrors);
+            }
+        }
+
+        public AsocFirmaDocto GetAsocFirmaDoctoGS(int expedienteID, int UsuarioID)
+        {
+            return _context.AsocFirmaDocto
+                  .Include("AsocEscritoDocto")
+                 .Include("Firma.Usuario")
+                 //  .Include("AsocEscritoDocto")
+                 .AsNoTracking()
+                 .FirstOrDefault(x => x.Firma.UsuarioID == UsuarioID && x.AsocEscritoDocto.ExpedienteID == expedienteID);
+        }
+
+        public IList<AsocFirmaDocto> GetListAsocFirmaDoctoGS(int expedienteID)
+        {
+            return _context.AsocFirmaDocto
+                 .Include("AsocEscritoDocto")
+                 .Include("Firma.Usuario")
+                 // .Include("AsocEscritoDocto")
+                 .AsNoTracking()
+                 .Where(x => x.AsocEscritoDocto.ExpedienteID == expedienteID).ToList();
+        }
+
         public AsocDocSistemaFirma GetAsocDocSistemaFirma(int FirmaID, int DocumentoSistemaID)
         {
             return _context.AsocDocSistemaFirma

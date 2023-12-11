@@ -999,10 +999,10 @@ function createFormDownload(FrmID) {
         id: FrmID,
         name: FrmID,
         method: 'POST',
-        action: '/ES/Uploader/DownloadFile',
+        action: '/ES/Uploader/DownloadFilePdf',
         target: '_blank'
     }).appendTo('body');
-
+   
     $("#frmDown").append('<input name="ObjID1" id="ObjID1" type="hidden" value="0" />');
     $("#frmDown").append('<input name="ObjID2" id="ObjID2" type="hidden" value="0" />');
     $("#frmDown").append('<input name="Hash" id="Hash" type="hidden" value="0" />');
@@ -1013,6 +1013,16 @@ function createFormDownload(FrmID) {
 function getDownloadFile(ObjID1, ObjID2, Hash, TipoDoc) {
 
     createFormDownload("frmDown");
+    console.log('---- gs -------');
+    console.log('ObjID1');
+    console.log(ObjID1);
+    console.log('ObjID2');
+    console.log(ObjID2);
+    console.log('Hash');
+    console.log(Hash);
+    console.log('TipoDoc');
+    console.log(TipoDoc);
+
 
     $("#frmDown #ObjID1").val(ObjID1);
     $("#frmDown #ObjID2").val(ObjID2);
@@ -1026,6 +1036,54 @@ function getDownloadFile(ObjID1, ObjID2, Hash, TipoDoc) {
     } else {
         $("#frmDown").submit();
     }
+}
+
+function getDownloadFileUrl(pDocumentoCausaID, pCausaID, pHash, pTipoDoc) {
+
+    var sReturnUrl = '';
+
+    $.ajax({
+        async: false,
+        url: "/ES/Uploader/TraeUrlDocumentoFirma",
+        type: "GET",
+        data: {
+            DocumentoID: pDocumentoCausaID,
+            CausaID: pCausaID,
+            TipoDoc: pTipoDoc,
+            Hash: pHash
+        },
+        success: function (response) {
+            sReturnUrl = response;
+        },
+        error: function (error) {
+            console.log(error);
+        }
+    });
+
+    return sReturnUrl;
+}
+
+function getValidaSiDocumentoEstaTomado(l_expedienteID, l_usuarioID, iTipoTramite) {
+
+    var sReturn = '';
+    $.ajax({
+        async: false,
+        url: "/ES/Uploader/ValidaTomaFirma",
+        type: "GET",
+        data: {
+            l_expedienteID: l_expedienteID,
+            l_usuarioID: l_usuarioID,
+            l_iTipoTramite: iTipoTramite
+        },
+        success: function (response) {
+            sReturn = response;
+        },
+        error: function (error) {
+            console.log(error);
+        }
+    });
+
+    return sReturn;
 }
 
 function getDeleteFile(ObjID1, TipoDoc, VersionEnc, Hash, ObjID2, end) {

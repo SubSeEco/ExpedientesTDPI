@@ -203,12 +203,13 @@
     {<text>
 
     function CreateExpediente(option) {
-
+       
         var opts = {
             title: "Seleccione Tipo Expediente a Ingresar",
             msg1: $("#btnsAddExpediente").html(),
             url: null,
             params: {},
+            id: "myModalConfirmCreate2",
             btn1Hide: true,
             replaceParrafo: true,
             callback: function () {
@@ -217,6 +218,28 @@
         }
 
         xDialogConfirmAction(opts);
+
+    }
+
+    function CreateExpedienteConfirmacion(option) {
+
+        var opts = {
+            title: "Crear Nuevo Expediente",
+            html: "¿Confirma Crear un Nuevo Expediente?",
+            size: "modal-xl",
+            url: null,
+            params: {},
+            id: "myModalConfirmCreate",
+            IsHideMessageEnd: true,
+            //btn1Hide: true,
+            replaceParrafo: true,
+            callback: function () {
+                CreateExpediente(true);
+                end.apply();
+            }
+        }
+
+        xAlert(opts);
 
     }
 
@@ -310,8 +333,8 @@
                     @if (PuedeIngresar && !Domain.Infrastructure.WebConfigValues.IsAccesoPublico)
                     {
                         <button type="button" id="" class="btn btn-default"
-                                onclick="CreateExpediente(true)">
-                            <i class="x-icon x-icon-mas3 icon-in-button"></i> Ingresar Expediente
+                                onclick="CreateExpedienteConfirmacion(true)">
+                            <i class="x-icon x-icon-mas3 icon-in-button"></i> Ingresar Nuevos Expedientes
                         </button>
                     }
 

@@ -12,7 +12,7 @@
         <EntityTypeShape EntityType="SGDE_Model.AsocEscritoDocto" Width="1.5" PointX="19.5" PointY="13.25" />
         <EntityTypeShape EntityType="SGDE_Model.AsocExpedienteOpcion" Width="1.5" PointX="16.5" PointY="14.375" />
         <EntityTypeShape EntityType="SGDE_Model.AsocExpeFirma" Width="1.5" PointX="16.5" PointY="20.375" />
-        <EntityTypeShape EntityType="SGDE_Model.AsocFirmaDocto" Width="1.5" PointX="21.75" PointY="13.5" />
+        <EntityTypeShape EntityType="SGDE_Model.AsocFirmaDocto" Width="1.5" PointX="21.75" PointY="13.5" IsExpanded="true" />
         <EntityTypeShape EntityType="SGDE_Model.AsocTipoCausaPerfil" Width="1.5" PointX="21" PointY="26.75" />
         <EntityTypeShape EntityType="SGDE_Model.AsocTipoDocumentoAdjunto" Width="1.5" PointX="13.5" PointY="5.375" />
         <EntityTypeShape EntityType="SGDE_Model.AsocTipoNotificacionPerfil" Width="1.5" PointX="21" PointY="23.875" />

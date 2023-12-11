@@ -18,7 +18,9 @@ namespace Application.DTO.Models
         public int FirmaID { get; set; }
         public int AsocEscritoDoctoID { get; set; }
         public bool IsFirmado { get; set; }
-    
+        public Nullable<bool> IsTomado { get; set; }
+        public Nullable<System.DateTime> FechaTomado { get; set; }
+
         public virtual AsocEscritoDocto AsocEscritoDocto { get; set; }
         public virtual Firma Firma { get; set; }
     }

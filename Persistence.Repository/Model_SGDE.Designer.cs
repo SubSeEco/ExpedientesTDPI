@@ -1,4 +1,4 @@
-﻿// La generación de código T4 está habilitada para el modelo 'C:\inetpub\wwwroot\MINECOM\SGDE_2020\Persistence.Repository\Model_SGDE.edmx'. 
+﻿// La generación de código T4 está habilitada para el modelo 'C:\Empresa\Proyectos\Subsecretaría de Economía y Empresa de Menor Tamaño\03 - Fase Construcción\ExpedientesTDPI-develop\Persistence.Repository\Model_SGDE.edmx'. 
 // Para habilitar la generación de código heredada, cambie el valor de la propiedad del diseñador 'Estrategia de generación de código'
 // por 'ObjectContext heredado'. Esta propiedad está disponible en la ventana Propiedades cuando se abre
 // el modelo en el diseñador.

@@ -80,6 +80,8 @@
           <Property Name="FirmaID" Type="int" Nullable="false" />
           <Property Name="AsocEscritoDoctoID" Type="int" Nullable="false" />
           <Property Name="IsFirmado" Type="bit" Nullable="false" />
+          <Property Name="IsTomado" Type="bit" />
+          <Property Name="FechaTomado" Type="datetime" />
         </EntityType>
         <EntityType Name="AsocTipoCausaPerfil">
           <Key>
@@ -575,11 +577,11 @@
           <Property Name="Nombres" Type="char" MaxLength="200" Nullable="false" />
           <Property Name="Apellidos" Type="char" MaxLength="200" Nullable="false" />
           <Property Name="Mail" Type="char" MaxLength="200" Nullable="false" />
-          <Property Name="Telefono" Type="varchar" MaxLength="20" Nullable="false" />
           <Property Name="IsClaveUnica" Type="bit" Nullable="false" />
           <Property Name="FechaRegistro" Type="datetime" Nullable="false" />
           <Property Name="FechaModificacion" Type="datetime" Nullable="false" />
           <Property Name="Signer" Type="varchar" MaxLength="300" Nullable="false" />
+          <Property Name="Telefono" Type="varchar" MaxLength="20" Nullable="false" />
         </EntityType>
         <EntityType Name="Ventana">
           <Key>
@@ -2274,6 +2276,8 @@
           <Property Name="IsFirmado" Type="Boolean" Nullable="false" />
           <NavigationProperty Name="AsocEscritoDocto" Relationship="SGDE_Model.R_532" FromRole="AsocFirmaDocto" ToRole="AsocEscritoDocto" />
           <NavigationProperty Name="Firma" Relationship="SGDE_Model.R_533" FromRole="AsocFirmaDocto" ToRole="Firma" />
+          <Property Name="IsTomado" Type="Boolean" />
+          <Property Name="FechaTomado" Type="DateTime" Precision="3" />
         </EntityType>
         <EntityType Name="AsocTipoCausaPerfil">
           <Key>
@@ -3896,6 +3900,8 @@
           <EntitySetMapping Name="AsocFirmaDocto">
             <EntityTypeMapping TypeName="SGDE_Model.AsocFirmaDocto">
               <MappingFragment StoreEntitySet="AsocFirmaDocto">
+                <ScalarProperty Name="FechaTomado" ColumnName="FechaTomado" />
+                <ScalarProperty Name="IsTomado" ColumnName="IsTomado" />
                 <ScalarProperty Name="IsFirmado" ColumnName="IsFirmado" />
                 <ScalarProperty Name="AsocEscritoDoctoID" ColumnName="AsocEscritoDoctoID" />
                 <ScalarProperty Name="FirmaID" ColumnName="FirmaID" />
