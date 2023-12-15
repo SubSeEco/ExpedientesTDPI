@@ -1756,7 +1756,7 @@ namespace Presentation.Web.Controllers
 
                     foreach (var item in model.Expediente)
                     {
-                        if (item.IsDisponibleResolucion(EstadoDiario.Fecha))
+                        if (item.IsDisponibleResolucion(EstadoDiario.Fecha) && item.IsAdmisible)
                         {
                             DTO.Models.DetalleEstadoDiario ed = new DTO.Models.DetalleEstadoDiario();
                             ed.DetalleEstadoDiarioID = 0;
