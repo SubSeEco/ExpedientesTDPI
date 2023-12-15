@@ -99,7 +99,7 @@ namespace Presentation.Web.Controllers
                 foreach (var item in lista)
                 {
                     #region AsocFirmaDocto
-
+                    strResponsableActual = string.Empty;
                     foreach (var asoc in item.AsocFirmaDocto)
                     {
                         var iTipoTramite = asoc.AsocEscritoDocto.Expediente.TipoTramite.TipoTramiteID;
