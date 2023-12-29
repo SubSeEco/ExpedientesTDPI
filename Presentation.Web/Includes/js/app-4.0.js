@@ -674,6 +674,103 @@ function xAlert(options) {
     })
 }
 
+function xAlert_gs(options) {
+
+    //title, html, callback, btns, width, hideClose
+
+    options.title = options.title || "Mensaje";
+    options.txtBtn1 = options.txtBtn1 || Labels._aceptar;
+    options.txtBtn2 = options.txtBtn2 || Labels._cancelar;
+    options.iconBtn1 = options.iconBtn1 || "ok";
+    options.alert = options.alert || "alert-success"; //alert: "alert-success", "alert-secondary"
+    options.onOpen = options.onOpen || $.noop;
+
+    var html = '<div class="modalSiteAlert"><div class="modal fade" id="myModalAlert" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">' +
+              '<div class="modal-dialog modal-dialog-centered" role="document">' +
+                '<div class="modal-content">' +
+                  '<div class="modal-header ' + options.alert + '">' +
+                    '<h5 class="modal-title" id="modalLabel">' + options.title + '</h5>' +
+                    '<button type="button" class="close" data-dismiss="modal" aria-label="Close">' +
+                      '<span aria-hidden="true">&times;</span>' +
+                    '</button>' +
+                  '</div>' +
+                  '<div class="modal-body">' +
+                    '<span>' + options.html + '</span>' + //class="' + options.cssMsg + '" style="' + options.styleMsg + '"
+                  '</div>' +
+                  '<div class="modal-footer">' +
+                    '<button type="button" class="btn btn-default btnAceptar"><i class="x-icon x-icon-' + options.iconBtn1 + ' icon-in-button"></i> ' + options.txtBtn1 + '</button>' +
+                    '<button class="btn btn-default btnCancelar" data-dismiss="modal" type="button"><i class="x-icon x-icon-cancel2 icon-in-button"></i> ' + options.txtBtn2 + '</button>' +
+                    '</div>' +
+                '</div>' +
+              '</div>' +
+            '</div></div>';
+
+    $('body').append(html);
+
+    var $divModal = $("#myModalAlert");
+
+    $divModal.modal({
+        keyboard: false,
+        backdrop: 'static'
+    })
+
+
+    $divModal.on('shown.bs.modal', function (e) {
+
+        options.onOpen.apply();
+
+        var btnAceptar = $divModal.find(".btnAceptar");
+        
+        var btnCancelar = $divModal.find(".btnCancelar");
+
+        btnAceptar.on("click", function () {
+
+            CloseDialog();
+
+            if ($.isFunction(options.callback) && !xAlertCallbackAction) {
+                CreateExpediente(true); 
+                options.callback.apply();
+                xAlertCallbackAction = true;
+            }
+        })
+
+        btnCancelar.on("click", function () {
+
+            CloseDialog();
+            xAlertCallbackAction = false;
+
+       
+        })
+    })
+
+    //$divModal.on('hide.bs.modal', function (e) {
+
+    //    console.log("hide.bs.modal");
+    //    if ($.isFunction(options.callback)) {
+    //        options.callback.apply();
+    //    }
+
+    //})
+
+    $divModal.on('hidden.bs.modal', function (e) {
+        // do something...
+        //console.log("hidden.bs.modal");
+
+        $(".modalSiteAlert").remove();
+
+        if ($.isFunction(options.callback) && !xAlertCallbackAction) {
+            options.callback.apply();
+            xAlertCallbackAction = true;
+        }
+
+        if (IsEdit) {
+            SelfRedirect();
+        }
+        xAlertCallbackAction = false;
+
+    })
+}
+
 //xDialogConfirmAction(title, msg1, msg2, url, params, callback)
 function xDialogConfirmAction(options) {
 
@@ -809,7 +906,6 @@ function xDialogConfirmAction(options) {
     })
 
 }
-
 
 function xDialogConfirmAction3Options(options) {
 
@@ -1085,7 +1181,8 @@ function GetModalContentShowPdf(options, pDocumentoCausaID, pCausaID, pHash, pTi
                        // '<p>' + options.msg1 + '</p>' + //class="' + options.cssMsg + '" style="' + options.styleMsg + '"
                         '<p>' + sMensaje1 + '</p>' +
                         '<p>' +
-                            '<embed src="' + oUrlDocPdf + '" id="pdfEmbed" type="application/pdf" width="100%" height="450px" />' +
+                           // '<embed src="' + oUrlDocPdf + '" id="pdfEmbed" type="application/pdf" width="100%" height="450px" />' +
+                            '<iframe src="'+ oUrlDocPdf +'" height="450px" width="100%"></iframe>'
                         '</p>' +
 
                      '</div>' +
