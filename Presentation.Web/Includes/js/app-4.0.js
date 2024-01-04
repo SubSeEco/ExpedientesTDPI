@@ -1182,7 +1182,7 @@ function GetModalContentShowPdf(options, pDocumentoCausaID, pCausaID, pHash, pTi
                         '<p>' + sMensaje1 + '</p>' +
                         '<p>' +
                            // '<embed src="' + oUrlDocPdf + '" id="pdfEmbed" type="application/pdf" width="100%" height="450px" />' +
-                            '<iframe src="'+ oUrlDocPdf +'" height="450px" width="100%"></iframe>'
+                           '<iframe id="htmlPdf" name="nPdf" src="' + oUrlDocPdf + '" style="width: 100%; height: 450px;"></iframe>'
                         '</p>' +
 
                      '</div>' +
