@@ -1181,8 +1181,7 @@ function GetModalContentShowPdf(options, pDocumentoCausaID, pCausaID, pHash, pTi
                        // '<p>' + options.msg1 + '</p>' + //class="' + options.cssMsg + '" style="' + options.styleMsg + '"
                         '<p>' + sMensaje1 + '</p>' +
                         '<p>' +
-                           // '<embed src="' + oUrlDocPdf + '" id="pdfEmbed" type="application/pdf" width="100%" height="450px" />' +
-                           '<iframe id="htmlPdf" name="nPdf" src="' + oUrlDocPdf + '" style="width: 100%; height: 450px;"></iframe>'
+                           '<iframe id="htmlPdf" name="nPdf" src="' + oUrlDocPdf + '" style="width: 100%; height: 450px;"></iframe>' +
                         '</p>' +
 
                      '</div>' +
