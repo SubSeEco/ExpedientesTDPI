@@ -3,6 +3,12 @@
 Este archivo esta basado en el formato Keep a Changelog(https://keepachangelog.com/es-ES/1.0.0/)
 Junto con lo indicado por Semantic Versioning para las versiones (https://semver.org)
 
+## [2.0.2 - SGDE] - 09-01-2023
+
+### Changed
+
+- Semodifico la visualizacion de los PDF para los navegadores de acuerdo al problema presentado por TDPI.
+
 ## [2.0.1 - SGDE] - 05-01-2024
 
 ### Changed

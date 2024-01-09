@@ -1499,6 +1499,12 @@
     <Content Include="Views\Listados\Tablas\_GenerarListadoTablaPDF.cshtml" />
     <Content Include="Views\Listados\EstadosDiarios\_GenerarListadoEstadoDiarioPDF.cshtml" />
     <Content Include="Views\Listados\Tablas\_EditarCausaTabla.cshtml" />
+    <Content Include="TempPdf\Analytics_Todos_los_datos_de_sitios_web_Resumen_20230101-20231231.pdf" />
+    <Content Include="TempPdf\Analytics_Todos_los_datos_de_sitios_web_Ubicación_20230101-20231231.pdf" />
+    <Content Include="TempPdf\Prueba.pdf" />
+    <Content Include="TempPdf\Prueba_Doc_1_-_copia_%282%29.pdf" />
+    <Content Include="TempPdf\Prueba_Doc_1_-_copia_%287%29.pdf" />
+    <Content Include="TempPdf\Reporte_GA4_-_Paises.pdf" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -1508,7 +1514,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
-    <Folder Include="TempPdf\" />
     <Folder Include="Views\Json\" />
   </ItemGroup>
   <ItemGroup>
