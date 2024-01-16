@@ -16,7 +16,7 @@
 
     string OptionInitial = resources.GlobalResources.OptionInicial;
 
-    DateTime FechaDesde = DateTime.Now.AddMonths(-1);
+    DateTime FechaDesde = DateTime.Now.AddDays(-10);// AddMonths(-1);
     DateTime FechaHasta = DateTime.Now;
 
 }
@@ -29,7 +29,7 @@
 
             $("#btnBuscar").on("click", goGrid);
 
-            goGrid();
+           // goGrid();
         });
     })(jQuery);
 
@@ -215,7 +215,11 @@
     }
 
     function FirmarDocumentoShowPdf(ExpedienteID, AsocFirmaDoctoID, CausaID, Hash, DocumentoCausaID, TipoDoc, UsuarioID, iTipoTramite) {
-
+        //console.log(ExpedienteID);
+        //console.log(AsocFirmaDoctoID);
+        //console.log(CausaID);
+        //console.log(Hash);
+        //console.log(DocumentoCausaID);
         GetModalContentShowPdf({
             url: "@Url.Action("FirmarDocumentoExpediente", "Firmas")",
             title: "Firma Documento",

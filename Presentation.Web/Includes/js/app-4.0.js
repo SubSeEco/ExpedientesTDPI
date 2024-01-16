@@ -1166,9 +1166,11 @@ function GetModalContentShowPdf(options, pDocumentoCausaID, pCausaID, pHash, pTi
     }
     var sHtmlButonFirma = oValidaMuestraBotonFirma == true ? '<button type="button" class="btn btn-default btnAceptar"><i class="x-icon x-icon-' + options.iconBtn1 + ' icon-in-button"></i> ' + options.txtBtn1 + '</button><i class="x-icon-loader hide"></i>' : '';
     var sMensaje1 = oValidaMuestraBotonFirma == true ? options.msg1 : smensajeRetorna;
-    var oUrlDocPdf = getDownloadFileUrl(pDocumentoCausaID, pCausaID, pHash, pTipoDoc);
-
-    var html = '<div class="' + options.xclass + '" id="" ><div class="modal fade  ' + top + '" id="' + options.id + '" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">' +
+    var oUrlDocPdf = "";
+    oUrlDocPdf = getDownloadFileUrl(pDocumentoCausaID, pCausaID, pHash, pTipoDoc);
+    //console.log(oUrlDocPdf);
+    var html = "";
+    html = '<div class="' + options.xclass + '" id="' + pDocumentoCausaID + '" ><div class="modal fade  ' + top + '" id="' + options.id + '" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">' +
                   '<div class="modal-dialog modal-dialog-scrollable modal-dialog-centered ' + options.size + '" role="document">' +
                     '<div class="modal-content">' +
                       '<div class="modal-header  ' + options.alert + '">' +
@@ -1194,10 +1196,10 @@ function GetModalContentShowPdf(options, pDocumentoCausaID, pCausaID, pHash, pTi
                     '</div>' +
                   '</div>' +
                 '</div></div>';
-
     $('body').append(html);
+    $('#htmlPdf').attr('src', oUrlDocPdf)
     var $divModal = $("#" + options.id);
-
+    
     $divModal.modal({
         keyboard: false,
         backdrop: 'static'
