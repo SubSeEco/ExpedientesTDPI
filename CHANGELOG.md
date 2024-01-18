@@ -3,7 +3,16 @@
 Este archivo esta basado en el formato Keep a Changelog(https://keepachangelog.com/es-ES/1.0.0/)
 Junto con lo indicado por Semantic Versioning para las versiones (https://semver.org)
 
-## [2.0.2 - SGDE] - 09-01-2023
+## [2.1.0 - SGDE] - 18-01-2024
+
+### Changed
+
+- Se modifico connection string en web.connectionstring.config agregando instancia nueva de Testing
+- Cambios desarrollados por Global System:
+  - Cambios en iframe para visualizar documentos PDF.
+  - Correccion de bug que no permitia ver todos los documentos firmados y solo mostraba el primero seleccionado.
+
+## [2.0.2 - SGDE] - 09-01-2024
 
 ### Changed
 
