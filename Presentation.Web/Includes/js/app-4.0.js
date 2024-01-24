@@ -1181,14 +1181,14 @@ function GetModalContentShowPdf(options, pDocumentoCausaID, pCausaID, pHash, pTi
                       '</div>' +
                       '<div class="modal-body">' +
                        // '<p>' + options.msg1 + '</p>' + //class="' + options.cssMsg + '" style="' + options.styleMsg + '"
-                        '<p>' + sMensaje1 + '</p>' +
+                        '<p><div id="dvMensaje">' + sMensaje1 + '</div></p>' +
                         '<p>' +
                            '<iframe id="htmlPdf" name="nPdf" src="' + oUrlDocPdf + '" style="width: 100%; height: 450px;"></iframe>' +
                         '</p>' +
 
                      '</div>' +
                       '<div class="modal-footer">' +
-                         sHtmlButonFirma
+                        '<div id="dvAceptar">' + sHtmlButonFirma + '</div>'
                         //'<button type="button" class="btn btn-default btnAceptar"><i class="x-icon x-icon-' + options.iconBtn1 + ' icon-in-button"></i> ' + options.txtBtn1 + '</button><i class="x-icon-loader hide"></i>'
                         +
                         '<button class="btn btn-default" data-dismiss="modal" type="button"><i class="x-icon x-icon-cancel2 icon-in-button"></i> ' + options.txtBtn2 + '</button>' +
@@ -1197,7 +1197,10 @@ function GetModalContentShowPdf(options, pDocumentoCausaID, pCausaID, pHash, pTi
                   '</div>' +
                 '</div></div>';
     $('body').append(html);
-    $('#htmlPdf').attr('src', oUrlDocPdf)
+    $('#htmlPdf').attr('src', oUrlDocPdf);
+    $('#dvAceptar').html(sHtmlButonFirma);
+    $('#dvMensaje').html(sMensaje1);
+
     var $divModal = $("#" + options.id);
     
     $divModal.modal({

@@ -3,6 +3,14 @@
 Este archivo esta basado en el formato Keep a Changelog(https://keepachangelog.com/es-ES/1.0.0/)
 Junto con lo indicado por Semantic Versioning para las versiones (https://semver.org)
 
+## [2.1.1 - SGDE] - 24-01-2024
+
+### Changed
+
+- Se modifico conexión a servidor de testing por cambio de cluster.
+- Desarrollos de Global:
+  - Correción de boton escritorio de firmas.
+
 ## [2.1.0 - SGDE] - 18-01-2024
 
 ### Changed
