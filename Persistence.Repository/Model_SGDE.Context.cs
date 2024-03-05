@@ -26,7 +26,7 @@ public partial class SGDE2Entities : DbContext
     public SGDE2Entities()
         : base("name=SGDE2Entities")
     {
-
+            this.Database.CommandTimeout = 180;
     }
 
     protected override void OnModelCreating(DbModelBuilder modelBuilder)
