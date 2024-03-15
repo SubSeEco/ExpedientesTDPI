@@ -15,26 +15,24 @@ namespace Persistence.Repository
 using System;
     using System.Collections.Generic;
     
-public partial class AsocFirmaDocto
+public partial class TempMigraAdjuntos
 {
 
-    public int AsocFirmaDoctoID { get; set; }
+    public int TempID { get; set; }
 
-    public int FirmaID { get; set; }
+    public int Identidad { get; set; }
 
-    public int AsocEscritoDoctoID { get; set; }
+    public int Tipo { get; set; }
 
-    public bool IsFirmado { get; set; }
+    public int Anio { get; set; }
 
-    public Nullable<bool> IsTomado { get; set; }
+    public string RutaArchivo { get; set; }
 
-    public Nullable<System.DateTime> FechaTomado { get; set; }
+    public string NombreArchivo { get; set; }
 
+    public bool Migrado { get; set; }
 
-
-    public virtual AsocEscritoDocto AsocEscritoDocto { get; set; }
-
-    public virtual Firma Firma { get; set; }
+    public string Comentario { get; set; }
 
 }
 

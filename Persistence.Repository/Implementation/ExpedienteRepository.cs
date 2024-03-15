@@ -533,6 +533,7 @@ namespace Persistence.Repository
                      select f)
                         .Include("Usuario")
                         .Include("AsocExpeFirma.Expediente")
+                         .Include("AsocExpeFirma.Expediente.AsocExpedienteOpcion")
                         .Include("AsocFirmaDocto.AsocEscritoDocto.AsocCausaDocumento.DocumentoCausa.Causa")
                         .Include("AsocDocSistemaFirma.DocumentoSistema.TipoDocumento")
                         .ToList();

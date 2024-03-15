@@ -104,6 +104,20 @@ namespace Presentation.Web.Controllers
                     {
                         var iTipoTramite = asoc.AsocEscritoDocto.Expediente.TipoTramite.TipoTramiteID;
                         var oEsResolucion = iTipoTramite == (int)Enums.TipoTramite.Resolucion;
+
+                        var oListOpcion = new List<int>();
+                        oListOpcion.Add((int)Enums.TipoTramiteSinOrdenFirma.Estudio);
+                        oListOpcion.Add((int)Enums.TipoTramiteSinOrdenFirma.MedidaParaMejorResolver);
+                        oListOpcion.Add((int)Enums.TipoTramiteSinOrdenFirma.Otros);
+                        oListOpcion.Add((int)Enums.TipoTramiteSinOrdenFirma.PorInterpuestoRecursoDeCasación);
+                        oListOpcion.Add((int)Enums.TipoTramiteSinOrdenFirma.Sentencia);
+
+                        var oEsFirmaSinOrden = oEsResolucion && asoc.AsocEscritoDocto.Expediente.AsocExpedienteOpcion.Where(p => oListOpcion.Contains(p.OpcionesTramiteID)).Any(); 
+                        if(!oEsFirmaSinOrden)
+                        {
+                            iTipoTramite = 0;
+                        }
+                        
                         #region Responsable Actual
                         DTO.Models.AsocFirmaDocto asocSiguiente = new DTO.Models.AsocFirmaDocto();
                         int DoctoFirma = asoc.AsocEscritoDoctoID;
@@ -111,7 +125,7 @@ namespace Presentation.Web.Controllers
                         foreach (var f in firmas.OrderBy(x => x.Firma.Orden))
                         {
                             //if (asocSiguiente.AsocFirmaDoctoID > 0) continue; GS:28112023
-                            if (!oEsResolucion)
+                            if (!oEsFirmaSinOrden)
                             {
                                 if (asocSiguiente.AsocFirmaDoctoID > 0) continue;
                             }
@@ -147,7 +161,7 @@ namespace Presentation.Web.Controllers
                         #endregion
 
                         //bool PuedeFirmar = true; //GS: (asocSiguiente.Firma != null && asocSiguiente.Firma.UsuarioID == UsuarioActive);
-                        bool PuedeFirmar = oEsResolucion ? true : (asocSiguiente.Firma != null && asocSiguiente.Firma.UsuarioID == UsuarioActive);
+                        bool PuedeFirmar = oEsFirmaSinOrden ? true : (asocSiguiente.Firma != null && asocSiguiente.Firma.UsuarioID == UsuarioActive);
 
                         #region bt1: Descargar Documento
                         a._class = "";

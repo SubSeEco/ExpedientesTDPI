@@ -6,7 +6,9 @@ using System.Text;
 using System.Data.Entity.Validation;
 
 using Infrastructure.Logging;
+using Domain.Infrastructure;
 using Enums = Domain.Infrastructure;
+
 
 namespace Persistence.Repository
 {
@@ -346,7 +348,7 @@ namespace Persistence.Repository
         {
             return _context.AsocUsuarioPerfil.ToList();
         }
-        
+
         public IList<Perfil> PerfilesFuncionario(int FuncionarioID)
         {
             IList<AsocUsuarioPerfil> asoc = _context
@@ -684,7 +686,8 @@ namespace Persistence.Repository
             _context.SaveChanges();
         }
 
-        public void DeleteDocumentoExpediente(int documentoID) {
+        public void DeleteDocumentoExpediente(int documentoID)
+        {
 
             DocumentoCausa model = _context
                 .DocumentoCausa
@@ -698,12 +701,12 @@ namespace Persistence.Repository
 
                 foreach (var x in asocs)
                 {
-                    AsocCausaDocumento d = _context.AsocCausaDocumento.Include("AsocEscritoDocto").FirstOrDefault(z=> z.AsocCausaDocumentoID == x);
+                    AsocCausaDocumento d = _context.AsocCausaDocumento.Include("AsocEscritoDocto").FirstOrDefault(z => z.AsocCausaDocumentoID == x);
                     List<int> asocEscritoDcto = d.AsocEscritoDocto.Select(z => z.AsocEscritoDoctoID).ToList();
 
                     foreach (var y in asocEscritoDcto)
                     {
-                        AsocEscritoDocto e = _context.AsocEscritoDocto.Include("AsocFirmaDocto").FirstOrDefault(z=> z.AsocEscritoDoctoID == y);
+                        AsocEscritoDocto e = _context.AsocEscritoDocto.Include("AsocFirmaDocto").FirstOrDefault(z => z.AsocEscritoDoctoID == y);
                         List<int> asocfirma = e.AsocFirmaDocto.Select(z => z.AsocFirmaDoctoID).ToList();
 
                         foreach (var z in asocfirma)
@@ -733,7 +736,7 @@ namespace Persistence.Repository
 
         public IList<AsocTipoTramiteOpciones> GetAsocTipoTramiteOpciones(int TipoTramiteID)
         {
-            return _context.AsocTipoTramiteOpciones.Where(x=> x.TipoTramiteID == TipoTramiteID).ToList();
+            return _context.AsocTipoTramiteOpciones.Where(x => x.TipoTramiteID == TipoTramiteID).ToList();
         }
 
         public int SaveAsocTipoTramiteOpciones(AsocTipoTramiteOpciones model)
@@ -811,7 +814,7 @@ namespace Persistence.Repository
         {
             EstadosAplica model = _context
                 .EstadosAplica.FirstOrDefault(x => x.EstadosAplicaID == EstadosAplicaID);
-            
+
             _context.Entry(model).State = EntityState.Deleted;
 
             try
@@ -861,6 +864,33 @@ namespace Persistence.Repository
                 .FirstOrDefault(x => x.UsuarioID == usuarioID);
         }
 
+        public Usuario GetFirmanteTable(int tipoFirma)
+        {
+            Usuario retor;
+            switch (tipoFirma)
+            {
+                case (int)TipoFirmaTabla.Presidente:
+                    retor = _context.Usuario.AsNoTracking()
+                              .Include("AsocUsuarioPerfil")
+                              .Include("TipoGenero")
+                              .FirstOrDefault(x => x.IsPresidente == true);
+                    break;
+                case (int)TipoFirmaTabla.SecretarioAbogado:
+                    retor = _context.Usuario.AsNoTracking()
+                                 .Include("AsocUsuarioPerfil")
+                                 .Include("TipoGenero")
+                                 .FirstOrDefault(x => x.IsSecretarioAbogado == true);
+                    break;
+                default:
+                    retor = null;
+                    break;
+
+
+
+            }
+            return retor;
+        }
+
         public IList<Perfil> GetPerfilUsuario(int usuarioID)
         {
             IList<Perfil> lista = new List<Perfil>();
@@ -872,8 +902,8 @@ namespace Persistence.Repository
             }
 
             return lista;
-        }   
-        
+        }
+
         public void SaveSigner(int usuarioActive, string signer)
         {
             Usuario model = _context.Usuario.Find(usuarioActive);

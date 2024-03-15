@@ -103,5 +103,6 @@ namespace Application.Services
         IList<TipoGenero> GetTipoGenero(bool SoloVigente = false);
         IList<Perfil> GetPerfilUsuario(int UsuarioID);
         void SaveSigner(int usuarioActive, string signer);
+        Usuario GetFirmanteTable(int tipoFirma);
     }
 }

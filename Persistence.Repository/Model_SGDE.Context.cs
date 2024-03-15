@@ -151,6 +151,8 @@ public partial class SGDE2Entities : DbContext
 
     public virtual DbSet<Usuario> Usuario { get; set; }
 
+    public virtual DbSet<TempMigraAdjuntos> TempMigraAdjuntos { get; set; }
+
 
     public virtual ObjectResult<SP_FlujoEstado_Result> SP_FlujoEstado(Nullable<int> tipoTramiteID)
     {

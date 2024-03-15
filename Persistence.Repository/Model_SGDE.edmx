@@ -459,6 +459,19 @@
           <Property Name="UsuarioRelatorID" Type="int" Nullable="false" />
           <Property Name="UsuarioSubroganteID" Type="int" Nullable="false" />
         </EntityType>
+        <EntityType Name="TempMigraAdjuntos">
+          <Key>
+            <PropertyRef Name="TempID" />
+          </Key>
+          <Property Name="TempID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Identidad" Type="int" Nullable="false" />
+          <Property Name="Tipo" Type="int" Nullable="false" />
+          <Property Name="Anio" Type="int" Nullable="false" />
+          <Property Name="RutaArchivo" Type="char" MaxLength="300" Nullable="false" />
+          <Property Name="NombreArchivo" Type="char" MaxLength="300" Nullable="false" />
+          <Property Name="Migrado" Type="bit" Nullable="false" />
+          <Property Name="Comentario" Type="varchar(max)" Nullable="false" />
+        </EntityType>
         <EntityType Name="TipoCanal">
           <Key>
             <PropertyRef Name="TipoCanalID" />
@@ -582,6 +595,9 @@
           <Property Name="FechaModificacion" Type="datetime" Nullable="false" />
           <Property Name="Signer" Type="varchar" MaxLength="300" Nullable="false" />
           <Property Name="Telefono" Type="varchar" MaxLength="20" Nullable="false" />
+          <Property Name="IsPresidente" Type="bit" />
+          <Property Name="IsSecretarioAbogado" Type="bit" />
+          <Property Name="UsuarioModificacion" Type="varchar" MaxLength="30" />
         </EntityType>
         <EntityType Name="Ventana">
           <Key>
@@ -1516,6 +1532,7 @@
           <EntitySet Name="Perfil" EntityType="Self.Perfil" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Sala" EntityType="Self.Sala" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Tabla" EntityType="Self.Tabla" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="TempMigraAdjuntos" EntityType="Self.TempMigraAdjuntos" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="TipoCanal" EntityType="Self.TipoCanal" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="TipoCausa" EntityType="Self.TipoCausa" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="TipoContencioso" EntityType="Self.TipoContencioso" Schema="dbo" store:Type="Tables" />
@@ -2184,6 +2201,7 @@
             <End Role="TipoGenero" EntitySet="TipoGenero" />
             <End Role="Usuario" EntitySet="Usuario" />
           </AssociationSet>
+          <EntitySet Name="TempMigraAdjuntos" EntityType="SGDE_Model.TempMigraAdjuntos" />
           </EntityContainer>
         <ComplexType Name="SP_FlujoEstado_Result">
           <Property Type="Int32" Name="EstadoCausaID" Nullable="false" />
@@ -3731,6 +3749,9 @@
           <NavigationProperty Name="Expediente" Relationship="SGDE_Model.R_516" FromRole="Usuario" ToRole="Expediente" />
           <NavigationProperty Name="Firma" Relationship="SGDE_Model.R_529" FromRole="Usuario" ToRole="Firma" />
           <NavigationProperty Name="TipoGenero" Relationship="SGDE_Model.R_562" FromRole="Usuario" ToRole="TipoGenero" />
+          <Property Name="IsPresidente" Type="Boolean" />
+          <Property Name="IsSecretarioAbogado" Type="Boolean" />
+          <Property Name="UsuarioModificacion" Type="String" MaxLength="30" FixedLength="false" Unicode="false" />
         </EntityType>
         <Association Name="R_578">
           <End Type="SGDE_Model.Usuario" Role="Usuario" Multiplicity="1" />
@@ -3816,6 +3837,19 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <EntityType Name="TempMigraAdjuntos">
+          <Key>
+            <PropertyRef Name="TempID" />
+          </Key>
+          <Property Name="TempID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Identidad" Type="Int32" Nullable="false" />
+          <Property Name="Tipo" Type="Int32" Nullable="false" />
+          <Property Name="Anio" Type="Int32" Nullable="false" />
+          <Property Name="RutaArchivo" Type="String" Nullable="false" MaxLength="300" FixedLength="true" Unicode="false" />
+          <Property Name="NombreArchivo" Type="String" Nullable="false" MaxLength="300" FixedLength="true" Unicode="false" />
+          <Property Name="Migrado" Type="Boolean" Nullable="false" />
+          <Property Name="Comentario" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="false" />
+        </EntityType>
         </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -4514,6 +4548,9 @@
           <EntitySetMapping Name="Usuario">
             <EntityTypeMapping TypeName="SGDE_Model.Usuario">
               <MappingFragment StoreEntitySet="Usuario">
+                <ScalarProperty Name="UsuarioModificacion" ColumnName="UsuarioModificacion" />
+                <ScalarProperty Name="IsSecretarioAbogado" ColumnName="IsSecretarioAbogado" />
+                <ScalarProperty Name="IsPresidente" ColumnName="IsPresidente" />
                 <ScalarProperty Name="Signer" ColumnName="Signer" />
                 <ScalarProperty Name="FechaModificacion" ColumnName="FechaModificacion" />
                 <ScalarProperty Name="FechaRegistro" ColumnName="FechaRegistro" />
@@ -4526,6 +4563,20 @@
                 <ScalarProperty Name="AdID" ColumnName="AdID" />
                 <ScalarProperty Name="TipoGeneroID" ColumnName="TipoGeneroID" />
                 <ScalarProperty Name="UsuarioID" ColumnName="UsuarioID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="TempMigraAdjuntos">
+            <EntityTypeMapping TypeName="SGDE_Model.TempMigraAdjuntos">
+              <MappingFragment StoreEntitySet="TempMigraAdjuntos">
+                <ScalarProperty Name="Comentario" ColumnName="Comentario" />
+                <ScalarProperty Name="Migrado" ColumnName="Migrado" />
+                <ScalarProperty Name="NombreArchivo" ColumnName="NombreArchivo" />
+                <ScalarProperty Name="RutaArchivo" ColumnName="RutaArchivo" />
+                <ScalarProperty Name="Anio" ColumnName="Anio" />
+                <ScalarProperty Name="Tipo" ColumnName="Tipo" />
+                <ScalarProperty Name="Identidad" ColumnName="Identidad" />
+                <ScalarProperty Name="TempID" ColumnName="TempID" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>

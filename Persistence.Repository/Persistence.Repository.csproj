@@ -218,6 +218,9 @@
     <Compile Include="Tabla.cs">
       <DependentUpon>Model_SGDE.tt</DependentUpon>
     </Compile>
+    <Compile Include="TempMigraAdjuntos.cs">
+      <DependentUpon>Model_SGDE.tt</DependentUpon>
+    </Compile>
     <Compile Include="TipoCanal.cs">
       <DependentUpon>Model_SGDE.tt</DependentUpon>
     </Compile>
@@ -279,6 +282,10 @@
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Application.DTO\Application.DTO.csproj">
+      <Project>{CDCCC469-95F6-4B55-8544-BFEBC4BF6362}</Project>
+      <Name>Application.DTO</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Domain.Infraestructure\Domain.Infrastructure.csproj">
       <Project>{361a79a9-670e-4391-8225-702209b1795d}</Project>
       <Name>Domain.Infrastructure</Name>

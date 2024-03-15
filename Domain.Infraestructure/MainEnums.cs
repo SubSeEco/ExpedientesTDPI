@@ -359,8 +359,20 @@ namespace Domain.Infrastructure
         AlarmaNoAsignados= 0,
         AlarmasAtrasos = 1
     }
+    public enum TipoFirmaTabla
+    {
+        Presidente = 1,
+        SecretarioAbogado = 2
+    }
+    public enum TipoTramiteSinOrdenFirma
+    {
+        Estudio = 19,
+        MedidaParaMejorResolver = 47,
+        Otros = 48,
+        PorInterpuestoRecursoDeCasación = 53,
+        Sentencia = 57
+    }
 
 
-    
 
 }

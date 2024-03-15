@@ -19,6 +19,8 @@ namespace Application.DTO
         ServiceNotAvailable = 4,
         Fail = 5
     }
+
+   
     public class FiltrosEscritorio
     {
         public FiltrosEscritorio()
@@ -177,6 +179,9 @@ namespace Application.DTO
         public bool IsClaveUnica { get; set; }
         public string Perfiles { get; set; }        
         public string Actions { get; set; }
+        public bool IsPresidente { get; set; }
+        public bool IsSecretarioAbogado { get; set; }
+        public string UsuarioModificacion { get; set; }
 
         public string GetRUT() {
             int rut = Convert.ToInt32(this.Rut);
