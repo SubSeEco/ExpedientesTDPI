@@ -1131,17 +1131,26 @@ function GetModalContent(options) {
     })
 }
 
+function getRandomIntInclusive(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1) + min);
+}
+
+
 function GetModalContentShowPdf(options, pDocumentoCausaID, pCausaID, pHash, pTipoDoc, l_expedienteID, l_usuarioID, iTipoTramite) {
 
     //width = width || 450;msg2
     //UrlAction = UrlAction || 0;
     //params = params || function () { };
     //callback = callback || SelfRedirect;
-
+    var arrayDeCadenasValidaMuestraBotonFirma = [];
     var cadenaADividir = getValidaSiDocumentoEstaTomado(l_expedienteID, l_usuarioID, iTipoTramite);
-    var arrayDeCadenasValidaMuestraBotonFirma = cadenaADividir.split('|');
+    arrayDeCadenasValidaMuestraBotonFirma = cadenaADividir.split('|');
     var oValidaMuestraBotonFirma = arrayDeCadenasValidaMuestraBotonFirma[0] == '1';
     var smensajeRetorna = arrayDeCadenasValidaMuestraBotonFirma[1];
+   
+    var aleatorio = getRandomIntInclusive(1, 10000);
 
     options.txtBtn1 = options.txtBtn1 || Labels._aceptar;
     options.txtBtn2 = options.txtBtn2 || Labels._cancelar;
@@ -1150,9 +1159,9 @@ function GetModalContentShowPdf(options, pDocumentoCausaID, pCausaID, pHash, pTi
     options.cssMsg = options.cssMsg || "";
     options.styleMsg = options.styleMsg || "";
     options.onOpen = options.onOpen || $.noop;
-    options.id = options.id || "myModalConfirm";
+    options.id = options.id || "myModalConfirmGS_" + l_expedienteID.toString()+ "_" + aleatorio.toString();
     options.xclass = options.xclass || "modalSite";
-
+    console.log(options.id);
     if (options.hasOwnProperty("closeInAccept")) {
         options.closeInAccept = options.closeInAccept;
     } else {
@@ -1164,6 +1173,7 @@ function GetModalContentShowPdf(options, pDocumentoCausaID, pCausaID, pHash, pTi
     } else {
         options.IsHideMessageEnd = false;
     }
+
     var sHtmlButonFirma = oValidaMuestraBotonFirma == true ? '<button type="button" class="btn btn-default btnAceptar"><i class="x-icon x-icon-' + options.iconBtn1 + ' icon-in-button"></i> ' + options.txtBtn1 + '</button><i class="x-icon-loader hide"></i>' : '';
     var sMensaje1 = oValidaMuestraBotonFirma == true ? options.msg1 : smensajeRetorna;
     var oUrlDocPdf = "";
@@ -1202,41 +1212,46 @@ function GetModalContentShowPdf(options, pDocumentoCausaID, pCausaID, pHash, pTi
     $('#dvMensaje').html(sMensaje1);
 
     var $divModal = $("#" + options.id);
-    
+
     $divModal.modal({
         keyboard: false,
         backdrop: 'static'
     })
 
-
+   
     $divModal.on('shown.bs.modal', function (e) {
 
         options.onOpen.apply();
-
+        //console.log("entro 1");
         if (options.replaceParrafo) {
+            //console.log("entro 2");
             $divModal.find(".modal-body").html(options.msg1);
         }
 
         if (options.btn1Hide) {
+            //console.log("entro 3");
             $divModal.find(".btnAceptar").remove();
         }
         else {
+            //console.log("entro 4");
+        
             var btnAceptar = $divModal.find(".btnAceptar");
-
+            
             btnAceptar.on("click", function () {
-
+                //console.log("entro 5");
                 if (options.closeInAccept) {
+                    //console.log("entro 6");
                     CloseDialog();
                 }
 
                 if (options.url == null) {
-
+                    //console.log("entro 7");
                     if ($.isFunction(options.callback)) {
                         options.callback.apply();
                     }
 
                 } else {
-
+                    //console.log("entro 8");
                     blockPageUI();
 
                     xJsonObj(options.url, options.params, function () {
@@ -1246,7 +1261,7 @@ function GetModalContentShowPdf(options, pDocumentoCausaID, pCausaID, pHash, pTi
                         //callback
 
                         blockPageUIclose();
-
+                        console.log($.isFunction(options.callback));
                         if (options.IsHideMessageEnd) {
 
                             if ($.isFunction(options.callback)) {

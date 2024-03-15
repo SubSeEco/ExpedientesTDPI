@@ -169,12 +169,11 @@
 
     }
 
-    function FirmarDocumento(ExpedienteID, AsocFirmaDoctoID, DocumentoCausaID, UsuarioID) {
-        GetModalContent({
+   function FirmarDocumento(ExpedienteID, AsocFirmaDoctoID, DocumentoCausaID, UsuarioID) {
+            xDialogConfirmAction({
                 url: "@Url.Action("FirmarDocumentoExpediente", "Firmas")",
                 title: "Firma Documento",
                 msg1: "¿Confirma firmar documento?",
-                size: "modal-xl",
                 IsHideMessageEnd: true,
                 params: {
                     __RequestVerificationToken: getVToken(),
@@ -223,45 +222,44 @@
         GetModalContentShowPdf({
             url: "@Url.Action("FirmarDocumentoExpediente", "Firmas")",
             title: "Firma Documento",
-        msg1: "¿Confirma firmar documento?",
-        size: "modal-xl",
-        IsHideMessageEnd: true,
-        params: {
-            __RequestVerificationToken: getVToken(),
-            ExpedienteID: ExpedienteID,
-            AsocFirmaDoctoID: AsocFirmaDoctoID,
-            DocumentoCausaID: DocumentoCausaID,
-            UsuarioID: UsuarioID
-        },
-        callback: function () {
+            msg1: "¿Confirma firmar documento?",
+            size: "modal-xl",
+            IsHideMessageEnd: true,
+            params: {
+                __RequestVerificationToken: getVToken(),
+                ExpedienteID: ExpedienteID,
+                AsocFirmaDoctoID: AsocFirmaDoctoID,
+                DocumentoCausaID: DocumentoCausaID,
+                UsuarioID: UsuarioID
+            },
+            callback: function () {
+                if (xJSONResult.result == ReturnJson.ActionSuccess) {
+                    xAlert({
+                        title: "Firma Documento",
+                        html: $("#messageEnd").html(),
+                        onOpen: function () {
 
-            if (xJSONResult.result == ReturnJson.ActionSuccess) {
-                xAlert({
-                    title: "Firma Documento",
-                    html: $("#messageEnd").html(),
-                    onOpen: function () {
+                        },
+                        callback: function () {
+                            goGrid();
+                        }
+                    })
+                }
 
-                    },
-                    callback: function () {
-                        goGrid();
-                    }
-                })
+                if (xJSONResult.result == ReturnJson.ErrorCodigoVerificacion) {
+                    showBlockUIError("No es posible firmar, compruebe su firma en el menú Mi Firma");
+                    console.log(xJSONResult.message);
+                    return false;
+                }
+
+                if (xJSONResult.result == ReturnJson.ErrorModelo || xJSONResult.result == ReturnJson.SinAccion) {
+                    showBlockUIError("No es posible firmar, por favor intente más tarde");
+                    console.log(xJSONResult.message);
+                    return false;
+                }
             }
 
-            if (xJSONResult.result == ReturnJson.ErrorCodigoVerificacion) {
-                showBlockUIError("No es posible firmar, compruebe su firma en el menú Mi Firma");
-                console.log(xJSONResult.message);
-                return false;
-            }
-
-            if (xJSONResult.result == ReturnJson.ErrorModelo || xJSONResult.result == ReturnJson.SinAccion) {
-                showBlockUIError("No es posible firmar, por favor intente más tarde");
-                console.log(xJSONResult.message);
-                return false;
-            }
-        }
-
-        }, DocumentoCausaID, CausaID, Hash, TipoDoc, ExpedienteID, UsuarioID, iTipoTramite);
+            }, DocumentoCausaID, CausaID, Hash, TipoDoc, ExpedienteID, UsuarioID, iTipoTramite);
     }
 
     function FirmarDocumentoSistema(DocumentoSistemaID, FirmaID, UsuarioID) {

@@ -39,6 +39,9 @@ namespace Application.DTO.Models
         public string Signer { get; set; }
         public string SignerEncrypted { get; set; }
 
+        public bool IsPresidente { get; set; }
+        public bool IsSecretarioAbogado { get; set; }
+        public string UsuarioModificacion { get; set; }
 
         public virtual ICollection<AsocDocumentoUsuario> AsocDocumentoUsuario { get; set; }
         public virtual ICollection<AsocUsuarioPerfil> AsocUsuarioPerfil { get; set; }

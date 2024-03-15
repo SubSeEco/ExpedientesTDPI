@@ -134,6 +134,7 @@
         <AssociationConnector Association="SGDE_Model.R_516" />
         <AssociationConnector Association="SGDE_Model.R_529" />
         <AssociationConnector Association="SGDE_Model.R_562" />
+        <EntityTypeShape EntityType="SGDE_Model.TempMigraAdjuntos" Width="1.5" PointX="13.375" PointY="8.75" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

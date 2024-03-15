@@ -106,5 +106,7 @@ namespace Persistence.Repository
         Usuario GetUsuarioByID(int usuarioID);
         IList<Perfil> GetPerfilUsuario(int usuarioID);
         void SaveSigner(int usuarioActive, string signer);
+
+        Usuario GetFirmanteTable(int tipoFirma);
     }
 }

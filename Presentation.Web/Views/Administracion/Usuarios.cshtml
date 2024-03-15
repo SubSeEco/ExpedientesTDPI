@@ -77,6 +77,21 @@
                         return "";
                     }
                 },
+                'EsPresidente': function () {
+                    if (item.IsPresidente) {
+                        return "<i class='x-icon x-icon-accept'></i>";
+                    } else {
+                        return "";
+                    }
+                },
+                'EsSecretarioAbogado': function () {
+                    if (item.IsSecretarioAbogado) {
+                        return "<i class='x-icon x-icon-accept'></i>";
+                    } else {
+                        return "";
+                    }
+                },
+                'UsuarioModificacion': item.UsuarioModificacion,
                 'Acciones': item.Actions, //
                 'DT_RowId': 'tr_' + i
             }
@@ -99,6 +114,9 @@
 						{ "sClass": "al", "bSortable": true, "mDataProp": "NombreUsuario" },
                         { "sClass": "al", "bSortable": true, "mDataProp": "Perfiles" },
                         { "sClass": "ac", "bSortable": true, "mDataProp": "Externo" },
+                        { "sClass": "ac", "bSortable": true, "mDataProp": "EsPresidente" },
+                        { "sClass": "ac", "bSortable": true, "mDataProp": "EsSecretarioAbogado" },
+                        { "sClass": "ac", "bSortable": true, "mDataProp": "UsuarioModificacion" },
 						{ "sClass": "ac nw", "bSortable": false, "mDataProp": "Acciones" }]
         };
 
@@ -223,7 +241,10 @@
                     <th class="ac" style="">Nombre Usuario</th>
                     <th class="ac" style="">Perfil</th>
                     <th class="ac" style="width:10%">Externo</th>
-                    <th class="ac nw" style="width:10%">@resources.GlobalResources.TH_Acciones</th>
+                    <th class="ac" style="width:10%">Es Presidente</th>
+                    <th class="ac" style="width:10%">Es Secretario(a) Abogado(a)</th>
+                    <th class="ac" style="width:10%">Usuario Modificación</th>
+                    <th class="ac nw" style="width:5%">@resources.GlobalResources.TH_Acciones</th>
                 </tr>
             </thead>
             <tbody></tbody>

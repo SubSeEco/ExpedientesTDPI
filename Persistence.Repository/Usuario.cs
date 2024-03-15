@@ -61,6 +61,12 @@ public partial class Usuario
 
     public string Signer { get; set; }
 
+    public Nullable<bool> IsPresidente { get; set; }
+
+    public Nullable<bool> IsSecretarioAbogado { get; set; }
+
+    public string UsuarioModificacion { get; set; }
+
 
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]

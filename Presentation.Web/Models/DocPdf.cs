@@ -407,7 +407,10 @@ namespace Presentation.Web
             Unit bottomSpaceBreack = Unit.FromCentimeter(0.9);
 
             var appCommon = new Application.Services.CommonAppServices();
-            
+            DTO.Models.Usuario usuarioPresidente = appCommon.GetFirmanteTable((int)Enums.TipoFirmaTabla.Presidente);
+            DTO.Models.Usuario usuarioSecretarioAbogado = appCommon.GetFirmanteTable((int)Enums.TipoFirmaTabla.SecretarioAbogado);
+
+
             int count = 1;
             foreach (var item in Tabla.DetalleTabla.Where(x=> x.Vigente).OrderBy(x => x.Orden))
             {
@@ -420,6 +423,7 @@ namespace Presentation.Web
                 int TipoParteID2 = 0;
 
                 DTO.Models.ConfTipoCausa config = appCommon.GetConfTipoCausa(item.Causa.TipoCausaID);
+                
 
                 var TipoParte1 = TipoParte.FirstOrDefault(x => x.TipoParteID == config.TipoParteID1);                
                 if (TipoParte1 != null)
@@ -592,12 +596,13 @@ namespace Presentation.Web
             Cell cellFooter = rowFooter.Cells[0];
             cellFooter.Format.Alignment = ParagraphAlignment.Center;
             cellFooter.Format.Font.Bold = true;
-            cellFooter.AddParagraph(Domain.Infrastructure.WebConfigValues.NombrePresidente);
+            //cellFooter.AddParagraph(Domain.Infrastructure.WebConfigValues.NombrePresidente);
+            cellFooter.AddParagraph(usuarioPresidente.GetFullName(upper: true));
 
             cellFooter = rowFooter.Cells[1];
             cellFooter.Format.Alignment = ParagraphAlignment.Center;
             cellFooter.Format.Font.Bold = true;
-            cellFooter.AddParagraph(Usuario.GetFullName(upper: true));
+            cellFooter.AddParagraph(usuarioSecretarioAbogado.GetFullName(upper: true));
 
             rowFooter = tableFooter.AddRow();
 

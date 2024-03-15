@@ -317,6 +317,10 @@ namespace Application.Services
                 dto.FechaModificacion = item.FechaModificacion;
                 dto.TipoGeneroID = item.TipoGeneroID;
                 dto.Signer = item.Signer;
+                dto.IsPresidente = (bool)item.IsPresidente;
+                dto.IsSecretarioAbogado = (bool)item.IsSecretarioAbogado;
+                dto.UsuarioModificacion = item.UsuarioModificacion;
+
 
                 dto.AsocUsuarioPerfil = new List<DTO.Models.AsocUsuarioPerfil>();
                 foreach (var asoc in item.AsocUsuarioPerfil)
@@ -479,6 +483,9 @@ namespace Application.Services
             model.FechaModificacion = dto.FechaModificacion;
             model.TipoGeneroID = dto.TipoGeneroID;
             model.Signer = dto.Signer;
+            model.IsPresidente = dto.IsPresidente;
+            model.IsSecretarioAbogado = dto.IsSecretarioAbogado;
+            model.UsuarioModificacion = dto.UsuarioModificacion;
 
             return repo.SaveUser(model);
         }
@@ -1086,6 +1093,49 @@ namespace Application.Services
             dto.TipoParteID2 = model.TipoParteID2;
             dto.IsNumeroSolicitud = model.isNumeroSolicitud;
             dto.IsConsignacion = model.IsConsignacion;
+
+            return dto;
+        }
+
+        public DTO.Models.Usuario GetFirmanteTable(int tipoFirma)
+        {
+            var model = repo.GetFirmanteTable(tipoFirma);
+
+            DTO.Models.Usuario dto = new DTO.Models.Usuario();
+            dto.UsuarioID = (int)Domain.Infrastructure.GenericJson.UserTMP;
+            dto.AsocUsuarioPerfil = new List<DTO.Models.AsocUsuarioPerfil>();
+
+            if (model != null)
+            {
+                dto.UsuarioID = model.UsuarioID;
+                dto.AdID = model.AdID;
+                dto.Rut = model.Rut;
+                dto.Nombres = model.Nombres.Trim();
+                dto.Apellidos = model.Apellidos.Trim();
+                dto.Mail = model.Mail.Trim();
+                dto.Telefono = model.Telefono.Trim();
+                dto.IsClaveUnica = model.IsClaveUnica;
+                dto.FechaRegistro = model.FechaRegistro;
+                dto.FechaModificacion = model.FechaModificacion;
+                dto.TipoGeneroID = model.TipoGeneroID;
+                dto.Signer = model.Signer;
+
+                dto.AsocUsuarioPerfil = new List<DTO.Models.AsocUsuarioPerfil>();
+                foreach (var item in model.AsocUsuarioPerfil)
+                {
+                    DTO.Models.AsocUsuarioPerfil asoc = new DTO.Models.AsocUsuarioPerfil();
+                    asoc.AsocUsuarioPerfilID = item.AsocUsuarioPerfilID;
+                    asoc.UsuarioID = item.UsuarioID;
+                    asoc.PerfilID = item.PerfilID;
+
+                    dto.AsocUsuarioPerfil.Add(asoc);
+                }
+
+                dto.TipoGenero = new DTO.Models.TipoGenero();
+                dto.TipoGenero.TipoGeneroID = model.TipoGenero.TipoGeneroID;
+                dto.TipoGenero.Descripcion = model.TipoGenero.Descripcion.Trim();
+                dto.TipoGenero.Vigente = model.TipoGenero.Vigente;
+            }
 
             return dto;
         }

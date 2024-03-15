@@ -107,6 +107,10 @@ namespace Presentation.Web.Controllers
                     dto.Apellidos = item.Apellidos;
                     dto.Perfiles = item.GetPerfiles();
                     dto.IsClaveUnica = item.IsClaveUnica;
+                    dto.IsPresidente = item.IsPresidente;
+                    dto.IsSecretarioAbogado = item.IsSecretarioAbogado;
+                    dto.UsuarioModificacion = item.UsuarioModificacion;
+                    
 
                     dto.User = (item.IsClaveUnica) ? dto.GetRUT() : dto.AdID;
                     
@@ -210,6 +214,7 @@ namespace Presentation.Web.Controllers
             if (!acceso) return Response403();
 
             int UsuarioActive = sso.GetUsuarioActivoID();
+            var user = sso.UserActive;
 
             DateTime ahora = DateTime.Now;
             DBLogger dbLog = new DBLogger();
@@ -228,7 +233,10 @@ namespace Presentation.Web.Controllers
                 dto.Mail = active.GetStringValueForm(Request.Form["Mail"]);
                 dto.Telefono = active.GetStringValueForm(Request.Form["Telefono"]);
                 dto.IsClaveUnica = active.GetBoolValueForm(Request.Form["IsClaveUnica"]);
-                
+                dto.IsPresidente = active.GetBoolValueForm(Request.Form["IsPresidente"]);
+                dto.IsSecretarioAbogado = active.GetBoolValueForm(Request.Form["IsSecretarioAbogado"]);
+                dto.UsuarioModificacion = user.AdID;
+
                 bool IsAbogadoAnterior = false;
 
                 if (dto.UsuarioID >= 0)
@@ -248,6 +256,29 @@ namespace Presentation.Web.Controllers
                 }
 
                 bool ExisteUsuarioAD = dto.AdID != string.Empty && appCommon.GetUsuarios().Any(X=> X.AdID.Trim() == dto.AdID.Trim());
+                DTO.Models.Usuario usuarioPresidente = appCommon.GetFirmanteTable((int)Enums.TipoFirmaTabla.Presidente);
+                DTO.Models.Usuario usuarioSecretarioAbogado = appCommon.GetFirmanteTable((int)Enums.TipoFirmaTabla.SecretarioAbogado);
+                if(dto.IsPresidente && usuarioPresidente.UsuarioID >= 0)
+                {
+                    usuarioPresidente.IsPresidente = false;
+                    tipoLog = Enums.TipoLog.EditarUsuario;
+                    usuarioPresidente.FechaModificacion = ahora;
+                    usuarioPresidente.UsuarioModificacion = user.AdID;
+                    var uPresidente = appCommon.SaveUser(usuarioPresidente);
+                    dbLog.TipoLog = tipoLog;
+                    dbLog.Save();
+                }
+
+                if (dto.IsSecretarioAbogado && usuarioSecretarioAbogado.UsuarioID >= 0)
+                {
+                    usuarioSecretarioAbogado.IsSecretarioAbogado = false;
+                    tipoLog = Enums.TipoLog.EditarUsuario;
+                    usuarioSecretarioAbogado.FechaModificacion = ahora;
+                    usuarioSecretarioAbogado.UsuarioModificacion = user.AdID;
+                    var uPresidente = appCommon.SaveUser(usuarioSecretarioAbogado);
+                    dbLog.TipoLog = tipoLog;
+                    dbLog.Save();
+                }
 
                 if (dto.UsuarioID < 0 && ExisteUsuarioAD)
                 {

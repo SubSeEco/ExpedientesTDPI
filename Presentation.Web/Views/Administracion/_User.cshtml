@@ -123,30 +123,30 @@
         @if (Model.IsClaveUnica)
         {
             <div class="form-group row">
-                <label for="Rut" id="" class="col-md-3 col-form-label">Rut </label>
-                <div class="col-md-9">
+                <label for="Rut" id="" class="col-md-4 col-form-label">Rut </label>
+                <div class="col-md-8">
                     @Html.TextBox("_rut", rutUsuario, new { @class = "form-control", @maxlength = "100", @disabled = true })
                 </div>
             </div>
         }
 
         <div class="form-group row">
-            <label for="Nombres" id="" class="col-md-3 col-form-label">Nombres <span class="span-obligatorio">(*)</span></label>
-            <div class="col-md-9">
+            <label for="Nombres" id="" class="col-md-4 col-form-label">Nombres <span class="span-obligatorio">(*)</span></label>
+            <div class="col-md-8">
                 @Html.TextBoxFor(x => x.Nombres, new { @class = "form-control verificar", @maxlength = "100" })
             </div>
         </div>
 
         <div class="form-group row">
-            <label for="Apellidos" id="" class="col-md-3 col-form-label">Apellidos <span class="span-obligatorio">(*)</span></label>
-            <div class="col-md-9">
+            <label for="Apellidos" id="" class="col-md-4 col-form-label">Apellidos <span class="span-obligatorio">(*)</span></label>
+            <div class="col-md-8">
                 @Html.TextBoxFor(x => x.Apellidos, new { @class = "form-control verificar", @maxlength = "100" })
             </div>
         </div>
 
         <div class="form-group row">
-            <label for="TipoGeneroID" id="" class="col-md-3 col-form-label">Genero <span class="span-obligatorio">(*)</span></label>
-            <div class="col-md-9">
+            <label for="TipoGeneroID" id="" class="col-md-4 col-form-label">Genero <span class="span-obligatorio">(*)</span></label>
+            <div class="col-md-8">
                 <select id="TipoGeneroID" name="TipoGeneroID" class="custom-select verificar" data-default="">
                     <option value="">@resources.GlobalResources.OptionInicial</option>
                     @foreach (var item in TipoGeneroList)
@@ -160,8 +160,8 @@
         </div>
         
         <div class="form-group row">
-            <label for="Mail" id="" class="col-md-3 col-form-label">Mail <span class="span-obligatorio">(*)</span></label>
-            <div class="col-md-9">
+            <label for="Mail" id="" class="col-md-4 col-form-label">Mail <span class="span-obligatorio">(*)</span></label>
+            <div class="col-md-8">
                 @Html.TextBoxFor(x => x.Mail, new { @class = "form-control IsEmail verificar", @maxlength = "100" })
             </div>
         </div>
@@ -169,8 +169,8 @@
         @if (!Model.IsClaveUnica)
         {
             <div class="form-group row">
-                <label for="AdID" id="" class="col-md-3 col-form-label">Usuario TDPI</label>
-                <div class="col-md-9">
+                <label for="AdID" id="" class="col-md-4 col-form-label">Usuario TDPI</label>
+                <div class="col-md-8">
                     @Html.TextBoxFor(x => x.AdID, new { @class = "form-control", @maxlength = "100" })
                 </div>
             </div>
@@ -178,12 +178,25 @@
         else
         {
             <div class="form-group row">
-                <label for="Mail" id="" class="col-md-3 col-form-label">Teléfono </label>
-                <div class="col-md-9">
+                <label for="Mail" id="" class="col-md-4 col-form-label">Teléfono </label>
+                <div class="col-md-8">
                     @Html.TextBoxFor(x => x.Telefono, new { @class = "form-control", @maxlength = "100" })
                 </div>
             </div>
         }
+        <div class="form-group row" style="margin-top: 0px !important;">
+            <label for="Vigente" class="col-sm-4 col-form-label">Es Presidente</label>
+            <div class="col-sm-8">
+                @Html.Raw(Html.MyCheckbox(Model.IsPresidente, "IsPresidente", 0, "", "small", 0, false, false, ""))
+            </div>
+        </div>
+
+        <div class="form-group row" style="margin-top: 0px !important;">
+            <label for="Vigente" class="col-sm-4 col-form-label">Es Secretario(a)-Abogado(a)</label>
+            <div class="col-sm-8">
+                @Html.Raw(Html.MyCheckbox(Model.IsSecretarioAbogado, "IsSecretarioAbogado", 0, "", "small", 0, false, false, ""))
+            </div>
+        </div>
 
         @if (Model.AsocDocumentoUsuario.Count > 0)
         {

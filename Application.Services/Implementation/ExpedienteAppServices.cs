@@ -814,7 +814,7 @@ namespace Application.Services
         public IList<DTO.Models.Firma> GetEscritorioFirmas(DTO.FiltrosEscritorio filtros)
         {
             IList<Firma> repoList = repo.GetEscritorioFirmas(MapFilter(filtros));
-            
+             
             IList<DTO.Models.Firma> listDTO = new List<DTO.Models.Firma>();
 
             foreach (var item in repoList)
