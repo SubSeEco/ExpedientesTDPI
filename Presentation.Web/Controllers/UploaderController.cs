@@ -1065,7 +1065,7 @@ namespace Presentation.Web.Controllers
                     {
                         var dtNow = DateTime.Now;
                         DateTime dtFechaIngreso = Convert.ToDateTime(entityTomado.FechaTomado);
-                        DateTime dtingresoMas = dtFechaIngreso.AddMinutes(5);
+                        DateTime dtingresoMas = dtFechaIngreso.AddMinutes(1);
 
                         int result = DateTime.Compare(dtNow, dtingresoMas);
                         if (result < 0)
